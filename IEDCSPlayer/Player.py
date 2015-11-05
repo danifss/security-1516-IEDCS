@@ -5,8 +5,10 @@ from webbrowser import open as browser
 
 
 try:
+    ### Initialize core of the system
     core = Core()
 
+    ### Lyfecycle of the program
     while(True):
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Welcome to IEDCS Player"
         print "Identity Enabled Distribution Control System" + co.ENDC
@@ -24,7 +26,7 @@ try:
         print co.ENDC
 
 
-
+        ### Handling options
         if op == '1':
             core.logout() if core.loggedIn else core.login()
         elif op == '2' and core.loggedIn:
@@ -41,7 +43,6 @@ try:
             sys.exit(0)
         else:
             print co.WARNING + "\nInvalid option, sorry!" + co.ENDC
-
 
 except KeyboardInterrupt:
     print co.FAIL+"\n\nProgram interrupted by user. Bye!"

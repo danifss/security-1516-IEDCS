@@ -1,4 +1,5 @@
 from Resources import *
+import sys
 import requests
 import json
 
@@ -15,17 +16,25 @@ class Core(object):
         while(not self.loggedIn):
             # user mut be logged in
             self.login()
+            op = raw_input("\tExit?(y/N) ")
+            if op == 'y':
+                print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
+                sys.exit(0)
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
 
 
     ### Login
     def login(self):
-        print co.BOLD +co.OKBLUE + "\n\n\t\t  Logging into IEDCS Player" + co.ENDC
+        print co.BOLD + co.OKBLUE + "\n\n\t\t  Logging into IEDCS Player" + co.ENDC
         print co.WARNING
         username = raw_input("\tUsername: ")
         passwd = raw_input("\tPassword: ")
         print co.ENDC
-        result = requests.get(api.LOGIN+"?username="+username+"&password="+passwd, verify=True)
+        try:
+            result = requests.get(api.LOGIN+"?username="+username+"&password="+passwd, verify=True)
+        except requests.ConnectionError as e:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return;
         if result.status_code == 200:
             res = json.loads(result.text)
             self.userID = res['id']
