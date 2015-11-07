@@ -11,7 +11,7 @@ try:
     ### Lyfecycle of the program
     while(True):
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Welcome to IEDCS Player"
-        print "Identity Enabled Distribution Control System" + co.ENDC
+        print "\tIdentity Enabled Distribution Control System" + co.ENDC
         print co.OKGREEN +"\nOptions:"
         if not core.loggedIn:
             print "(1) Log me in"

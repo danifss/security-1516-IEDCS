@@ -88,9 +88,7 @@ class ContentByUser(generics.ListCreateAPIView):
             int_id = int(pk)
             print "id:"+str(int_id)
             user = User.objects.get(userID=int_id)
-            # self.queryset = self.queryset.filter()
-            # self.queryset = self.queryset.filter(userID=user)
-            purchases = list(Purchase.objects.all().filter(user=user))
+            purchases = Purchase.objects.all().filter(user=user)
             resp = []
             for p in purchases:
                 resp += [p.content]
