@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../IEDCSPlayer/.idea/IEDCSPlayer.iml" filepath="$PROJECT_DIR$/../IEDCSPlayer/.idea/IEDCSPlayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../.idea/security2015-p2g5.iml" filepath="$PROJECT_DIR$/../.idea/security2015-p2g5.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/webinterface.iml" filepath="$PROJECT_DIR$/.idea/webinterface.iml" />
     </modules>
   </component>

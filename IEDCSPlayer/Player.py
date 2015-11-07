@@ -13,13 +13,14 @@ try:
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Welcome to IEDCS Player"
         print "\tIdentity Enabled Distribution Control System" + co.ENDC
         print co.OKGREEN +"\nOptions:"
-        if not core.loggedIn:
-            print "(1) Log me in"
-        else:
-            print "(1) Log me out"
-            print "(2) Show me my stuff"
-            print "(3) Play my stuff"
-            print "(4) Buy more stuff"
+        # if not core.loggedIn:
+        #     print "(1) Log me in"
+        # else:
+        #     print "(1) Log me out"
+        print "(1) My personal information"
+        print "(2) Show me my stuff"
+        print "(3) Play my stuff"
+        print "(4) Buy more stuff"
         print "(x) Say bye to my stuff"
         print "" + co.BOLD
         op = raw_input("Choice: ")
@@ -28,7 +29,8 @@ try:
 
         ### Handling options
         if op == '1':
-            core.logout() if core.loggedIn else core.login()
+            core.show_my_info()
+            # core.logout() if core.loggedIn else core.login()
         elif op == '2' and core.loggedIn:
             core.list_my_content()
         elif op == '3' and core.loggedIn:

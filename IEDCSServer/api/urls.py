@@ -7,7 +7,7 @@ urlpatterns = [
     url(r'^docs/', include('rest_framework_swagger.urls')),
 
     # ex: /api/user/login/?username=daniel?password=1234
-    url(r'^user/login/$', views.UserLogin.as_view()),
+    # url(r'^user/login/$', views.UserLogin.as_view()),
     # ex: /api/content/user/3
     url(r'^content/user/(?P<pk>[0-9]+)$', views.ContentByUser.as_view()),
 
