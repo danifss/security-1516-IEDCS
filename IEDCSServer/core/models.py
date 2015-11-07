@@ -31,13 +31,13 @@ class User(models.Model):
     createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return u'{0} - {1} - {2} - {3} - ({4}/{5}/{6})'.format( \
+        return u'ID {0} - {1} - ({2}/{3}/{4})'.format( \
             self.userID, \
-            self.password, \
-            self.username, self.email, \
+            self.username, \
             self.createdOn.day, \
             self.createdOn.month, \
-            self.createdOn.year)
+            self.createdOn.year
+        )
 
 
 ### DEVICE
@@ -61,21 +61,21 @@ class Content(models.Model):
     createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return u'{0} - ({1}/{2}/{3})'.format(self.name, \
-            self.createdOn.day, \
-            self.createdOn.month, \
-            self.createdOn.year)
+        return u'{0} - {1}'.format(
+                self.contentId, \
+                self.name, \
+            )
 
 
 ### PURCHASE
 class Purchase(models.Model):
     purchaseID = models.AutoField(primary_key=True)
     createdOn = models.DateTimeField(auto_now_add=True)
-    contentID = models.ForeignKey(Content)
+    content = models.ForeignKey(Content)
+    user = models.ForeignKey(User)
 
     def __unicode__(self):
-        return u'{0} - ({1}/{2}/{3})'.format(self.purchaseID, \
-            self.createdOn.day, \
-            self.createdOn.month, \
-            self.createdOn.year)
-
+        return u'contentID {0} - {1}'.format(
+                self.purchaseID, \
+                self.user, \
+            )

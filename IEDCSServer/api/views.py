@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics
 from core.models import User, Player, Device, Content, Purchase
-from core.serializers import UserSerializer
+from core.serializers import *
 from httplib import HTTPResponse
 from rest_framework.response import Response
 from rest_framework import status
@@ -56,3 +56,45 @@ class UserLogin(generics.ListCreateAPIView):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
                 # print e
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class ContentByUser(generics.ListCreateAPIView):
+    """<b>Content by User</b>"""
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets purchased content by given user id
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            print "id:"+str(int_id)
+            user = User.objects.get(userID=int_id)
+            # self.queryset = self.queryset.filter()
+            # self.queryset = self.queryset.filter(userID=user)
+            purchases = list(Purchase.objects.all().filter(user=user))
+            resp = []
+            for p in purchases:
+                resp += [p.content]
+            self.queryset = resp
+        except:
+            self.queryset = []
+        return self.list(request)

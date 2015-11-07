@@ -16,10 +16,12 @@ class Core(object):
         while(not self.loggedIn):
             # user mut be logged in
             self.login()
-            op = raw_input("\tExit?(y/N) ")
-            if op == 'y':
-                print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
-                sys.exit(0)
+            if not self.loggedIn:
+                op = raw_input("\tExit?(y/N) ")
+                if op == 'y':
+                    print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
+                    sys.exit(0)
+        ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
 
 
@@ -55,7 +57,16 @@ class Core(object):
 
     ### List content from logged user
     def list_my_content(self):
-        print "This is your content:"
+        try:
+            result = requests.get(api.GETCONTENTBYUSER+str(self.userID), verify=True)
+            if result.status_code == 200:
+                res = json.loads(result.text)
+
+        except requests.ConnectionError as e:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return;
+        print co.OKBLUE+"\tThis is your content:"+co.ENDC
+
 
 
     ### Play content bought by the logged client
