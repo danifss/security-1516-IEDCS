@@ -8,8 +8,6 @@ from .forms import registerUserForm
 from CryptoModule import *
 
 
-# def index(request):
-#     return HttpResponse("Hello, world. You're at the iedcs index.")
 
 def index(request):
     # fields = User._meta.get_fields()
