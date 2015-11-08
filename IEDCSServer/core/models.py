@@ -4,19 +4,6 @@ from django.db import models
 keySize = 1024
 
 
-### PLAYER
-class Player(models.Model):
-    playerID = models.AutoField(primary_key=True)
-    playerKey = models.CharField(max_length=keySize)
-    createdOn = models.DateTimeField(auto_now_add=True)
-
-    def __unicode__(self):
-        return u'{0} - ({1}/{2}/{3})'.format(self.playerID, \
-            self.createdOn.day, \
-            self.createdOn.month, \
-            self.createdOn.year)
-
-
 ### USER
 class User(models.Model):
     userID = models.AutoField(primary_key=True)
@@ -27,7 +14,7 @@ class User(models.Model):
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     fileKey = models.CharField(max_length=keySize, blank=True)
-    playerID = models.ForeignKey(Player)
+    # playerID = models.ForeignKey(Player)
     createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
@@ -38,6 +25,20 @@ class User(models.Model):
             self.createdOn.month, \
             self.createdOn.year
         )
+
+
+### PLAYER
+class Player(models.Model):
+    playerID = models.AutoField(primary_key=True)
+    playerKey = models.CharField(max_length=keySize)
+    createdOn = models.DateTimeField(auto_now_add=True)
+    userId = models.ForeignKey(User)
+
+    def __unicode__(self):
+        return u'{0} - ({1}/{2}/{3})'.format(self.playerID, \
+            self.createdOn.day, \
+            self.createdOn.month, \
+            self.createdOn.year)
 
 
 ### DEVICE

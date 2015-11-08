@@ -5,6 +5,8 @@ from django.template import RequestContext, loader
 from .models import User, Player
 from .forms import registerUserForm
 
+from CryptoModule import *
+
 
 # def index(request):
 #     return HttpResponse("Hello, world. You're at the iedcs index.")
@@ -41,12 +43,33 @@ def register(request):
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
+            # instantiate Crypto Module
+            crypt = CryptoModule()
+
+
+            # apply SHA256 to password
+            form.password = crypt.hashingSHA256(form.cleaned_data['password'])
+
+            # get email
+            email = form.cleaned_data['email']
+
+            # save form without commit changes
             form = form.save(commit=False)
 
             ### TODO generate userKey, playerKey and create player in database.
-            form.userKey = "aaaaaaaaaaaa"
+
+            # Generate pair of userKey
+            form.userKey = "ddddd"
 
             form.save()
+
+            # Create new Player with associated playerKey
+            playerKey = "swagger"
+            new_player = Player(playerKey=playerKey, userId=User.objects.get(email=email))
+            new_player.save()
+
+            print new_player.playerID
+            form.playerId = new_player.playerID
 
             return HttpResponseRedirect('../login/')
     else:
