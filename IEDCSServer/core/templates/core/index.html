@@ -1,10 +1,11 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>IEDCS</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" href="./css/styles.css">
-    <link rel="stylesheet" href="http://bootswatch.com/superhero/bootstrap.css">
+    <link rel="stylesheet" href="http://bootswatch.com/yeti/bootstrap.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -25,8 +26,8 @@
                 <li><a href="/iedcs/contact">Contact</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="">Register</a></li>
-                <li><a href="">Log in</a></li>
+                <li><a href="/iedcs/Account/register">Register</a></li>
+                <li><a href="/iedcs/Account/login">Log in</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="" title="Manage your account">Hello!</a></li>
@@ -36,11 +37,17 @@
 </div>
 
 <div class="container body-content">
-    <hr/>
-    <div class="jumbotron">
-        <h1>Welcome to Identity Enabled Distribution Control System</h1>
 
-        <p><a class="btn btn-primary btn-lg">Learn more</a></p>
+    <div class="jumbotron">
+
+        {% block content %}
+
+        <h1>Identity Enabled Distribution Control System</h1>
+        <img src="https://i.ytimg.com/vi/KsJRCZ7WLuA/maxresdefault.jpg" width="100%">
+
+        {% endblock %}
+
+        <!--<p><a class="btn btn-primary btn-lg" href="/iedcs/about">Learn more</a></p>-->
 
     </div>
     <footer>

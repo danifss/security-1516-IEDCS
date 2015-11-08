@@ -1,8 +1,9 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
 
-from .models import User
+from .models import User, Player
+from .forms import registerUserForm
 
 
 # def index(request):
@@ -36,8 +37,22 @@ def login(request):
 
 
 def register(request):
-    template = loader.get_template('core/Account/register.html')
-    return HttpResponse(template.render())
+    # template = loader.get_template('core/Account/register.html')
+    if request.method == 'POST':
+        form = registerUserForm(request.POST)
+        if form.is_valid():
+            form = form.save(commit=False)
+
+            ### TODO generate userKey, playerKey and create player in database.
+            form.userKey = "aaaaaaaaaaaa"
+
+            form.save()
+
+            return HttpResponseRedirect('../login/')
+    else:
+        form = registerUserForm()
+
+    return render(request, 'core/Account/register.html', {'form': form})
 
 
 def manage(request):
