@@ -9,7 +9,7 @@ Correr servidor:
 ##-------------------------------------------------------------------
 Criar uma app: (por exemplo api ou core do sistema)
     1 - python manage.py startapp nomeDaApp
-    2 - ir a settings.py dos ficheiros iniciais do django e adiocionar as
+    2 - ir a settings.py dos ficheiros iniciais do django e adicionar as
         INSTALLED_APPS no final 'nomeDaApp' :
             INSTALLED_APPS = (
                     ... ,
@@ -28,7 +28,7 @@ Depois de criar ou editar models.py: (da uma dada app)
 
 
 ##-------------------------------------------------------------------
-Criar um super utilizador:
+Criar um super utilizador (inicio da base de dados):
     1 - python manage.py createsuperuser
     2 - depois ele pede username email e password
 
@@ -45,7 +45,7 @@ Registar a nossa app no backend:
 
 
 ##-------------------------------------------------------------------
-Personalizar formularios etc no admin:
+Personalizar formularios etc no admin (apenas no backend):
     1 - ir a admin.py :
         from django.contrib import admin
         from .models import Question

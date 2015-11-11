@@ -11,7 +11,7 @@ class api:
     GETCONTENTBYUSER = serverUrl + "/api/content/user/"
 
 
-
+# color
 class co:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

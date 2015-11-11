@@ -14,7 +14,7 @@ class Core(object):
     loggedIn = False
 
     def __init__(self):
-        while(not self.loggedIn):
+        while not self.loggedIn:
             # user mut be logged in
             self.login()
             if not self.loggedIn:

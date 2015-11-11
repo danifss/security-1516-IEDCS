@@ -30,7 +30,7 @@ class CryptoModule(object):
     def cipherAES(self, key, data):
         # Encryption mode
         encryption_suite = AES.new(key, AES.MODE_CFB, 'This is an IV456')
-        # data = "A really secret message. Not for prying eyes."
+
         # encrypt
         cipher_text = encryption_suite.encrypt(data)
         return cipher_text
@@ -58,8 +58,8 @@ class CryptoModule(object):
 
 c = CryptoModule()
 
-# a = c.cipherAES("swagger", "isto e um espetaculo")
-# print c.decipherAES("swagger", a)
+a = c.cipherAES("swagger", "isto e um espetaculo")
+print c.decipherAES("swagger", a)
 
 # print c.rsaKeyPub
 # print c.rsaKeyPriv
