@@ -15,5 +15,7 @@ urlpatterns = [
     url(r'^Account/register/$', views.register, name='register'),
     # ex: /iedcs/Account/manage/
     url(r'^Account/manage/$', views.manage, name='manage'),
+    # ex: /iedcs/content/
+    url(r'^content/$', views.listContent, name='content'),
 
 ]

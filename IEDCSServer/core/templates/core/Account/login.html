@@ -2,6 +2,23 @@
 
 {% block content %}
 
-        <h1>Login Page</h1>
+        <h1>Login</h1>
+        <br>
+        <form class="form-horizontal" action="/iedcs/Account/login/" method="post">{% csrf_token %}
+            <fieldset>
+                <legend>User Login</legend>
+                <div class="form-group">
+                    <div class="col-lg-10">
+                        {{ form.as_ul }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-0">
+                        <button type="reset" class="btn btn-xs btn-default">Cancel</button>
+                        <button type="submit" class="btn btn-xs btn-primary">Submit</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
 
 {% endblock %}

@@ -58,7 +58,10 @@ class CryptoModule(object):
 
 c = CryptoModule()
 
+# a = c.cipherAES("swagger", "isto e um espetaculo")
+# print c.decipherAES("swagger", a)
+
 # print c.rsaKeyPub
 # print c.rsaKeyPriv
 
-print c.rsaEncrypt("ola")
+# print c.rsaEncrypt("ola")
