@@ -41,15 +41,15 @@ try:
 
 
         elif op == 'x':
-            print co.BOLD + co.HEADER + "Terminated by user! See you soon."
+            print co.BOLD + co.HEADER + "Terminated by user! See you soon."+co.ENDC
             sys.exit(0)
         else:
             print co.WARNING + "\nInvalid option, sorry!" + co.ENDC
 
 except KeyboardInterrupt:
-    print co.FAIL+"\n\nProgram interrupted by user. Bye!"
+    print co.FAIL+"\n\nProgram interrupted by user. Bye!"+co.ENDC
     sys.exit(1)
 except Exception as e:
-    print co.FAIL+"Oops, unexpected error!\n{0}".format(e)
+    print co.FAIL+"Oops, unexpected error!\n{0}".format(e)+co.ENDC
     sys.exit(2)
 

@@ -2,5 +2,7 @@ Django==1.8.5
 django-rest-swagger==0.3.4
 django-wpadmin==1.7.4
 djangorestframework==3.2.4
+pycrypto==2.6.1
 PyYAML==3.11
 requests==2.8.1
+wheel==0.24.0
