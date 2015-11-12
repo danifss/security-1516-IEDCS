@@ -13,10 +13,6 @@ import sys
 
 
 def index(request):
-    # fields = User._meta.get_fields()
-    # my_field = User.get #._meta.get_field('firstName')
-    # first_name = getattr(User, "firstName")
-    # last_name = getattr(User, "lastName")
     template = loader.get_template('core/index.html')
     loggedIn = False
     if 'username' in request.session and 'loggedIn' in request.session:
@@ -35,13 +31,17 @@ def index(request):
 
 
 def about(request):
+    if 'loggedIn' not in request.session:
+        request.session['loggedIn'] = False
     template = loader.get_template('core/about.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 
 
 def contact(request):
+    if 'loggedIn' not in request.session:
+        request.session['loggedIn'] = False
     template = loader.get_template('core/contact.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 
 
 def login(request):
@@ -80,7 +80,7 @@ def login(request):
     context = RequestContext(request, {
         'error_message' : msgError,
     })
-    return render(request, 'core/Account/login.html', {'form': form})
+    return render(request, 'core/Account/login.html', {'form': form, 'loggedIn' : request.session['loggedIn']})
 
 def authenticate(username, password):
     try:
@@ -100,6 +100,7 @@ def authenticate(username, password):
 
 
 def logout(request):
+    request.session.flush()
     template = loader.get_template('core/Account/logout.html')
     return HttpResponse(template.render())
 
@@ -158,11 +159,20 @@ def register(request):
 
 
 def manage(request):
+    if 'loggedIn' not in request.session:
+        request.session['loggedIn'] = False
     template = loader.get_template('core/Account/manage.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 
 
 def listContent(request):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False:
+        request.session['loggedIn'] = False
+        template = loader.get_template('core/index.html')
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+
+
+
     template = loader.get_template('core/content.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 

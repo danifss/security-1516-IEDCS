@@ -11,7 +11,6 @@ class registerUserForm(ModelForm):
     # first_name = forms.CharField(label="First Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'First Name'}),)
     # last_name = forms.CharField(label="Last Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Last Name'}),)
 
-
     class Meta:
         model = User
         fields = ['username', 'password', 'email', 'firstName', 'lastName']

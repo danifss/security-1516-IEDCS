@@ -22,20 +22,26 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
+                {% if loggedIn %}
                 <li><a href="/content">What we have</a></li>
+                {% endif %}
                 <li><a href="/about">About</a></li>
                 <li><a href="/contact">Contact</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                {% if loggedIn == False %}
+                {% if loggedIn %}
+                <li><a href="/Account/logout">Log out</a></li>
+                {% else %}
                 <li><a href="/Account/register">Register</a></li>
                 <li><a href="/Account/login">Log in</a></li>
-                {% else %}
-                <li><a href="/Account/logout">Log out</a></li>
                 {% endif %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
+                {% if loggedIn %}
                 <li><a href="/Account/manage" title="Manage your account">Hello {{ firstName }}</a></li>
+                {% else %}
+                <li><a href="#">Hello {{ firstName }}</a></li>
+                {% endif %}
             </ul>
         </div>
     </div>
