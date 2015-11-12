@@ -60,8 +60,8 @@ class Content(models.Model):
     contentId = models.AutoField(primary_key=True)
     name = models.CharField(max_length=150)
     createdOn = models.DateTimeField(auto_now_add=True)
-    restriction = models.CharField(max_length=150)
-    description = models.CharField(max_length=250)
+    restriction = models.CharField(max_length=150, default="World")
+    description = models.CharField(max_length=250, blank=True, default="Place description here")
 
     def __unicode__(self):
         return u'{0} - {1}'.format(

@@ -99,6 +99,11 @@ def authenticate(username, password):
     return True
 
 
+def logout(request):
+    template = loader.get_template('core/Account/logout.html')
+    return HttpResponse(template.render())
+
+
 @csrf_protect
 def register(request):
     # template = loader.get_template('core/Account/register.html')
