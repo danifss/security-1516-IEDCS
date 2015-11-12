@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
@@ -16,21 +17,21 @@ class CryptoModule(object):
     """
         RSA encrypt
     """
-    def rsaEncrypt(self, data):
-        rsaKey = RSA.generate(2048, Random.new().read)
-        self.rsaKeyPriv = rsaKey.has_private()
+    def rsaKeys(self, data):
+        rsaKey = RSA.generate(2048)
+
+        # self.rsaKeyPriv = rsaKey.has_private()
         # rsaKeyPub = rsaKey.publickey()
-        encrypted = rsaKey.encrypt(data, 32)
-        return encrypted
+        # encrypted = rsaKey.encrypt(data, 32)
+        # return encrypted
 
 
     """
         cypherAES method
     """
-    def cipherAES(self, key, data):
+    def cipherAES(self, key, vi, data):
         # Encryption mode
-        encryption_suite = AES.new(key, AES.MODE_CFB, 'This is an IV456')
-
+        encryption_suite = AES.new(key, AES.MODE_CFB, vi)
         # encrypt
         cipher_text = encryption_suite.encrypt(data)
         return cipher_text
@@ -39,9 +40,10 @@ class CryptoModule(object):
     """
         decypherAES method
     """
-    def decipherAES(self, key, data):
-        # Decryption
-        decryption_suite = AES.new(key, AES.MODE_CFB, 'This is an IV456')
+    def decipherAES(self, key, vi, data):
+        # Decryption mode
+        decryption_suite = AES.new(key, AES.MODE_CFB, vi)
+        # decrypt
         plain_text = decryption_suite.decrypt(data)
         return plain_text
 
@@ -56,12 +58,17 @@ class CryptoModule(object):
 
 
 
-c = CryptoModule()
 
-a = c.cipherAES("swagger", "isto e um espetaculo")
-print c.decipherAES("swagger", a)
+f = CryptoModule()
 
-# print c.rsaKeyPub
-# print c.rsaKeyPriv
+### Testing RSA
+f.rsaKeys("a")
 
-# print c.rsaEncrypt("ola")
+
+
+### Testing AES
+# vi = "jugujugleswagger"
+# c = f.cipherAES("_swaggerswagger_", vi, "isto e um espetaculo")
+# print "Cifra: "+c
+# p = f.decipherAES("_swaggerswagger_", vi, c)
+# print "Plain text: "+p
