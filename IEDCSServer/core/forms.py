@@ -5,16 +5,17 @@ from .models import User
 
 class registerUserForm(ModelForm):
     # password = forms.CharField(label="Password", widget=forms.PasswordInput, help_text="Enter password")
-    username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
-    password = forms.CharField(widget=forms.PasswordInput, required=True,)
-    email = forms.EmailField(label="Email", max_length=150, required=True, widget=forms.TextInput(attrs={'placeholder': 'Email'}),)
-    first_name = forms.CharField(label="First Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'First Name'}),)
-    last_name = forms.CharField(label="Last Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Last Name'}),)
+    # username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
+    # password = forms.CharField(widget=forms.PasswordInput, required=True,)
+    # email = forms.EmailField(label="Email", max_length=150, required=True, widget=forms.TextInput(attrs={'placeholder': 'Email'}),)
+    # first_name = forms.CharField(label="First Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'First Name'}),)
+    # last_name = forms.CharField(label="Last Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Last Name'}),)
 
 
     class Meta:
         model = User
-        fields = []
+        fields = ['username', 'password', 'email', 'firstName', 'lastName']
+        widgets = { 'password' : forms.PasswordInput() }
 
 
 
