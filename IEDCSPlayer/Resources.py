@@ -6,7 +6,7 @@ serverPort = "8000"
 serverUrl = "http://" + serverIp + ":" + serverPort
 
 class api:
-    HOMEPAGE = serverUrl + "/iedcs/"
+    HOMEPAGE = serverUrl + "/"
     LOGIN = serverUrl + "/api/user/login/"
     GETCONTENTBYUSER = serverUrl + "/api/content/user/"
 

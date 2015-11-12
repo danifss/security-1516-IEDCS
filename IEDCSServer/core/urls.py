@@ -1,22 +1,24 @@
 from django.conf.urls import url
-import django
 
 from . import views
 
+
 urlpatterns = [
-    # ex: /iedcs/
+    # ex: /
     url(r'^$', views.index, name='index'),
-    # ex: /iedcs/about/
+    # ex: /about/
     url(r'^about/$', views.about, name='about'),
-    # ex: /iedcs/contact/
+    # ex: /contact/
     url(r'^contact/$', views.contact, name='contact'),
-    # ex: /iedcs/Account/login/
+    # ex: /Account/login/
     url(r'^Account/login/$', views.login, name='login'),
-    # ex: /iedcs/Account/login/
+    # ex: /Account/login/
+    url(r'^Account/logout/$', views.logout, name='logout'),
+    # ex: /Account/register/
     url(r'^Account/register/$', views.register, name='register'),
-    # ex: /iedcs/Account/manage/
+    # ex: /Account/manage/
     url(r'^Account/manage/$', views.manage, name='manage'),
-    # ex: /iedcs/content/
+    # ex: /content/
     url(r'^content/$', views.listContent, name='content'),
 
 ]

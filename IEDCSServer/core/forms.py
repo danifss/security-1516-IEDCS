@@ -18,19 +18,27 @@ class registerUserForm(ModelForm):
         widgets = { 'password' : forms.PasswordInput() }
 
 
+class loginForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
 
-class AuthenticationForm(ModelForm):
-    """
-    Base class for authenticating users. Extend this to get a form that accepts
-    username/password logins.
-    """
-    # username = forms.CharField(label="Username", max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
-    # password = forms.CharField(label="Password", widget=forms.PasswordInput)
+    # class Meta:
+    #     model = User
+    #     fields = ['username', 'password']
+    #     widgets = { 'password' : forms.PasswordInput() }
 
-    class Meta:
-        model = User
-        fields = ['username', 'password']
-        widgets = { 'password' : forms.PasswordInput() }
+# class AuthenticationForm(ModelForm):
+#     """
+#     Base class for authenticating users. Extend this to get a form that accepts
+#     username/password logins.
+#     """
+#     # username = forms.CharField(label="Username", max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Username'}))
+#     # password = forms.CharField(label="Password", widget=forms.PasswordInput)
+#
+#     class Meta:
+#         model = User
+#         fields = ['username', 'password']
+#         widgets = { 'password' : forms.PasswordInput() }
 
     # error_messages = {
     #     'invalid_login': "Please enter a correct %(username)s and password. "

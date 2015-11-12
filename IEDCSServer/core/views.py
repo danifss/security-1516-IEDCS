@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.template import RequestContext, loader
 
 from .models import User, Player
-from .forms import registerUserForm, AuthenticationForm
+from .forms import registerUserForm, loginForm
 
 from CryptoModule import *
 
@@ -18,10 +18,20 @@ def index(request):
     # first_name = getattr(User, "firstName")
     # last_name = getattr(User, "lastName")
     template = loader.get_template('core/index.html')
-    # context = RequestContext(request, {
-    #     'first_name' : my_field,
-    # })
-    return HttpResponse(template.render())
+    loggedIn = False
+    if 'username' in request.session and 'loggedIn' in request.session:
+        firstName = request.session['username']
+        loggedIn = request.session['loggedIn']
+    else:
+        firstName = "Visitante"
+        request.session['username'] = firstName
+        request.session['loggedIn'] = False
+
+    context = RequestContext(request, {
+        'firstName' : firstName,
+        'loggedIn' : loggedIn,
+    })
+    return HttpResponse(template.render(context))
 
 
 def about(request):
@@ -35,35 +45,41 @@ def contact(request):
 
 
 def login(request):
-    # template = loader.get_template('core/Account/login.html')
     msgError = ''
     if request.method == 'POST':
-        form = AuthenticationForm(request.POST)
-        if form.is_valid():
-            username = str(form.cleaned_data['username'])
-            password = str(form.cleaned_data['password'])
+        form = loginForm(request.POST)
+        if form.is_valid:
+            username = str(request.POST['username']) # str(form.cleaned_data['username'])
+            password = str(request.POST['password']) # str(form.cleaned_data['password'])
 
             user = authenticate(username=username, password=password)
             if user is not None:
-                # the password verified for the user
+                # get user and set session
                 if user:
-                    print("User is valid, active and authenticated")
-                    return HttpResponseRedirect('../')
-
+                    try:
+                        utilizador = User.objects.get(username=username)
+                        request.session['username'] = str(utilizador.firstName)
+                        request.session['loggedIn'] = True
+                    except Exception as e:
+                        print "Some error acurred getting user to logging in.", e
+                        request.session.flush()
+                        return HttpResponseRedirect('/Account/login/')
+                    return HttpResponseRedirect('/')
                 else:
-                    print("The User is not valid!")
+                    print "The User is not valid!"
+                    request.session.flush()
                     msgError ='The User is not valid!'
             else:
                 # the authentication system was unable to verify the username and password
-                print("The username and password were incorrect.")
+                print "The username and password were incorrect."
+                request.session.flush()
                 msgError ='The username and password were incorrect.'
     else:
-        form = AuthenticationForm()
+        form = loginForm()
 
     context = RequestContext(request, {
         'error_message' : msgError,
     })
-
     return render(request, 'core/Account/login.html', {'form': form})
 
 def authenticate(username, password):
