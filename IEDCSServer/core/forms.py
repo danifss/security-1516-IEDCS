@@ -30,6 +30,7 @@ class AuthenticationForm(ModelForm):
     class Meta:
         model = User
         fields = ['username', 'password']
+        widgets = { 'password' : forms.PasswordInput() }
 
     # error_messages = {
     #     'invalid_login': "Please enter a correct %(username)s and password. "

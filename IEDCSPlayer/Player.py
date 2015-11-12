@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from Resources import *
 from Core import *
 import sys
