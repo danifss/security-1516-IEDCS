@@ -4,6 +4,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 import Crypto.Random as Random
+import hashlib
 
 
 
@@ -52,18 +53,25 @@ class CryptoModule(object):
         hashing method
     """
     def hashingSHA256(self, data):
-        h = SHA256.new()
-        h.update(data)
-        return h.digest()
+        d = str.encode(data)
+        type(d) # insures its bytes
+        # apply sintese
+        hash_object = hashlib.sha256(d)
+        hex_dig = hash_object.hexdigest()
+
+        return hex_dig
 
 
 
 
-f = CryptoModule()
+# f = CryptoModule()
 
 ### Testing RSA
-f.rsaKeys("a")
+# f.rsaKeys("a")
 
+
+### Testing SHA256
+# print f.hashingSHA256("ola mundo")
 
 ### Testing AES
 vi = "jugujugleswagger"
