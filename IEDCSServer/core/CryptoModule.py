@@ -23,7 +23,7 @@ class CryptoModule(object):
         # self.rsaKeyPriv = rsaKey.has_private()
         # rsaKeyPub = rsaKey.publickey()
         # encrypted = rsaKey.encrypt(data, 32)
-        # return encrypted
+        #return rsaKey
 
 
     """
@@ -65,10 +65,10 @@ f = CryptoModule()
 f.rsaKeys("a")
 
 
-
 ### Testing AES
-# vi = "jugujugleswagger"
-# c = f.cipherAES("_swaggerswagger_", vi, "isto e um espetaculo")
-# print "Cifra: "+c
-# p = f.decipherAES("_swaggerswagger_", vi, c)
-# print "Plain text: "+p
+vi = "jugujugleswagger"
+#    cipherAES(key, vi, data)
+c = f.cipherAES("_swaggerswagger_", vi, "isto e um espetaculo")
+print "Cifra: " + c
+p = f.decipherAES("_swaggerswagger_", vi, c)
+print "Plain text: " + p
