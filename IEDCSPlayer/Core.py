@@ -34,6 +34,7 @@ class Core(object):
         passwd = raw_input("\tPassword: ")
         print co.ENDC
         try:
+            ### TODO send also device id in order to server check if the player is associated with this device
             result = requests.get(api.LOGIN+"?username="+username+"&password="+passwd, verify=True)
         except requests.ConnectionError as e:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
