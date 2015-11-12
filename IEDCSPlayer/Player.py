@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from Resources import *
 from Core import *
 import sys
@@ -17,10 +18,10 @@ try:
             print "(1) Log me in"
         else:
             print "(1) Log me out"
-            print "(1) My personal information"
-            print "(2) Show me my stuff"
-            print "(3) Play my stuff"
-            print "(4) Buy more stuff"
+            print "(2) My personal information"
+            print "(3) Show me my stuff"
+            print "(4) Play my stuff"
+            print "(5) Buy more stuff"
         print "(x) Say bye to my stuff"
         print "" + co.BOLD
         op = raw_input("Choice: ")
@@ -28,14 +29,16 @@ try:
 
 
         ### Handling options
-        if op == '1':
+        if op == '1': # login/logout
             # core.show_my_info()
             core.logout() if core.loggedIn else core.login()
-        elif op == '2' and core.loggedIn:
+        elif op == '2' and core.loggedIn: # personal info
+            core.show_my_info()
+        elif op == '3' and core.loggedIn: # show my purchases
             core.list_my_content()
-        elif op == '3' and core.loggedIn:
-            core.show_my_content()
-        elif op == '4' and core.loggedIn:
+        elif op == '4' and core.loggedIn: # play some content
+            core.play_my_content()
+        elif op == '5' and core.loggedIn: # go to webpage
             browser(api.HOMEPAGE)
 
 

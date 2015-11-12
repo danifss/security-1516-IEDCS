@@ -1523,6 +1523,9 @@ class ForeignObject(RelatedField):
         except AttributeError:
             return []
 
+        if not self.foreign_related_fields:
+            return []
+
         has_unique_field = any(rel_field.unique
             for rel_field in self.foreign_related_fields)
         if not has_unique_field and len(self.foreign_related_fields) > 1:
@@ -1622,7 +1625,7 @@ class ForeignObject(RelatedField):
 
     @property
     def foreign_related_fields(self):
-        return tuple(rhs_field for lhs_field, rhs_field in self.related_fields)
+        return tuple(rhs_field for lhs_field, rhs_field in self.related_fields if rhs_field)
 
     def get_local_related_value(self, instance):
         return self.get_instance_value_for_fields(instance, self.local_related_fields)
@@ -2537,7 +2540,7 @@ class ManyToManyField(RelatedField):
             # related_name with one generated from the m2m field name. Django
             # still uses backwards relations internally and we need to avoid
             # clashes between multiple m2m fields with related_name == '+'.
-            self.rel.related_name = "_%s_+" % name
+            self.rel.related_name = "_%s_%s_+" % (cls.__name__.lower(), name)
 
         super(ManyToManyField, self).contribute_to_class(cls, name, **kwargs)
 

@@ -1,4 +1,5 @@
 from Resources import *
+from CryptoModule import *
 import sys
 import requests
 import json
@@ -7,6 +8,7 @@ import json
 class Core(object):
     userID = "1"
     userName = "daniel"
+    password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
     email = "daniel.silva@ua.pt"
     firstName = "Daniel"
     lastName = "Silva"
@@ -35,7 +37,9 @@ class Core(object):
         print co.ENDC
         try:
             ### TODO send also device id in order to server check if the player is associated with this device
-            result = requests.get(api.LOGIN+"?username="+username+"&password="+passwd, verify=True)
+            crypt = CryptoModule()
+            hash_pass = crypt.hashingSHA256(passwd)
+            result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
         except requests.ConnectionError as e:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return;
@@ -75,13 +79,13 @@ class Core(object):
 
 
     ### Play content bought by the logged client
-    def show_my_content(self):
+    def play_my_content(self):
         print "Showing content"
 
 
     ### Show personal information
     def show_my_info(self):
-        print co.OKBLUE+co.BOLD+"Username  : "+co.ENDC+ \
+        print co.HEADER+co.BOLD+"Username  : "+co.ENDC+ \
               co.OKGREEN+self.userName+co.ENDC
         print co.HEADER+co.BOLD+"Email     : "+co.ENDC+ \
               co.OKGREEN+self.email+co.ENDC

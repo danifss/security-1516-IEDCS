@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_protect
 from django.template import RequestContext, loader
-from django.contrib.auth.decorators import login_required
 
 from .models import User, Player
-from .forms import registerUserForm, AuthenticationForm
+from .forms import registerUserForm, loginForm
 
 from CryptoModule import *
 
+import sys
 
 
 def index(request):
@@ -16,10 +18,20 @@ def index(request):
     # first_name = getattr(User, "firstName")
     # last_name = getattr(User, "lastName")
     template = loader.get_template('core/index.html')
-    # context = RequestContext(request, {
-    #     'first_name' : my_field,
-    # })
-    return HttpResponse(template.render())
+    loggedIn = False
+    if 'username' in request.session and 'loggedIn' in request.session:
+        firstName = request.session['username']
+        loggedIn = request.session['loggedIn']
+    else:
+        firstName = "Visitante"
+        request.session['username'] = firstName
+        request.session['loggedIn'] = False
+
+    context = RequestContext(request, {
+        'firstName' : firstName,
+        'loggedIn' : loggedIn,
+    })
+    return HttpResponse(template.render(context))
 
 
 def about(request):
@@ -33,26 +45,61 @@ def contact(request):
 
 
 def login(request):
-    # template = loader.get_template('core/Account/login.html')
+    msgError = ''
     if request.method == 'POST':
-        form = AuthenticationForm(request.POST)
+        form = loginForm(request.POST)
+        if form.is_valid:
+            username = str(request.POST['username']) # str(form.cleaned_data['username'])
+            password = str(request.POST['password']) # str(form.cleaned_data['password'])
 
-        user = authenticate(username='john', password='secret')
-        if user is not None:
-            # the password verified for the user
-            if user.is_active:
-                print("User is valid, active and authenticated")
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                # get user and set session
+                if user:
+                    try:
+                        utilizador = User.objects.get(username=username)
+                        request.session['username'] = str(utilizador.firstName)
+                        request.session['loggedIn'] = True
+                    except Exception as e:
+                        print "Some error acurred getting user to logging in.", e
+                        request.session.flush()
+                        return HttpResponseRedirect('/Account/login/')
+                    return HttpResponseRedirect('/')
+                else:
+                    print "The User is not valid!"
+                    request.session.flush()
+                    msgError ='The User is not valid!'
             else:
-                print("The password is valid, but the account has been disabled!")
-        else:
-            # the authentication system was unable to verify the username and password
-            print("The username and password were incorrect.")
+                # the authentication system was unable to verify the username and password
+                print "The username and password were incorrect."
+                request.session.flush()
+                msgError ='The username and password were incorrect.'
     else:
-        form = AuthenticationForm()
+        form = loginForm()
 
+    context = RequestContext(request, {
+        'error_message' : msgError,
+    })
     return render(request, 'core/Account/login.html', {'form': form})
 
+def authenticate(username, password):
+    try:
+        # validate if username exists
+        user = User.objects.get(username=username)
+    except:
+        print "Error getting user by username!"
+        return None
+    # validate password
+    crypt = CryptoModule()
+    sha_pass = crypt.hashingSHA256(password)
+    bd_pass = user.password
+    if bd_pass != sha_pass:
+        return False
+    # all good
+    return True
 
+
+@csrf_protect
 def register(request):
     # template = loader.get_template('core/Account/register.html')
     if request.method == 'POST':
@@ -61,31 +108,42 @@ def register(request):
             # instantiate Crypto Module
             crypt = CryptoModule()
 
-            print form.cleaned_data
-
-            # apply SHA256 to password
-            form.password = crypt.hashingSHA256(form.cleaned_data['password'])
-
-            # get email
-            email = form.cleaned_data['email']
+            ### Get form data
+            email = str(form.cleaned_data['email'])
+            password = str(form.cleaned_data['password'])
+            username = str(form.cleaned_data['username'])
+            firstName = str(form.cleaned_data['lastName'])
+            lastName = str(form.cleaned_data['firstName'])
 
             # save form without commit changes
             form = form.save(commit=False)
 
-            ### TODO generate userKey, playerKey and create player in database.
+            # apply SHA256 to password
+            form.password = crypt.hashingSHA256(password)
 
-            # Generate pair of userKey
-            form.userKey = "ddddd"
 
+            # Generate symmetric userKey with AES from user details
+            uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
+            userkeyString = crypt.hashingSHA256(uk) ### TODO OR NOT!!! Change this to something ciphered with AES, a key and vi
+            form.userKey = userkeyString
+
+            # effectively registers new user in db
             form.save()
 
             # Create new Player with associated playerKey
-            playerKey = "swagger"
-            new_player = Player(playerKey=playerKey, userId=User.objects.get(email=email))
+            pk = email[:len(email)/2]+password[len(password)/2:]+username
+            playerKey = crypt.hashingSHA256(pk) # TODO change to pair of keys
+            try:
+                new_player = Player(playerKey=playerKey, userId=User.objects.get(username=username))
+            except:
+                print "Error getting the new register user."
+                return HttpResponseRedirect('../register/')
+
+            # Save new Player in DB
             new_player.save()
 
-            print new_player.playerID
-            form.playerId = new_player.playerID
+            ### TODO create Player file to download
+            # maybe this is only done when the user makes download of program from webpage
 
             return HttpResponseRedirect('../login/')
     else:
@@ -94,7 +152,6 @@ def register(request):
     return render(request, 'core/Account/register.html', {'form': form})
 
 
-@login_required
 def manage(request):
     template = loader.get_template('core/Account/manage.html')
     return HttpResponse(template.render())
