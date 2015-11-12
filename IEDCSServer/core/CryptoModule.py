@@ -35,44 +35,50 @@ class CryptoModule(object):
     def publicRsa(self, pairKey):
 
         try:
-            pairKey.can_encrypt()
-        except Exception:
-            print "Key not valid"
-
-        return pairKey.publickey()
+            # Construct a new key carrying only the public information.
+            return pairKey.publickey()
+        except Exception as e:
+            print "Key not valid: ", e
+            return None
 
     """
         RSA public and private
     """
     #
-    def pairRsa(self, pairKey):
+    def rsaExport(self, pairKey, data = None):
 
         try:
-            pairKey.can_encrypt()
-            # check if is pair and not only public key
-            pairKey.has_private()
-        except Exception:
-            print "Key not valid"
-            return 1
+            if not pairKey.has_private() :
+                raise Exception("has no private key")
 
-        # Construct a new key carrying only the public information.
-        # public = rsaKey.publickey()
-        # Retrives data of the public key, format PEM
-        # pub = public.exportKey()
+            # # Retrives data of the public key, format PEM
+            # pub = pairKey.publickey().exportKey('PEM')
 
-        # Retrives data of the public key, format PEM
-        pub = pairKey.publickey().exportKey('PEM')
-        # Retrives data of the private key, format PEM
-        priv = pairKey.exportKey('PEM')
+            # Retrives data of the private key, format PEM
+            return pairKey.exportKey('PEM',data)
+
+        except Exception as e:
+            print "Key not valid: ", e
+            return None, None
 
         # # cifrar directamente com a chave publica, e decifrar com a chave rsa
-        # x = pairKey.publickey()
-        # encry = x.encrypt('encripta tudo',32)
-        # dec = pairKey.decrypt(encry)
-        # print encry
-        # print dec
+        # pubkey = pairKey.publickey()
+        # encrypt = pubkey.encrypt('encripta tudo',32)
+        # decrypt = pairKey.decrypt(encrypt)
 
-        return pub, priv
+
+    """
+        RSA import
+    """
+    def rsaImport(self, key, data = None):
+
+        try:
+            pairKey = RSA.importKey(key, data)
+            return pairKey
+        except Exception as e:
+            print "Error importing: ", e
+            return None
+
 
     """
         RSA ciphering
@@ -80,13 +86,15 @@ class CryptoModule(object):
     # receives rsa key, returns ciphered text
     def rsaCipher(self, pairKey, data):
 
-        # import from file
-        # pairKey = RSA.importKey(key)
-        cipher = PKCS1_OAEP.new(pairKey)
-        ciphertext = cipher.encrypt(data)
+        try:
+            cipher = PKCS1_OAEP.new(pairKey)
+            ciphertext = cipher.encrypt(data)
+            # base64 turns the symbols of the ciphered text to "readable letters"
+            return ciphertext.encode('base64')
 
-        # base64 turns the symbols of the ciphered text to "readable letters"
-        return ciphertext.encode('base64')
+        except Exception as e:
+            print "Key not valid: ", e
+            return None
 
     """
         RSA DEciphering
@@ -94,16 +102,19 @@ class CryptoModule(object):
     def rsaDecipher(self, pairKey, data):
 
         try:
+            # to force a verification if pairKey is a rsa key
             pairKey.can_encrypt()
-            # check if is pair and not only public key
-            pairKey.has_private()
-        except Exception:
-            print "Key not valid"
-            return 1
+        except Exception as e:
+            print "Key not valid: ", e
+            return None
 
-        cipher = PKCS1_OAEP.new(pairKey)
-        # if ciphertext was produced with base64, reverve using b64decode
-        return cipher.decrypt(b64decode(data))
+        try:
+            cipher = PKCS1_OAEP.new(pairKey)
+            # if ciphertext was produced with base64, reverve using b64decode
+            return cipher.decrypt(b64decode(data))
+        except Exception as e:
+            print "Incorrect key: ", e
+            return None
 
 
     """
@@ -114,7 +125,6 @@ class CryptoModule(object):
         encryption_suite = AES.new(key, AES.MODE_CFB, vi)
         # encrypt
         cipher_text = encryption_suite.encrypt(data)
-
 
         return cipher_text
 
@@ -148,17 +158,17 @@ f = CryptoModule()
 
 ### Testing RSA
 key = f.generateRsa()
+pubkey = f.publicRsa(key)
+privkey = f.rsaExport(key, 'xixa')
+nkey = f.rsaImport(privkey, 'xixa')
 
+text = 'abcdefgh'
+hash = SHA256.new(text).digest()
+signature = key.sign(hash,'')
 
-data = 'bamos a esto'
-cifrado = f.rsaCipher(key,data)
-print cifrado
+hash2 = SHA256.new(text).digest()
+print pubkey.verify(hash2, signature)
 
-key2 = f.generateRsa()
-
-wrongkey='dsad'
-clear = f.rsaDecipher(wrongkey, cifrado)
-print clear
 
 ### Testing SHA256
 # print f.hashingSHA256("ola mundo")
