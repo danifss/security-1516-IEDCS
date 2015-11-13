@@ -46,7 +46,8 @@ class Device(models.Model):
     deviceID = models.AutoField(primary_key=True)
     deviceKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
-    player = models.ManyToManyField(Player) # ManyToMany relation
+    player = models.ForeignKey(Player)
+    # player = models.ManyToManyField(Player) # ManyToMany relation
     deviceHash = models.CharField(max_length=keySize)
 
     def __unicode__(self):

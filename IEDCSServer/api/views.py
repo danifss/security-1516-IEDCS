@@ -142,6 +142,7 @@ class UserDevice(generics.ListCreateAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return self.list(request)
 
+
 class UserDeviceCreate(generics.ListCreateAPIView):
     """<b>Creates new Device</b>"""
     queryset = Device.objects.all()
@@ -199,21 +200,18 @@ class UserDeviceCreate(generics.ListCreateAPIView):
         if 'hash' in request.data and 'userID' in request.data and 'deviceKey' in request.data:
             try:
                 deviceHash = request.data['hash']
-                # print deviceHash
                 userID = int(request.data['userID'])
-                # print userID
                 user = User.objects.get(userID=userID)
-                print user
-                player = Player.objects.all().filter(userID=user.userID)
-                print player
+                player = Player.objects.get(userID=user.userID)
                 deviceKey = request.data['deviceKey']
-                # print deviceKey
-
-                # new_device = Device(deviceHash=deviceHash, player=player, deviceKey=deviceKey)
-                # new_device.save()
+                # create Device and save it
+                new_device = Device(deviceKey=deviceKey, player=player, deviceHash=deviceHash)
+                new_device.save()
                 return Response(status=status.HTTP_200_OK)
             except Exception as e:
                 print "Error creating new Device.", e
                 Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
