@@ -38,7 +38,6 @@ class ContentByUser(generics.ListCreateAPIView):
         """
         try:
             int_id = int(pk)
-            print "id:"+str(int_id)
             user = User.objects.get(userID=int_id)
             purchases = Purchase.objects.all().filter(user=user)
             resp = []

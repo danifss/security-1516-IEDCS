@@ -37,10 +37,15 @@ try:
         elif op == '3' and core.loggedIn: # show my purchases
             core.list_my_content()
         elif op == '4' and core.loggedIn: # play some content
-            core.play_my_content()
+            print co.OKGREEN+co.BOLD
+            opt = raw_input("\tWhat do you wanna watch? "+co.ENDC)
+            try:
+                int_opt = int(opt)
+                core.play_my_content(int_opt)
+            except Exception as e:
+                print co.FAIL+"Invalid option, sorry!"
         elif op == '5' and core.loggedIn: # go to webpage
             browser(api.HOMEPAGE)
-
 
 
         elif op == 'x':
