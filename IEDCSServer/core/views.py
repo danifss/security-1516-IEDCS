@@ -132,8 +132,9 @@ def register(request):
 
 
             # Generate symmetric userKey with AES from user details
-            uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
-            userkeyString = crypt.hashingSHA256(uk) ### TODO OR NOT!!! Change this to something ciphered with AES, a key and vi
+            # uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
+            uk = email+username+lastName+password+firstName
+            userkeyString = crypt.hashingSHA256(uk) ### TODO! Change this to something ciphered with AES, a key and vi
             form.userKey = userkeyString
 
             # effectively registers new user in db
