@@ -11,21 +11,12 @@ from base64 import b64decode
 
 class CryptoModule(object):
 
-    def __init__(self):
-        self.rsaKeyPriv = ""
-        self.rsaKeyPub = ""
-        # cypher_text = ""
-        # plain_text = ""
-
 
     """
         RSA generate
     """
     # returns rsa key object
     def generateRsa(self):
-
-        pairKey = RSA.generate(2048)
-
         return pairKey
 
     """
@@ -42,7 +33,7 @@ class CryptoModule(object):
             return None
 
     """
-        RSA public and private
+        RSA export
     """
     #
     def rsaExport(self, pairKey, data = None):
@@ -125,9 +116,7 @@ class CryptoModule(object):
         encryption_suite = AES.new(key, AES.MODE_CFB, vi)
         # encrypt
         cipher_text = encryption_suite.encrypt(data)
-
         return cipher_text
-
 
     """
         decypherAES method
