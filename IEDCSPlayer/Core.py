@@ -40,9 +40,9 @@ class Core(object):
             crypt = CryptoModule()
             hash_pass = crypt.hashingSHA256(passwd)
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-        except requests.ConnectionError as e:
+        except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return;
+            return
         if result.status_code == 200:
             res = json.loads(result.text)
             self.username = username
@@ -79,14 +79,13 @@ class Core(object):
                 else:
                     print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
 
-        except requests.ConnectionError as e:
+        except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return;
-
+            return
 
 
     ### Play content bought by the logged client
-    def play_my_content(self):
+    def play_my_content(self, contentID):
         print "Showing content"
 
 

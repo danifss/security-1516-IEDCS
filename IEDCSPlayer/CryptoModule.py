@@ -147,12 +147,13 @@ class CryptoModule(object):
         return hex_dig
 
 
-f = CryptoModule()
 
+
+# f = CryptoModule()
 
 ### Testing RSA
 
-key = f.generateRsa()
+# key = f.generateRsa()
 # pubkey = f.publicRsa(key)
 # privkey = f.rsaExport(key, 'xixa')
 # nkey = f.rsaImport(privkey, 'xixa')

@@ -10,7 +10,7 @@ import socket
 def hwFingerprint():
 
     if os.geteuid() > 0:
-        print("ERROR: Must be root to use")
+        # print("ERROR: Must be root to use")
         return None
 
     # us, gets always from /dev/sda
