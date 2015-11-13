@@ -1,9 +1,9 @@
 import sys
 import fcntl
 import struct
-
 import os
 
+# adapted from http://stackoverflow.com/questions/4193514/how-to-get-hard-disk-serial-number-using-python
 
 def getHddId():
 
@@ -11,6 +11,7 @@ def getHddId():
         print("ERROR: Must be root to use")
         sys.exit(1)
 
+    # us, gets always from /dev/sda
     with open("/dev/sda", "rb") as fd:
         # tediously derived from the monster struct defined in <hdreg.h>
         # see comment at end of file to verify

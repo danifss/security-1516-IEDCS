@@ -152,16 +152,16 @@ f = CryptoModule()
 
 ### Testing RSA
 key = f.generateRsa()
-pubkey = f.publicRsa(key)
-privkey = f.rsaExport(key, 'xixa')
-nkey = f.rsaImport(privkey, 'xixa')
-
-text = 'abcdefgh'
-hash = SHA256.new(text).digest()
-signature = key.sign(hash,'')
-
-hash2 = SHA256.new(text).digest()
-print pubkey.verify(hash2, signature)
+# pubkey = f.publicRsa(key)
+# privkey = f.rsaExport(key, 'xixa')
+# nkey = f.rsaImport(privkey, 'xixa')
+#
+# text = 'abcdefgh'
+# hash = SHA256.new(text).digest()
+# signature = key.sign(hash,'')
+#
+# hash2 = SHA256.new(text).digest()
+# print pubkey.verify(hash2, signature)
 
 
 ### Testing SHA256
