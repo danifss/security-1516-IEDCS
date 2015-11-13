@@ -134,7 +134,7 @@ def register(request):
             # Generate symmetric userKey with AES from user details
             # uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
             uk = email+username+lastName+password+firstName
-            userkeyString = crypt.hashingSHA256(uk) ### TODO! Change this to something ciphered with AES, a key and vi
+            userkeyString = crypt.hashingSHA256(uk) ### TODO! Change this in some way ciphered with AES, a key and vi
             form.userKey = userkeyString
 
             # effectively registers new user in db
@@ -144,7 +144,7 @@ def register(request):
             pk = email[:len(email)/2]+password[len(password)/2:]+username
             playerKey = crypt.hashingSHA256(pk) # TODO change to pair of keys
             try:
-                new_player = Player(playerKey=playerKey, userId=User.objects.get(username=username))
+                new_player = Player(playerKey=playerKey, userID=User.objects.get(username=username))
             except:
                 print "Error getting the new register user."
                 return HttpResponseRedirect('../register/')
