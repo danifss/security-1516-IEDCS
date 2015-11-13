@@ -78,6 +78,7 @@ def login(request):
     else:
         form = loginForm()
 
+    request.session['loggedIn'] = False
     context = RequestContext(request, {
         'error_message' : msgError,
     })
@@ -214,7 +215,6 @@ def buyContent(request, pk=None):
         content = Content.objects.get(contentID=pk)
         print content.contentID
         new_purchase = Purchase(content=content, user=user)
-        # print new_purchase
         new_purchase.save()
         result = True
         context = RequestContext(request, {
