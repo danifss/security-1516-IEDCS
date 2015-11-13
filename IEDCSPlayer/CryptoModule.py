@@ -7,7 +7,7 @@ import Crypto.Random as Random
 import hashlib
 from base64 import b64decode
 
-from hd import *
+from Fingerprint import *
 
 
 class CryptoModule(object):
@@ -21,7 +21,7 @@ class CryptoModule(object):
 
         pairKey = RSA.generate(2048)
 
-        print getHddId()
+        print hwFingerprint()
         return pairKey
 
     """
@@ -147,11 +147,12 @@ class CryptoModule(object):
         return hex_dig
 
 
-# f = CryptoModule()
+f = CryptoModule()
 
 
 ### Testing RSA
-# key = f.generateRsa()
+
+key = f.generateRsa()
 # pubkey = f.publicRsa(key)
 # privkey = f.rsaExport(key, 'xixa')
 # nkey = f.rsaImport(privkey, 'xixa')

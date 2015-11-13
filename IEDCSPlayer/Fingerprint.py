@@ -2,14 +2,16 @@ import sys
 import fcntl
 import struct
 import os
+import socket
 
 # adapted from http://stackoverflow.com/questions/4193514/how-to-get-hard-disk-serial-number-using-python
 
-def getHddId():
+
+def hwFingerprint():
 
     if os.geteuid() > 0:
         print("ERROR: Must be root to use")
-        sys.exit(1)
+        return None
 
     # us, gets always from /dev/sda
     with open("/dev/sda", "rb") as fd:
@@ -28,10 +30,11 @@ def getHddId():
         # Call native function
         buf = fcntl.ioctl(fd, HDIO_GET_IDENTITY, " " * sizeof_hd_driveid)
         fields = struct.unpack(hd_driveid_format_str, buf)
+        #model = fields[15].strip()
         serial_no = fields[10].strip()
-        # model = fields[15].strip()
-        # print("Hard Disk Model: %s" % model)
-        # print("  Serial Number: %s" % serial_no)
 
-        return serial_no
+        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        host = socket.gethostname()
+
+        return serial_no+str(host)+str(mem_bytes)
 
