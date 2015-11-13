@@ -106,7 +106,7 @@ class UserDevice(generics.ListCreateAPIView):
 
     def get(self, request, pk=None, hash=None):
         """
-        Gets device hash and key by given User
+        Gets device hash and key by given User and Hash
 
 
 
@@ -121,6 +121,8 @@ class UserDevice(generics.ListCreateAPIView):
 
         - 200 OK.
 
+        - 204 NO CONTENT
+
         ---
         omit_parameters:
         - form
@@ -131,8 +133,87 @@ class UserDevice(generics.ListCreateAPIView):
             user = User.objects.get(userID=int_id)
             player = Player.objects.all().filter(userID=user.userID)
             device = Device.objects.all().filter(player=player,deviceHash=hash_str)
+            if len(device) == 0:
+                self.queryset = []
+                return Response(status=status.HTTP_204_NO_CONTENT)
             self.queryset = device
         except Exception as e:
             print e
-            self.queryset = []
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return self.list(request)
+
+class UserDeviceCreate(generics.ListCreateAPIView):
+    """<b>Creates new Device</b>"""
+    queryset = Device.objects.all()
+    serializer_class = DeviceSerializer
+    allowed_methods = ['post']
+
+    @csrf_exempt
+    def post(self, request):
+        """
+        Creates a Device
+
+
+
+
+        <b>Details</b>
+
+        METHODS : POST
+
+
+
+
+        <b>Example:</b>
+
+
+        {
+
+            "hash": "5i9fh938hf83h893hg9384hg9348hg",
+
+            "userID": "1",
+
+            "deviceKey": "982hr834ht348hr3298hr9283hf298hf984ht"
+
+        }
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+
+
+        ---
+        omit_parameters:
+            - form
+        """
+        # print request.META
+        # X-CSRFToken: Zp5dgB965IKXQmSyzYaqoXrKfUTWSKsq
+        # {
+        # "hash" : "ola",
+        # "userID" : "1",
+        # "deviceKey" : "loles"
+        # }
+
+        if 'hash' in request.data and 'userID' in request.data and 'deviceKey' in request.data:
+            try:
+                deviceHash = request.data['hash']
+                # print deviceHash
+                userID = int(request.data['userID'])
+                # print userID
+                user = User.objects.get(userID=userID)
+                print user
+                player = Player.objects.all().filter(userID=user.userID)
+                print player
+                deviceKey = request.data['deviceKey']
+                # print deviceKey
+
+                # new_device = Device(deviceHash=deviceHash, player=player, deviceKey=deviceKey)
+                # new_device.save()
+                return Response(status=status.HTTP_200_OK)
+            except Exception as e:
+                print "Error creating new Device.", e
+                Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
