@@ -9,6 +9,7 @@ import socket
 
 def hwFingerprint():
 
+    """
     if os.geteuid() > 0:
         # print("ERROR: Must be root to use")
         return None
@@ -32,9 +33,9 @@ def hwFingerprint():
         fields = struct.unpack(hd_driveid_format_str, buf)
         #model = fields[15].strip()
         serial_no = fields[10].strip()
+    """
+    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+    host = socket.gethostname()
 
-        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-        host = socket.gethostname()
-
-        return serial_no+str(host)+str(mem_bytes)
-
+    #return serial_no+str(host)+str(mem_bytes)
+    return str(host)+str(mem_bytes)

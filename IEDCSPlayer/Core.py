@@ -16,6 +16,9 @@ class Core(object):
     loggedIn = False
 
     def __init__(self):
+
+        self.crypt = CryptoModule()
+
         while not self.loggedIn:
             # user mut be logged in
             self.login()
@@ -37,9 +40,10 @@ class Core(object):
         print co.ENDC
         try:
             ### TODO send also device id in order to server check if the player is associated with this device
-            crypt = CryptoModule()
-            hash_pass = crypt.hashingSHA256(passwd)
+            hash_pass = self.crypt.hashingSHA256(passwd)
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
+
+
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
@@ -51,8 +55,12 @@ class Core(object):
             self.firstName = res['first_name']
             self.lastName = res['last_name']
             self.loggedIn = True
+
+            # if everything ok, lets generate device key or not
+            self.generateDevice()
         else:
             print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
+
 
 
     ### Logout
@@ -74,7 +82,7 @@ class Core(object):
                     distinct = []
                     for item in res:
                         if item not in distinct:
-                            distinct +=  [item]
+                            distinct += [item]
                             print co.OKGREEN+str(item['contentID'])+"\t"+item['createdOn']+"\t"+item['name']+co.ENDC
                 else:
                     print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
@@ -82,7 +90,6 @@ class Core(object):
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
-
 
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
@@ -99,3 +106,36 @@ class Core(object):
               co.OKGREEN+self.firstName+co.ENDC
         print co.HEADER+co.BOLD+"Last Name : "+co.ENDC+ \
               co.OKGREEN+self.lastName+co.ENDC
+
+    # generates device key if first run
+    def generateDevice(self):
+
+        hashdevice = self.crypt.hashDevice()
+        # check if hash of the device exists, if exists no need to make device key
+        key = self.getDeviceKey(hashdevice)
+
+        if key is None:
+
+            rsadevice = self.crypt.generateRsa()
+            devicekey = self.crypt.rsaExport(rsadevice, hashdevice)
+            # save key to DB
+
+    def getDeviceKey(self, hashdevice):
+
+        # with userID and hash get device key
+
+        try:
+            result = requests.get(api.GETDEVICE+self.userID+"/"+hashdevice+"/", verify=True)
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                key = res['deviceKey']
+                return self.crypt.rsaImport(key, hashdevice)
+
+            # 204 - no content found
+            if result.status_code == 204:
+                return None
+
+        except requests.ConnectionError:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return
+
