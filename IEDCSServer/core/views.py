@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
 from django.template import RequestContext, loader
 
-from .models import User, Player
+from .models import User, Player, Content
 from .forms import registerUserForm, loginForm
 
 from CryptoModule import *
@@ -171,8 +171,16 @@ def listContent(request):
         template = loader.get_template('core/index.html')
         return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 
-
+    try:
+        content = Content.objects.all()
+        print list(content)
+        context = RequestContext(request, {
+            'content' : content,
+            'loggedIn' : request.session['loggedIn']
+        })
+    except Exception as e:
+        print "Error getting Content.", e
 
     template = loader.get_template('core/content.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render(context))
 
