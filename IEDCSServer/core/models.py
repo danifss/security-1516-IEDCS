@@ -32,7 +32,7 @@ class Player(models.Model):
     playerID = models.AutoField(primary_key=True)
     playerKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
-    userId = models.ForeignKey(User)
+    userID = models.ForeignKey(User)
 
     def __unicode__(self):
         return u'{0} - ({1}/{2}/{3})'.format(self.playerID, \
@@ -46,7 +46,8 @@ class Device(models.Model):
     deviceID = models.AutoField(primary_key=True)
     deviceKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
-    players = models.ManyToManyField(Player) # ManyToMany relation
+    player = models.ManyToManyField(Player) # ManyToMany relation
+    deviceHash = models.CharField(max_length=keySize)
 
     def __unicode__(self):
         return u'{0} - ({1}/{2}/{3})'.format(self.deviceID, \

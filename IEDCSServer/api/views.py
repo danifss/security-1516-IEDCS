@@ -9,46 +9,6 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 
-class ContentByUser(generics.ListCreateAPIView):
-    """<b>Content by User</b>"""
-    queryset = Content.objects.all()
-    serializer_class = ContentSerializer
-    allowed_methods = ['get']
-
-    def get(self, request, pk=None):
-        """
-        Gets purchased content by given user id
-
-
-
-
-        <b>Details</b>
-
-        METHODS : GET
-
-
-
-        <b>RETURNS:</b>
-
-        - 200 OK.
-
-        ---
-        omit_parameters:
-        - form
-        """
-        try:
-            int_id = int(pk)
-            user = User.objects.get(userID=int_id)
-            purchases = Purchase.objects.all().filter(user=user)
-            resp = []
-            for p in purchases:
-                resp += [p.content]
-            self.queryset = resp
-        except:
-            self.queryset = []
-        return self.list(request)
-
-
 class UserLogin(generics.ListCreateAPIView):
     """<b>User Login</b>"""
     queryset = User.objects.all()
@@ -96,3 +56,83 @@ class UserLogin(generics.ListCreateAPIView):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
                 # print e
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContentByUser(generics.ListCreateAPIView):
+    """<b>Content by User</b>"""
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets purchased content by given user id
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            user = User.objects.get(userID=int_id)
+            purchases = Purchase.objects.all().filter(user=user)
+            resp = []
+            for p in purchases:
+                resp += [p.content]
+            self.queryset = resp
+        except:
+            self.queryset = []
+        return self.list(request)
+
+
+class UserDevice(generics.ListCreateAPIView):
+    """<b>Gets User device hash and key</b>"""
+    queryset = Device.objects.all()
+    serializer_class = DeviceSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None, hash=None):
+        """
+        Gets device hash and key by given User
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            hash_str = str(hash)
+            user = User.objects.get(userID=int_id)
+            player = Player.objects.all().filter(userID=user.userID)
+            device = Device.objects.all().filter(player=player,deviceHash=hash_str)
+            self.queryset = device
+        except Exception as e:
+            print e
+            self.queryset = []
+        return self.list(request)
