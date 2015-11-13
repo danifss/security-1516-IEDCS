@@ -70,7 +70,7 @@ class Core(object):
                 print co.OKBLUE+co.BOLD+"\tThis is your content:\n"+co.ENDC
                 print co.HEADER+co.BOLD+"  ID  \t   Date of purchase\t\t    Name of product"+co.ENDC
                 for item in res:
-                    print co.OKGREEN+str(item['contentId'])+"\t"+item['createdOn']+"\t"+item['name']+co.ENDC
+                    print co.OKGREEN+str(item['contentID'])+"\t"+item['createdOn']+"\t"+item['name']+co.ENDC
 
         except requests.ConnectionError as e:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC

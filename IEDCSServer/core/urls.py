@@ -20,5 +20,6 @@ urlpatterns = [
     url(r'^Account/manage/$', views.manage, name='manage'),
     # ex: /content/
     url(r'^content/$', views.listContent, name='content'),
-
+    # ex: /content/buy/1
+    url(r'^content/buy/(?P<pk>[0-9]+)/$', views.buyContent, name='buyContent'),
 ]

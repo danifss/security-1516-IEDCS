@@ -57,7 +57,7 @@ class Device(models.Model):
 
 ### CONTENT
 class Content(models.Model):
-    contentId = models.AutoField(primary_key=True)
+    contentID = models.AutoField(primary_key=True)
     name = models.CharField(max_length=150)
     createdOn = models.DateTimeField(auto_now_add=True)
     restriction = models.CharField(max_length=150, default="World")
@@ -65,7 +65,7 @@ class Content(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(
-                self.contentId, \
+                self.contentID, \
                 self.name, \
             )
 

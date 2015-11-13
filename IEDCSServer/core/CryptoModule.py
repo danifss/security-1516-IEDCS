@@ -17,6 +17,8 @@ class CryptoModule(object):
     """
     # returns rsa key object
     def generateRsa(self):
+        pairKey = RSA.generate(2048)
+
         return pairKey
 
     """

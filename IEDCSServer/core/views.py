@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
 from django.template import RequestContext, loader
 
-from .models import User, Player, Content
+from .models import User, Player, Content, Purchase
 from .forms import registerUserForm, loginForm
 
 from CryptoModule import *
@@ -15,12 +15,12 @@ import sys
 def index(request):
     template = loader.get_template('core/index.html')
     loggedIn = False
-    if 'username' in request.session and 'loggedIn' in request.session:
-        firstName = request.session['username']
+    if 'firstName' in request.session and 'loggedIn' in request.session:
+        firstName = request.session['firstName']
         loggedIn = request.session['loggedIn']
     else:
         firstName = "Visitante"
-        request.session['username'] = firstName
+        request.session['firstName'] = firstName
         request.session['loggedIn'] = False
 
     context = RequestContext(request, {
@@ -58,7 +58,8 @@ def login(request):
                 if user:
                     try:
                         utilizador = User.objects.get(username=username)
-                        request.session['username'] = str(utilizador.firstName)
+                        request.session['firstName'] = str(utilizador.firstName)
+                        request.session['username'] = str(utilizador.username)
                         request.session['loggedIn'] = True
                     except Exception as e:
                         print "Some error acurred getting user to logging in.", e
@@ -101,6 +102,7 @@ def authenticate(username, password):
 
 def logout(request):
     request.session.flush()
+    request.session['loggedIn'] = False
     template = loader.get_template('core/Account/logout.html')
     return HttpResponse(template.render())
 
@@ -159,28 +161,69 @@ def register(request):
 
 
 def manage(request):
-    if 'loggedIn' not in request.session:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
         request.session['loggedIn'] = False
+        template = loader.get_template('core/index.html')
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+
+    try:
+        user = User.objects.get(username=request.session['username'])
+        context = RequestContext(request, {
+            'user' : user,
+            'loggedIn' : request.session['loggedIn']
+        })
+
+    except Exception as e:
+        print "Error getting User details.", e
+        return HttpResponseRedirect('/')
+
     template = loader.get_template('core/Account/manage.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render(context))
 
 
 def listContent(request):
-    if 'loggedIn' not in request.session or request.session['loggedIn'] == False:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
         request.session['loggedIn'] = False
         template = loader.get_template('core/index.html')
         return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
 
     try:
         content = Content.objects.all()
-        print list(content)
         context = RequestContext(request, {
             'content' : content,
             'loggedIn' : request.session['loggedIn']
         })
     except Exception as e:
         print "Error getting Content.", e
+        return HttpResponseRedirect('/')
 
     template = loader.get_template('core/content.html')
     return HttpResponse(template.render(context))
 
+
+def buyContent(request, pk=None):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False:
+        request.session['loggedIn'] = False
+        template = loader.get_template('core/index.html')
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+
+    result = False
+    try:
+        user = User.objects.get(username=request.session['username'])
+        print user.userID
+        content = Content.objects.get(contentID=pk)
+        print content.contentID
+        new_purchase = Purchase(content=content, user=user)
+        # print new_purchase
+        new_purchase.save()
+        result = True
+        context = RequestContext(request, {
+            'result' : result,
+            'loggedIn' : request.session['loggedIn']
+        })
+    except Exception as e:
+        print "Error making purchase action.", e
+        return HttpResponseRedirect('/')
+
+    template = loader.get_template('core/purchase_content.html')
+    return HttpResponse(template.render(context))

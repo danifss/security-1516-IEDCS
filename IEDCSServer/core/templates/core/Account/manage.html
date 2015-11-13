@@ -2,6 +2,27 @@
 
 {% block content %}
 
-        <h1>Account Manage Page</h1>
+    <h1>Account Manage Page</h1>
+    <br/>
+
+    <table class="table table-striped table-hover table-condensed">
+        <tbody>
+        <tr>
+            <td width="10%"><b>Username:</b></td>
+            <td>{{ user }}</td>
+        </tr><tr>
+            <td width="10%"><b>Email:</b></td>
+            <td>{{ user.email }}</td>
+        </tr><tr>
+            <td width="10%"><b>First Name:</b></td>
+            <td>{{ user.firstName }}</td>
+        </tr><tr>
+            <td width="10%"><b>Last Name:</b></td>
+            <td>{{ user.lastName }}</td>
+        </tr><tr>
+            <td width="10%"><b>Member since:</b></td>
+            <td>{{ user.createdOn }}</td>
+        </tr>
+    </table>
 
 {% endblock %}
