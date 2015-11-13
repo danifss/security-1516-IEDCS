@@ -42,7 +42,6 @@ class Core(object):
             ### TODO send also device id in order to server check if the player is associated with this device
             hash_pass = self.crypt.hashingSHA256(passwd)
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-            self.generateDevice(username)
 
 
         except requests.ConnectionError:
@@ -56,8 +55,12 @@ class Core(object):
             self.firstName = res['first_name']
             self.lastName = res['last_name']
             self.loggedIn = True
+
+            # if everything ok, lets generate device key or not
+            self.generateDevice()
         else:
             print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
+
 
 
     ### Logout
@@ -88,7 +91,6 @@ class Core(object):
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
 
-
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
         print "Showing content"
@@ -106,23 +108,34 @@ class Core(object):
               co.OKGREEN+self.lastName+co.ENDC
 
     # generates device key if first run
-    def generateDevice(self, username):
+    def generateDevice(self):
 
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
-        key = self.getDeviceKey(username, hashdevice)
+        key = self.getDeviceKey(hashdevice)
 
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
             devicekey = self.crypt.rsaExport(rsadevice, hashdevice)
+            # save key to DB
 
-    def getDeviceKey(self, username, hash):
+    def getDeviceKey(self, hashdevice):
 
-        # with username and hash get device key
+        # with userID and hash get device key
 
-        devicekey = self.crypt.rsaImport(key,hash)
+        try:
+            result = requests.get(api.GETDEVICE+self.userID+"/"+hashdevice+"/", verify=True)
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                key = res['deviceKey']
+                return self.crypt.rsaImport(key, hashdevice)
 
-        return username
+            # 204 - no content found
+            if result.status_code == 204:
+                return None
 
+        except requests.ConnectionError:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return
 
