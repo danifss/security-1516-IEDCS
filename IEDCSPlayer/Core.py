@@ -57,6 +57,7 @@ class Core(object):
             self.loggedIn = True
 
             # if everything ok, lets generate device key or not
+            print
             self.generateDevice()
         else:
             print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
@@ -109,6 +110,7 @@ class Core(object):
 
     # generates device key if first run
     def generateDevice(self):
+        print "generating device key"
 
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
@@ -117,15 +119,28 @@ class Core(object):
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
-            devicekey = self.crypt.rsaExport(rsadevice, hashdevice)
+            devkey = self.crypt.rsaExport(rsadevice, hashdevice)
+
             # save key to DB
+            # original {"hash" : "ola", "userID" : "1","deviceKey" : "loles"}
+            #obj = {"hash": hash, "userID": self.userID, "deviceKey": devkey}
+
+            #obj = {u"hashdevice": u"hash", u"self.userID": u"userID", u"devkey": u"deviceKey"}
+            #body = json.dumps(obj)
+            #r = requests.post("http://httpbin.org/post", data = {"key":"value"})
+            #body = json.dumps({u"body": u"Sounds great! I'll get right on it!"})
+            #r = requests.post(api.SAVEDEVICE, data=None,json=body)
+            r = requests.post(api.SAVEDEVICE, data={"hash":"hasdevice", "userID": "self.userID", "deviceKey": "devkey"})
+
+            print "Status post: ", r.status_code
+
 
     def getDeviceKey(self, hashdevice):
 
         # with userID and hash get device key
 
         try:
-            result = requests.get(api.GETDEVICE+self.userID+"/"+hashdevice+"/", verify=True)
+            result = requests.get(api.GETDEVICE+str(self.userID)+"/"+hashdevice+"/", verify=True)
             if result.status_code == 200:
                 res = json.loads(result.text)
                 key = res['deviceKey']
