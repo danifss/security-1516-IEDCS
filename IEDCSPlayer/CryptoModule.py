@@ -21,8 +21,6 @@ class CryptoModule(object):
 
         pairKey = RSA.generate(2048)
 
-        print hwFingerprint()
-    
         return pairKey
 
     """
@@ -146,6 +144,13 @@ class CryptoModule(object):
         hex_dig = hash_object.hexdigest()
 
         return hex_dig
+
+    def hashDevice(self):
+
+        finger = hwFingerprint()
+        hashfinger = self.hashingSHA256(finger)
+        return hashfinger
+
 
 
 

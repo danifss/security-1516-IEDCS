@@ -16,6 +16,9 @@ class Core(object):
     loggedIn = False
 
     def __init__(self):
+
+        self.crypt = CryptoModule()
+
         while not self.loggedIn:
             # user mut be logged in
             self.login()
@@ -37,9 +40,11 @@ class Core(object):
         print co.ENDC
         try:
             ### TODO send also device id in order to server check if the player is associated with this device
-            crypt = CryptoModule()
-            hash_pass = crypt.hashingSHA256(passwd)
+            hash_pass = self.crypt.hashingSHA256(passwd)
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
+            self.generateDevice(username)
+
+
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
@@ -99,3 +104,26 @@ class Core(object):
               co.OKGREEN+self.firstName+co.ENDC
         print co.HEADER+co.BOLD+"Last Name : "+co.ENDC+ \
               co.OKGREEN+self.lastName+co.ENDC
+
+    # generates device key if first run
+    def generateDevice(self, username):
+
+        hashdevice = self.crypt.hashDevice()
+
+        # check if hash of the device exists, if exists no need to make device key
+        key = self.getDeviceKey(username,hashdevice)
+
+        if key is None:
+
+            rsadevice = self.crypt.generateRsa()
+            devicekey = self.crypt.rsaExport(rsadevice, hashdevice)
+
+    def getDeviceKey(self, username, hash):
+
+        # with username and hash get device key
+
+        devicekey = self.crypt.rsaImport(key,hash)
+
+        return username
+
+
