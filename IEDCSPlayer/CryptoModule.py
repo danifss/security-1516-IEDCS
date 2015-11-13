@@ -22,6 +22,7 @@ class CryptoModule(object):
         pairKey = RSA.generate(2048)
 
         print hwFingerprint()
+    
         return pairKey
 
     """
