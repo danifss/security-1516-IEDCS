@@ -9,6 +9,7 @@ class api:
     HOMEPAGE = serverUrl + "/"
     LOGIN = serverUrl + "/api/user/login/"
     GETCONTENTBYUSER = serverUrl + "/api/content/user/"
+    GETDEVICE = serverUrl + "/api/user/device/"
 
 
 # color

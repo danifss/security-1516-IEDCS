@@ -79,7 +79,7 @@ class Core(object):
                     distinct = []
                     for item in res:
                         if item not in distinct:
-                            distinct +=  [item]
+                            distinct += [item]
                             print co.OKGREEN+str(item['contentID'])+"\t"+item['createdOn']+"\t"+item['name']+co.ENDC
                 else:
                     print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
@@ -109,9 +109,8 @@ class Core(object):
     def generateDevice(self, username):
 
         hashdevice = self.crypt.hashDevice()
-
         # check if hash of the device exists, if exists no need to make device key
-        key = self.getDeviceKey(username,hashdevice)
+        key = self.getDeviceKey(username, hashdevice)
 
         if key is None:
 
