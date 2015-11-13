@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^user/login/$', views.UserLogin.as_view()),
     # ex: /api/user/device/1/j82hf8724hf287f
     url(r'^user/device/(?P<pk>[0-9]+)/(?P<hash>[a-zA-Z0-9]+)/$', views.UserDevice.as_view()),
+    
 
 
     # ex: /api/content/user/3

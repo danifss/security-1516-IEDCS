@@ -121,6 +121,8 @@ class UserDevice(generics.ListCreateAPIView):
 
         - 200 OK.
 
+        - 204 NO CONTENT
+
         ---
         omit_parameters:
         - form
@@ -131,8 +133,11 @@ class UserDevice(generics.ListCreateAPIView):
             user = User.objects.get(userID=int_id)
             player = Player.objects.all().filter(userID=user.userID)
             device = Device.objects.all().filter(player=player,deviceHash=hash_str)
+            if len(device) == 0:
+                self.queryset = []
+                return Response(status=status.HTTP_204_NO_CONTENT)
             self.queryset = device
         except Exception as e:
             print e
-            self.queryset = []
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return self.list(request)
