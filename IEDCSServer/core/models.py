@@ -1,7 +1,7 @@
 from django.db import models
 
 
-keySize = 1024
+keySize = 2048
 
 
 ### USER
@@ -62,6 +62,7 @@ class Content(models.Model):
     contentID = models.AutoField(primary_key=True)
     name = models.CharField(max_length=150)
     createdOn = models.DateTimeField(auto_now_add=True)
+    filepath = models.CharField(max_length=400)
     restriction = models.CharField(max_length=150, default="World")
     description = models.CharField(max_length=250, blank=True, default="Place description here")
 
