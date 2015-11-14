@@ -1,8 +1,9 @@
 from Resources import *
 from CryptoModule import *
-import sys
+import sys, os
 import requests
 import json
+import cv2
 
 
 class Core(object):
@@ -94,7 +95,22 @@ class Core(object):
 
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
-        print "Showing content"
+        print co.OKBLUE+co.BOLD+"\nPlaying content #"+co.ENDC+str(contentID)
+        try:
+            img = cv2.imread('../Storage/Death_Note_vol01/Volume01/Cap01/DEATH_NOTE01_000'+str(contentID)+'.jpg')
+            while True:
+                cv2.imshow("Showing content",img)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            ### This is a trick to make opencv close all windows
+            cv2.destroyAllWindows()
+            for i in range (1,5):
+                cv2.waitKey(1)
+            ### End of trick
+            
+        except Exception as e:
+            print "Error! ", e
+
 
 
     ### Show personal information
@@ -108,9 +124,10 @@ class Core(object):
         print co.HEADER+co.BOLD+"Last Name : "+co.ENDC+ \
               co.OKGREEN+self.lastName+co.ENDC
 
+
     # generates device key if first run
     def generateDevice(self):
-        print "\nDevice integrity check..."
+        print co.BOLD+"\nChecking Device integrity..."+co.ENDC
 
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
@@ -132,9 +149,10 @@ class Core(object):
             #r = requests.post(api.SAVEDEVICE, data=None,json=body)
             r = requests.post(api.SAVEDEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devkey})
 
-            print "Status post: ", r.status_code
+            # print "Status post: ", r.status_code
+            print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n\n"+co.ENDC
         else:
-            print "Yes, this is not your first time!\n\n"
+            print co.OKGREEN+co.BOLD+"Yes, this is not your first time!\n\n"+co.ENDC
 
 
     def getDeviceKey(self, hashdevice):

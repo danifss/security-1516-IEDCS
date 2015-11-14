@@ -1,4 +1,4 @@
-import os
+# import os
 
 
 serverIp = "localhost"
@@ -9,10 +9,10 @@ class api:
     HOMEPAGE = serverUrl + "/"
     LOGIN = serverUrl + "/api/user/login/"
     GETCONTENTBYUSER = serverUrl + "/api/content/user/"
-    GETDEVICE = serverUrl + "/api/user/device/"
-    SAVEDEVICE = serverUrl + "/api/user/device/new/"
+    GETDEVICE = serverUrl + "/api/device/"
+    SAVEDEVICE = serverUrl + "/api/device/new/"
 
-# color
+# colors
 class co:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

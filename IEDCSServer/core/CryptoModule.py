@@ -7,7 +7,7 @@ import Crypto.Random as Random
 import hashlib
 from base64 import b64decode
 
-from Fingerprint import *
+# from Fingerprint import *
 
 
 class CryptoModule(object):
@@ -145,11 +145,11 @@ class CryptoModule(object):
 
         return hex_dig
 
-    def hashDevice(self):
-
-        finger = hwFingerprint()
-        hashfinger = self.hashingSHA256(finger)
-        return hashfinger
+    # def hashDevice(self):
+    #
+    #     finger = hwFingerprint()
+    #     hashfinger = self.hashingSHA256(finger)
+    #     return hashfinger
 
 
 
