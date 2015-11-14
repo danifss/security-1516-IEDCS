@@ -63,7 +63,6 @@ class Core(object):
             print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
 
 
-
     ### Logout
     def logout(self):
         self.userID = self.username = self.email = self.firstName = self.lastName = ""
@@ -92,6 +91,7 @@ class Core(object):
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
 
+
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
         print "Showing content"
@@ -110,7 +110,7 @@ class Core(object):
 
     # generates device key if first run
     def generateDevice(self):
-        print "generating device key"
+        print "\nDevice integrity check..."
 
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
@@ -130,9 +130,11 @@ class Core(object):
             #r = requests.post("http://httpbin.org/post", data = {"key":"value"})
             #body = json.dumps({u"body": u"Sounds great! I'll get right on it!"})
             #r = requests.post(api.SAVEDEVICE, data=None,json=body)
-            r = requests.post(api.SAVEDEVICE, data={"hash":"hasdevice", "userID": "self.userID", "deviceKey": "devkey"})
+            r = requests.post(api.SAVEDEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devkey})
 
             print "Status post: ", r.status_code
+        else:
+            print "Yes, this is not your first time!\n\n"
 
 
     def getDeviceKey(self, hashdevice):
@@ -142,8 +144,10 @@ class Core(object):
         try:
             result = requests.get(api.GETDEVICE+str(self.userID)+"/"+hashdevice+"/", verify=True)
             if result.status_code == 200:
+                # print result.text
                 res = json.loads(result.text)
-                key = res['deviceKey']
+                dados = res['results']
+                key = dados[0]['deviceKey']
                 return self.crypt.rsaImport(key, hashdevice)
 
             # 204 - no content found
@@ -152,5 +156,11 @@ class Core(object):
 
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return
+            return None
+        except Exception as e:
+            print co.FAIL+"ERROR!", e
+            print co.ENDC
+            return None
 
+# c = Core()
+# c.generateDevice()
