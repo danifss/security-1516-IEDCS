@@ -1,15 +1,41 @@
-import sys
-import fcntl
-import struct
+# import sys
+# import fcntl
+# import struct
 import os
 import socket
+import subprocess
 
-# adapted from http://stackoverflow.com/questions/4193514/how-to-get-hard-disk-serial-number-using-python
 
-
+# hostname + ram_size + cpu_name + disk_size(kind of)
 def hwFingerprint():
 
-    """
+    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+    host = socket.gethostname()
+
+    # cpu_name
+    command = "cat /proc/cpuinfo"
+    cpu_info = subprocess.check_output(command, shell=True).strip()
+
+    for line in cpu_info.split("\n"):
+        if "model name" in line:
+            cpu_raw =  line.strip("model name	:")
+            cpu_name = cpu_raw.replace(' ', '')
+            break
+    # disk size
+    command = "cat /proc/partitions"
+    disk_info = subprocess.check_output(command, shell=True).strip()
+    a = disk_info.split("\n")
+    b = a[2]
+    disk_size = b.replace(' ', '')
+
+    return host + str(mem_bytes) + cpu_name + str(disk_size)
+
+print hwFingerprint()
+# from http://stackoverflow.com/questions/4193514/how-to-get-hard-disk-serial-number-using-python
+# maybe unusable because forces player.py to run on sudo, that's no good for us
+"""
+def getSerialHdd():
+
     if os.geteuid() > 0:
         # print("ERROR: Must be root to use")
         return None
@@ -33,9 +59,5 @@ def hwFingerprint():
         fields = struct.unpack(hd_driveid_format_str, buf)
         #model = fields[15].strip()
         serial_no = fields[10].strip()
+        return serial_no
     """
-    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-    host = socket.gethostname()
-
-    #return serial_no+str(host)+str(mem_bytes)
-    return str(host)+str(mem_bytes)

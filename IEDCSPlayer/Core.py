@@ -137,16 +137,9 @@ class Core(object):
             rsadevice = self.crypt.generateRsa()
             devkey = self.crypt.rsaExport(rsadevice, hashdevice)
 
-            # save key to DB
-            # original {"hash" : "ola", "userID" : "1","deviceKey" : "loles"}
-            #obj = {"hash": hash, "userID": self.userID, "deviceKey": devkey}
-
-            #obj = {u"hashdevice": u"hash", u"self.userID": u"userID", u"devkey": u"deviceKey"}
-            #body = json.dumps(obj)
-            #r = requests.post("http://httpbin.org/post", data = {"key":"value"})
-            #body = json.dumps({u"body": u"Sounds great! I'll get right on it!"})
-            #r = requests.post(api.SAVEDEVICE, data=None,json=body)
-            r = requests.post(api.SAVEDEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devkey})
+            # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
+            devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devkey)
+            r = requests.post(api.SAVEDEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
             print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n\n"+co.ENDC
@@ -164,7 +157,10 @@ class Core(object):
                 # print result.text
                 res = json.loads(result.text)
                 dados = res['results']
-                key = dados[0]['deviceKey']
+                key_ciphered = dados[0]['deviceKey']
+
+                hashdevice = self.crypt.hashDevice()
+                key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
                 return self.crypt.rsaImport(key, hashdevice)
 
             # 204 - no content found

@@ -120,7 +120,7 @@ class CryptoModule(object):
         encryption_suite = AES.new(key, AES.MODE_CFB, vi)
         # encrypt
         cipher_text = encryption_suite.encrypt(data)
-        return cipher_text
+        return cipher_text.encode('base64')
 
     """
         decypherAES method
@@ -129,7 +129,7 @@ class CryptoModule(object):
         # Decryption mode
         decryption_suite = AES.new(key, AES.MODE_CFB, vi)
         # decrypt
-        plain_text = decryption_suite.decrypt(data)
+        plain_text = decryption_suite.decrypt(b64decode(data))
         return plain_text
 
 
