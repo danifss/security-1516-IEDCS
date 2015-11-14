@@ -1,9 +1,10 @@
+#!/usr/bin/python
 from Resources import *
 from CryptoModule import *
 import sys, os
 import requests
 import json
-import cv2
+import subprocess
 
 
 class Core(object):
@@ -96,18 +97,16 @@ class Core(object):
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
         print co.OKBLUE+co.BOLD+"\nPlaying content #"+co.ENDC+str(contentID)
+
         try:
-            img = cv2.imread('../Storage/Death_Note_vol01/Volume01/Cap01/DEATH_NOTE01_000'+str(contentID)+'.jpg')
+            ### TODO get content path from server to show images from their
+            ### TODO fazer for para percorrer imagens da pasta
+            p = subprocess.Popen(["display", "../Storage/Death_Note_vol01/DEATH_NOTE01_000"+str(contentID)+".jpg"])
             while True:
-                cv2.imshow("Showing content",img)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                opt = raw_input("Close image? (y/n) ")
+                if opt=='y':
                     break
-            ### This is a trick to make opencv close all windows
-            cv2.destroyAllWindows()
-            for i in range (1,5):
-                cv2.waitKey(1)
-            ### End of trick
-            
+            p.kill()
         except Exception as e:
             print "Error! ", e
 
@@ -180,5 +179,7 @@ class Core(object):
             print co.ENDC
             return None
 
+
+
 # c = Core()
-# c.generateDevice()
+# c.play_my_content(1)
