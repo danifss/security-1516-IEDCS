@@ -156,7 +156,7 @@ def register(request):
             # Save new Player in DB
             new_player.save()
 
-            ### TODO create Player file to download
+            ### TO DO create Player file to download
             # maybe this is only done when the user makes download of program from webpage
 
             return HttpResponseRedirect('../login/')
