@@ -257,6 +257,7 @@ class PlayContent(generics.ListCreateAPIView):
 
             if len(purchases) > 0:
                 if content.pages > 0 and int_page > 0 and int_page <= content.pages:
+                    fileKey = "olamundo"
                     ### TODO chipher page content with FileKey to Storage/ghosts/
                     cipheredFileName = "ciphered_"+content.fileName+pg+".jpg"
                     return Response(status=status.HTTP_200_OK, data={'path': 'Storage/ghosts/'+cipheredFileName})
@@ -305,3 +306,83 @@ class ContentPages(generics.ListCreateAPIView):
         except:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ContentNames(generics.ListCreateAPIView):
+#     """<b>Content file name</b>"""
+#     queryset = Content.objects.all()
+#     serializer_class = ContentSerializer
+#     allowed_methods = ['get']
+#
+#     def get(self, request, pk=None):
+#         """
+#         Gets file name of given content id
+#
+#
+#
+#
+#         <b>Details</b>
+#
+#         METHODS : GET
+#
+#
+#
+#         <b>RETURNS:</b>
+#
+#         - 200 OK.
+#
+#         - 400 BAD REQUEST
+#
+#         ---
+#         omit_parameters:
+#         - form
+#         """
+#         try:
+#             int_id = int(pk)
+#             content = Content.objects.get(contentID=int_id)
+#             file_name = str(content.fileName)
+#
+#             return Response(status=status.HTTP_200_OK, data={'file_name': file_name})
+#         except:
+#             pass
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
+#
+#
+# class ContentFilePath(generics.ListCreateAPIView):
+#     """<b>Content file path</b>"""
+#     queryset = Content.objects.all()
+#     serializer_class = ContentSerializer
+#     allowed_methods = ['get']
+#
+#     def get(self, request, pk=None):
+#         """
+#         Gets file path of given content id
+#
+#
+#
+#
+#         <b>Details</b>
+#
+#         METHODS : GET
+#
+#
+#
+#         <b>RETURNS:</b>
+#
+#         - 200 OK.
+#
+#         - 400 BAD REQUEST
+#
+#         ---
+#         omit_parameters:
+#         - form
+#         """
+#         try:
+#             int_id = int(pk)
+#             content = Content.objects.get(contentID=int_id)
+#             file_path = str(content.filepath)
+#
+#             return Response(status=status.HTTP_200_OK, data={'file_path': file_path})
+#         except:
+#             pass
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
