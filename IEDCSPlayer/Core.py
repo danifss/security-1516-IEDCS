@@ -75,7 +75,7 @@ class Core(object):
     ### List content from logged user
     def list_my_content(self):
         try:
-            result = requests.get(api.GETCONTENTBYUSER+str(self.userID), verify=True)
+            result = requests.get(api.GET_CONTENT_BY_USER + str(self.userID), verify=True)
             if result.status_code == 200:
                 res = json.loads(result.text)['results']
                 if len(res) > 0:
@@ -85,7 +85,7 @@ class Core(object):
                     for item in res:
                         if item not in distinct:
                             distinct += [item]
-                            print co.OKGREEN+str(item['contentID'])+"\t"+item['createdOn']+"\t"+item['name']+co.ENDC
+                            print co.OKGREEN+"  "+str(item['contentID'])+"\t"+item['createdOn']+"\t    "+item['name']+co.ENDC
                 else:
                     print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
 
@@ -99,8 +99,13 @@ class Core(object):
         print co.OKBLUE+co.BOLD+"\nPlaying content #"+co.ENDC+str(contentID)
 
         try:
-            ### TODO get content path from server to show images from their
-            ### TODO fazer for para percorrer imagens da pasta
+            # Get pages number to view one by one
+            result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                pages = res['pages']
+            ### TODO get ciphered content path from server to show images from their
+
             p = subprocess.Popen(["display", "../Storage/Death_Note_vol01/DEATH_NOTE01_000"+str(contentID)+".jpg"])
             while True:
                 opt = raw_input("Close image? (y/n) ")
@@ -108,8 +113,8 @@ class Core(object):
                     break
             p.kill()
         except Exception as e:
-            print "Error! ", e
-
+            print co.FAIL+"Error occurred!! ", e
+            print co.ENDC
 
 
     ### Show personal information
@@ -139,12 +144,12 @@ class Core(object):
 
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
             devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devkey)
-            r = requests.post(api.SAVEDEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
+            r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
-            print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n\n"+co.ENDC
+            print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
         else:
-            print co.OKGREEN+co.BOLD+"Yes, this is not your first time!\n\n"+co.ENDC
+            print co.OKGREEN+co.BOLD+"Yes, this is not your first time!\n"+co.ENDC
 
 
     def getDeviceKey(self, hashdevice):
@@ -152,7 +157,7 @@ class Core(object):
         # with userID and hash get device key
 
         try:
-            result = requests.get(api.GETDEVICE+str(self.userID)+"/"+hashdevice+"/", verify=True)
+            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice + "/", verify=True)
             if result.status_code == 200:
                 # print result.text
                 res = json.loads(result.text)

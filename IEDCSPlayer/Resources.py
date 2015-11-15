@@ -8,9 +8,11 @@ serverUrl = "http://" + serverIp + ":" + serverPort
 class api:
     HOMEPAGE = serverUrl + "/"
     LOGIN = serverUrl + "/api/user/login/"
-    GETCONTENTBYUSER = serverUrl + "/api/content/user/"
-    GETDEVICE = serverUrl + "/api/device/"
-    SAVEDEVICE = serverUrl + "/api/device/new/"
+    GET_CONTENT_BY_USER = serverUrl + "/api/content/user/"
+    GET_CONTENT_TO_PLAY = serverUrl + "/api/content/play/"
+    GET_CONTENT_PAGES = serverUrl + "/api/content/pages/"
+    GET_DEVICE = serverUrl + "/api/device/"
+    SAVE_DEVICE = serverUrl + "/api/device/new/"
 
 # colors
 class co:

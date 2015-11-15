@@ -265,3 +265,43 @@ class PlayContent(generics.ListCreateAPIView):
             # return Response(status=status.HTTP_200_OK, data={'path': ''})
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContentPages(generics.ListCreateAPIView):
+    """<b>Content pages number</b>"""
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets number of pages of given content id
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            content = Content.objects.get(contentID=int_id)
+            pages = str(content.pages)
+
+            return Response(status=status.HTTP_200_OK, data={'pages': pages})
+        except:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
