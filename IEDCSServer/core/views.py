@@ -63,21 +63,25 @@ def login(request):
                         request.session['loggedIn'] = True
                     except Exception as e:
                         print "Some error acurred getting user to logging in.", e
-                        request.session.flush()
+                        request.session['firstName'] = "Visitante"
+                        request.session['loggedIn'] = False
                         return HttpResponseRedirect('/Account/login/')
                     return HttpResponseRedirect('/')
                 else:
                     print "The User is not valid!"
-                    request.session.flush()
+                    request.session['firstName'] = "Visitante"
+                    request.session['loggedIn'] = False
                     msgError ='The User is not valid!'
             else:
                 # the authentication system was unable to verify the username and password
                 print "The username and password were incorrect."
-                request.session.flush()
+                request.session['firstName'] = "Visitante"
+                request.session['loggedIn'] = False
                 msgError ='The username and password were incorrect.'
     else:
         form = loginForm()
 
+    request.session['firstName'] = "Visitante"
     request.session['loggedIn'] = False
     context = RequestContext(request, {
         'error_message' : msgError,
@@ -102,7 +106,7 @@ def authenticate(username, password):
 
 
 def logout(request):
-    request.session.flush()
+    request.session['firstName'] = "Visitante"
     request.session['loggedIn'] = False
     template = loader.get_template('core/Account/logout.html')
     return HttpResponse(template.render())
@@ -164,6 +168,7 @@ def register(request):
 
 def manage(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
         template = loader.get_template('core/index.html')
         return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
@@ -171,7 +176,11 @@ def manage(request):
     try:
         user = User.objects.get(username=request.session['username'])
         context = RequestContext(request, {
-            'user' : user,
+            'username' : user.username,
+            'email' : user.email,
+            'firstName' : user.firstName,
+            'lastName' : user.lastName,
+            'createdOn' : user.createdOn,
             'loggedIn' : request.session['loggedIn']
         })
 
