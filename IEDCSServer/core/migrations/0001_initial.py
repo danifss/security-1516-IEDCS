@@ -15,10 +15,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('contentID', models.AutoField(serialize=False, primary_key=True)),
                 ('name', models.CharField(max_length=150)),
-                ('createdOn', models.DateTimeField(auto_now_add=True)),
+                ('fileName', models.CharField(max_length=150)),
                 ('filepath', models.CharField(max_length=400)),
+                ('pages', models.IntegerField(default=0)),
                 ('restriction', models.CharField(default=b'World', max_length=150)),
                 ('description', models.CharField(default=b'Place description here', max_length=250, blank=True)),
+                ('createdOn', models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(

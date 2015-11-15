@@ -61,10 +61,12 @@ class Device(models.Model):
 class Content(models.Model):
     contentID = models.AutoField(primary_key=True)
     name = models.CharField(max_length=150)
-    createdOn = models.DateTimeField(auto_now_add=True)
+    fileName = models.CharField(max_length=150)
     filepath = models.CharField(max_length=400)
+    pages = models.IntegerField(default=0)
     restriction = models.CharField(max_length=150, default="World")
     description = models.CharField(max_length=250, blank=True, default="Place description here")
+    createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return u'{0} - {1}'.format(
@@ -81,7 +83,8 @@ class Purchase(models.Model):
     user = models.ForeignKey(User)
 
     def __unicode__(self):
-        return u'contentID {0} - {1}'.format(
+        return u'purchaseID {0} - {1} - {2}'.format(
                 self.purchaseID, \
                 self.user, \
+                self.content
             )

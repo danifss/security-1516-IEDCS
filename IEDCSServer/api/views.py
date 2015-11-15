@@ -1,11 +1,10 @@
 from django.shortcuts import render
 from rest_framework import generics
-from core.models import User, Player, Device, Content, Purchase
-from core.serializers import *
-from httplib import HTTPResponse
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
+from core.models import User, Player, Device, Content, Purchase
+from core.serializers import *
 import json
 
 
@@ -215,3 +214,54 @@ class UserDeviceCreate(generics.ListCreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class PlayContent(generics.ListCreateAPIView):
+    """<b>Play Ciphered Content</b>"""
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None, ct=None, pg=None):
+        """
+        Gets ciphered content by given user id and content id and page of content
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_user_id = int(pk)
+            int_content_id = int(ct)
+            int_page = int(pg)
+
+            user = User.objects.get(userID=int_user_id)
+            # print "user: ", user
+            content = Content.objects.get(contentID=int_content_id)
+            # print "content: ", content
+            purchases = Purchase.objects.all().filter(user=user, content=content)
+            # print "purchases: ", purchases
+
+            if len(purchases) > 0:
+                if content.pages > 0 and int_page > 0 and int_page <= content.pages:
+                    ### TODO chipher page content with FileKey to Storage/ghosts/
+                    cipheredFileName = "ciphered_"+content.fileName+pg+".jpg"
+                    return Response(status=status.HTTP_200_OK, data={'path': 'Storage/ghosts/'+cipheredFileName})
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+            # return Response(status=status.HTTP_200_OK, data={'path': ''})
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
