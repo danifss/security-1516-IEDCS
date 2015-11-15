@@ -157,7 +157,7 @@ class Core(object):
         # with userID and hash get device key
 
         try:
-            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice + "/", verify=True)
+            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
             if result.status_code == 200:
                 # print result.text
                 res = json.loads(result.text)
