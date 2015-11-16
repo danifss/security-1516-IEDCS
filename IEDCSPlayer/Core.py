@@ -5,6 +5,7 @@ import sys, os
 import requests
 import json
 import subprocess
+import time
 # from PIL import Image
 
 
@@ -18,18 +19,10 @@ class Core(object):
     createdOn = "06/11/2015"
     loggedIn = False
 
-    deviceKey = ""
-    playerKey = ""
 
     def __init__(self):
 
         self.crypt = CryptoModule()
-
-        f = open('player.pub', 'r')
-        playerPublic = f.read()
-        player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
-
-        self.crypt
 
         while not self.loggedIn:
             # user mut be logged in
@@ -39,6 +32,13 @@ class Core(object):
                 if op == 'y':
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
+
+        f = open('../IEDCSServer/media/player_keys/player'+self.username+'.pub', 'r')
+        playerPublic = f.read()
+        player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+        self.playerHash = self.crypt.hashingSHA256(player)
+        # self.playerKey = self.crypt.rsaImport(player)
+
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
 
@@ -126,12 +126,13 @@ class Core(object):
                     cfname = res['path']
 
                     # decipher content
-                    crypto = CryptoModule()
-                    fk = generateFileKey()
+                    # fk = generateFileKey()
                     fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+                    # fileKey = generateFileKey()
                     f1 = open(cfname, 'r')
-                    decifrado = crypto.decipherAES(fileKey[0], fileKey[1], f1.read())
+                    decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
                     f1.close()
+                    os.remove(cfname)
 
                     filePath = cfname+'.jpg'
                     f4 = open(filePath, 'w')
@@ -140,6 +141,8 @@ class Core(object):
 
                     try:
                         p = subprocess.Popen(["display", filePath])
+                        time.sleep(0.3)
+                        os.remove(filePath)
                         while True:
                             opt = raw_input("Next image? (y/n/x) ")
                             if opt=='y':
@@ -151,9 +154,7 @@ class Core(object):
                                 break
                     except:
                         print co.FAIL+"Something happened opening the file #" + str(i) + co.ENDC
-
-                    os.remove(filePath)
-                    os.remove(cfname)
+                    # os.remove(filePath)
                 else:
                     return co.FAIL+"Error occurred!! "+co.ENDC
         except Exception as e:
@@ -162,10 +163,9 @@ class Core(object):
 
 
     def generateFileKey(self):
-        crypto = CryptoModule()
-        hash_player = ""
-        hash_device = crypto.hashingSHA256(self.deviceKey)
-        return ""
+        hash_player = self.playerHash
+        hash_device = self.crypt.hashingSHA256(self.deviceKey)
+        return (hash_player,hash_device)
 
 
     ### Show personal information

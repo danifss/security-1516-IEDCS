@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
@@ -158,7 +159,7 @@ def register(request):
             playerPublic = playerRsa.publickey().exportKey("PEM")
             playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
 
-            f = open('../../IEDCSPlayer/player.pub', 'w')
+            f = open(settings.MEDIA_ROOT+'/player_keys/player'+username+'.pub', 'w')
             f.write(playerPublicSafe)
             f.close()
 

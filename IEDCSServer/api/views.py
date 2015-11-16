@@ -262,8 +262,9 @@ class PlayContent(generics.ListCreateAPIView):
                     try:
                         crypto = CryptoModule()
                         fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+                        # fileKey =
                         # TODO correct path
-                        fpath = settings.MEDIA_ROOT+'/'+content.filepath+content.fileName+pg+".jpg"
+                        fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
                         print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
