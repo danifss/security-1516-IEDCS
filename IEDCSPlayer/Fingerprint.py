@@ -30,7 +30,7 @@ def hwFingerprint():
 
     return host + str(mem_bytes) + cpu_name + str(disk_size)
 
-print hwFingerprint()
+# print hwFingerprint()
 # from http://stackoverflow.com/questions/4193514/how-to-get-hard-disk-serial-number-using-python
 # maybe unusable because forces player.py to run on sudo, that's no good for us
 """
