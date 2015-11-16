@@ -7,7 +7,7 @@ import Crypto.Random as Random
 import hashlib
 from base64 import b64decode
 
-from Fingerprint import *
+# from Fingerprint import *
 
 
 class CryptoModule(object):
@@ -184,3 +184,4 @@ class CryptoModule(object):
 # print "Cifra: " + c
 # p = f.decipherAES("_swaggerswagger_", vi, c)
 # print "Plain text: " + p
+

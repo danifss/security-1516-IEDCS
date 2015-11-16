@@ -119,6 +119,13 @@ class Core(object):
             #     file_path = res['file_path']
 
             ### TODO decipher the content
+            f3 = open('/home/silva/security2015-p2g5/Storage/ghosts/cifrado_'+content.fileName+pg, 'r')
+            decifrado = crypto.decipherAES(fileKey[0], fileKey[1], f3.read())
+            f3.close()
+
+            f4 = open('/home/silva/security2015-p2g5/Storage/ghosts/decifrado_'+content.fileName+pg, 'w')
+            f4.write(decifrado)
+            f4.close()
             filePath = "deciphered file path here"
 
             for i in range(1, pages):
