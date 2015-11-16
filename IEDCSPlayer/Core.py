@@ -25,6 +25,12 @@ class Core(object):
 
         self.crypt = CryptoModule()
 
+        f = open('player.pub', 'r')
+        playerPublic = f.read()
+        player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+
+        self.crypt
+
         while not self.loggedIn:
             # user mut be logged in
             self.login()
