@@ -140,6 +140,8 @@ def register(request):
             uk = email+username+lastName+password+firstName
             userkeyHash = crypt.hashingSHA256(uk)
 
+            # userkeyHash[0:16], userkeyHash[48:64]
+            # just a decoy, the user key is the hash
             userkeyString = crypt.cipherAES(userkeyHash[0:16], userkeyHash[48:64], "bananas")
 
             form.userKey = userkeyString
@@ -151,6 +153,16 @@ def register(request):
             pk = email[:len(email)/2]+password[len(password)/2:]+username
             playerHash = crypt.hashingSHA256(pk)
             playerRsa = crypt.generateRsa()
+
+            # save to file, ciphered
+            playerPublic = playerRsa.publickey().exportKey("PEM")
+            playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+
+            f = open('../../IEDCSPlayer/player.pub', 'w')
+            f.write(playerPublicSafe)
+            f.close()
+
+            # passphrase playerHash
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
             try:
