@@ -5,6 +5,7 @@ from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
+from core.CryptoModule import *
 import json
 
 
@@ -257,9 +258,22 @@ class PlayContent(generics.ListCreateAPIView):
 
             if len(purchases) > 0:
                 if content.pages > 0 and int_page > 0 and int_page <= content.pages:
-                    ### TODO chipher page content with FileKey to Storage/ghosts/
-                    cipheredFileName = "ciphered_"+content.fileName+pg+".jpg"
-                    return Response(status=status.HTTP_200_OK, data={'path': 'Storage/ghosts/'+cipheredFileName})
+                    try:
+                        crypto = CryptoModule()
+                        fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+                        fpath = "/tmp/"+content.filepath+content.fileName+pg+".jpg"
+                        f1 = open(fpath, 'rb')
+                        fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
+                        # save to disk
+                        cipheredFileName = "ciphered_"+content.fileName+pg
+                        f2 = open('/tmp/'+cipheredFileName, 'w')
+                        f2.write(fcifra)
+                        f2.close()
+                        f1.close()
+                    except Exception as e:
+                        print "Error encrypting! ", e
+
+                    return Response(status=status.HTTP_200_OK, data={'path': '/temp/'+cipheredFileName})
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
             # return Response(status=status.HTTP_200_OK, data={'path': ''})
@@ -305,3 +319,83 @@ class ContentPages(generics.ListCreateAPIView):
         except:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ContentNames(generics.ListCreateAPIView):
+#     """<b>Content file name</b>"""
+#     queryset = Content.objects.all()
+#     serializer_class = ContentSerializer
+#     allowed_methods = ['get']
+#
+#     def get(self, request, pk=None):
+#         """
+#         Gets file name of given content id
+#
+#
+#
+#
+#         <b>Details</b>
+#
+#         METHODS : GET
+#
+#
+#
+#         <b>RETURNS:</b>
+#
+#         - 200 OK.
+#
+#         - 400 BAD REQUEST
+#
+#         ---
+#         omit_parameters:
+#         - form
+#         """
+#         try:
+#             int_id = int(pk)
+#             content = Content.objects.get(contentID=int_id)
+#             file_name = str(content.fileName)
+#
+#             return Response(status=status.HTTP_200_OK, data={'file_name': file_name})
+#         except:
+#             pass
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
+#
+#
+# class ContentFilePath(generics.ListCreateAPIView):
+#     """<b>Content file path</b>"""
+#     queryset = Content.objects.all()
+#     serializer_class = ContentSerializer
+#     allowed_methods = ['get']
+#
+#     def get(self, request, pk=None):
+#         """
+#         Gets file path of given content id
+#
+#
+#
+#
+#         <b>Details</b>
+#
+#         METHODS : GET
+#
+#
+#
+#         <b>RETURNS:</b>
+#
+#         - 200 OK.
+#
+#         - 400 BAD REQUEST
+#
+#         ---
+#         omit_parameters:
+#         - form
+#         """
+#         try:
+#             int_id = int(pk)
+#             content = Content.objects.get(contentID=int_id)
+#             file_path = str(content.filepath)
+#
+#             return Response(status=status.HTTP_200_OK, data={'file_path': file_path})
+#         except:
+#             pass
+#         return Response(status=status.HTTP_400_BAD_REQUEST)

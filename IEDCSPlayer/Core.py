@@ -100,18 +100,48 @@ class Core(object):
 
         try:
             # Get pages number to view one by one
+            pages = 0
             result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
             if result.status_code == 200:
                 res = json.loads(result.text)
-                pages = res['pages']
-            ### TODO get ciphered content path from server to show images from their
+                pages = int(res['pages'])
+            # # Get file name by content id
+            # file_name = ""
+            # result = requests.get(api.GET_CONTENT_FILENAME + str(contentID), verify=True)
+            # if result.status_code == 200:
+            #     res = json.loads(result.text)
+            #     file_name = res['file_name']
+            # # Get file path by content id
+            # file_path = ""
+            # result = requests.get(api.GET_CONTENT_FILEPATH + str(contentID), verify=True)
+            # if result.status_code == 200:
+            #     res = json.loads(result.text)
+            #     file_path = res['file_path']
 
-            p = subprocess.Popen(["display", "../Storage/Death_Note_vol01/DEATH_NOTE01_000"+str(contentID)+".jpg"])
-            while True:
-                opt = raw_input("Close image? (y/n) ")
-                if opt=='y':
-                    break
-            p.kill()
+            ### TODO decipher the content
+            f3 = open('/home/silva/security2015-p2g5/Storage/ghosts/cifrado_'+content.fileName+pg, 'r')
+            decifrado = crypto.decipherAES(fileKey[0], fileKey[1], f3.read())
+            f3.close()
+
+            f4 = open('/home/silva/security2015-p2g5/Storage/ghosts/decifrado_'+content.fileName+pg, 'w')
+            f4.write(decifrado)
+            f4.close()
+            filePath = "deciphered file path here"
+
+            for i in range(1, pages):
+                result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
+                print result
+                if result.status_code == 200:
+                    try:
+                        p = subprocess.Popen(["display", "../"+filePath])
+                        while True:
+                            opt = raw_input("Close image? (y/n) ")
+                            if opt=='y':
+                                break
+                        p.kill()
+                    except:
+                        print co.FAIL+"Something happened opening the file #" + file_name + str(i) + co.ENDC
+                        p.kill()
         except Exception as e:
             print co.FAIL+"Error occurred!! ", e
             print co.ENDC
@@ -155,9 +185,9 @@ class Core(object):
     def getDeviceKey(self, hashdevice):
 
         # with userID and hash get device key
-
         try:
             result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
+            # print result.text
             if result.status_code == 200:
                 # print result.text
                 res = json.loads(result.text)
