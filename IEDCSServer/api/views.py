@@ -3,6 +3,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
 from core.CryptoModule import *
@@ -261,19 +262,22 @@ class PlayContent(generics.ListCreateAPIView):
                     try:
                         crypto = CryptoModule()
                         fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
-                        fpath = "/tmp/"+content.filepath+content.fileName+pg+".jpg"
+                        # TODO correct path
+                        fpath = settings.MEDIA_ROOT+'/'+content.filepath+content.fileName+pg+".jpg"
+                        print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
                         # save to disk
-                        cipheredFileName = "ciphered_"+content.fileName+pg
-                        f2 = open('/tmp/'+cipheredFileName, 'w')
+                        cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
+                        f2 = open(cipheredFileName, 'w')
                         f2.write(fcifra)
                         f2.close()
                         f1.close()
                     except Exception as e:
                         print "Error encrypting! ", e
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
 
-                    return Response(status=status.HTTP_200_OK, data={'path': '/temp/'+cipheredFileName})
+                    return Response(status=status.HTTP_200_OK, data={'path': cipheredFileName})
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
             # return Response(status=status.HTTP_200_OK, data={'path': ''})

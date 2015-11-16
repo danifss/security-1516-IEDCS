@@ -5,6 +5,7 @@ import sys, os
 import requests
 import json
 import subprocess
+# from PIL import Image
 
 
 class Core(object):
@@ -16,6 +17,9 @@ class Core(object):
     lastName = "Silva"
     createdOn = "06/11/2015"
     loggedIn = False
+
+    deviceKey = ""
+    playerKey = ""
 
     def __init__(self):
 
@@ -65,8 +69,7 @@ class Core(object):
             self.loggedIn = True
 
             # if everything ok, lets generate device key or not
-            print
-            self.generateDevice()
+            self.deviceKey = self.generateDevice()
         else:
             print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
 
@@ -111,46 +114,58 @@ class Core(object):
             if result.status_code == 200:
                 res = json.loads(result.text)
                 pages = int(res['pages'])
-            # # Get file name by content id
-            # file_name = ""
-            # result = requests.get(api.GET_CONTENT_FILENAME + str(contentID), verify=True)
-            # if result.status_code == 200:
-            #     res = json.loads(result.text)
-            #     file_name = res['file_name']
-            # # Get file path by content id
-            # file_path = ""
-            # result = requests.get(api.GET_CONTENT_FILEPATH + str(contentID), verify=True)
-            # if result.status_code == 200:
-            #     res = json.loads(result.text)
-            #     file_path = res['file_path']
+            else:
+                return co.FAIL+"Error occurred!! "+co.ENDC
 
-            ### TODO decipher the content
-            f3 = open('/home/silva/security2015-p2g5/Storage/ghosts/cifrado_'+content.fileName+pg, 'r')
-            decifrado = crypto.decipherAES(fileKey[0], fileKey[1], f3.read())
-            f3.close()
-
-            f4 = open('/home/silva/security2015-p2g5/Storage/ghosts/decifrado_'+content.fileName+pg, 'w')
-            f4.write(decifrado)
-            f4.close()
-            filePath = "deciphered file path here"
-
-            for i in range(1, pages):
+            i = 0
+            while i <= pages:
+                i += 1
                 result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
-                print result
                 if result.status_code == 200:
+                    res = json.loads(result.text)
+                    cfname = res['path']
+
+                    # decipher content
+                    crypto = CryptoModule()
+                    fk = generateFileKey()
+                    fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+                    f1 = open(cfname, 'r')
+                    decifrado = crypto.decipherAES(fileKey[0], fileKey[1], f1.read())
+                    f1.close()
+
+                    filePath = cfname+'.jpg'
+                    f4 = open(filePath, 'w')
+                    f4.write(decifrado)
+                    f4.close()
+
                     try:
-                        p = subprocess.Popen(["display", "../"+filePath])
+                        p = subprocess.Popen(["display", filePath])
                         while True:
-                            opt = raw_input("Close image? (y/n) ")
+                            opt = raw_input("Next image? (y/n/x) ")
                             if opt=='y':
+                                p.kill()
                                 break
-                        p.kill()
+                            elif opt=='x':
+                                i = pages + 1
+                                p.kill()
+                                break
                     except:
-                        print co.FAIL+"Something happened opening the file #" + file_name + str(i) + co.ENDC
-                        p.kill()
+                        print co.FAIL+"Something happened opening the file #" + str(i) + co.ENDC
+
+                    os.remove(filePath)
+                    os.remove(cfname)
+                else:
+                    return co.FAIL+"Error occurred!! "+co.ENDC
         except Exception as e:
             print co.FAIL+"Error occurred!! ", e
             print co.ENDC
+
+
+    def generateFileKey(self):
+        crypto = CryptoModule()
+        hash_player = ""
+        hash_device = crypto.hashingSHA256(self.deviceKey)
+        return ""
 
 
     ### Show personal information
@@ -216,7 +231,3 @@ class Core(object):
             print co.ENDC
             return None
 
-
-
-# c = Core()
-# c.play_my_content(1)
