@@ -105,8 +105,6 @@ class Core(object):
 
     ### Play content bought by the logged client
     def play_my_content(self, contentID):
-        print co.OKBLUE+co.BOLD+"\nPlaying content #"+co.ENDC+str(contentID)
-
         try:
             # Get pages number to view one by one
             pages = 0
@@ -115,8 +113,10 @@ class Core(object):
                 res = json.loads(result.text)
                 pages = int(res['pages'])
             else:
-                return co.FAIL+"Error occurred!! "+co.ENDC
+                print co.FAIL+"Invalid content number. Please choose one from your bought list. "+co.ENDC
+                return
 
+            print co.OKBLUE+co.BOLD+"\nPlaying content #"+str(contentID)+co.ENDC
             i = 0
             while i <= pages:
                 i += 1
@@ -126,9 +126,7 @@ class Core(object):
                     cfname = res['path']
 
                     # decipher content
-                    # fk = generateFileKey()
-                    fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
-                    # fileKey = generateFileKey()
+                    fileKey = self.genFileKey()
                     f1 = open(cfname, 'r')
                     decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
                     f1.close()
@@ -160,6 +158,9 @@ class Core(object):
         except Exception as e:
             print co.FAIL+"Error occurred!! ", e
             print co.ENDC
+
+    def genFileKey(self):
+        return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
 
 
     def generateFileKey(self):

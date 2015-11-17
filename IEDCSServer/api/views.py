@@ -261,8 +261,8 @@ class PlayContent(generics.ListCreateAPIView):
                 if content.pages > 0 and int_page > 0 and int_page <= content.pages:
                     try:
                         crypto = CryptoModule()
-                        fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
-                        # fileKey =
+                        # fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+                        fileKey = genFileKey()
                         # TODO correct path
                         fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
                         print fpath
@@ -284,6 +284,11 @@ class PlayContent(generics.ListCreateAPIView):
             # return Response(status=status.HTTP_200_OK, data={'path': ''})
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+def genFileKey():
+
+    return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
 
 
 class ContentPages(generics.ListCreateAPIView):
