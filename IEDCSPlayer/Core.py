@@ -2,6 +2,7 @@
 from Resources import *
 from CryptoModule import *
 import sys, os
+import getpass
 import requests
 import json
 import subprocess
@@ -12,7 +13,7 @@ import time
 class Core(object):
     userID = "1"
     username = "daniel"
-    password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
+    # password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
     email = "daniel.silva@ua.pt"
     firstName = "Daniel"
     lastName = "Silva"
@@ -48,7 +49,7 @@ class Core(object):
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Logging into IEDCS Player" + co.ENDC
         print co.WARNING
         username = raw_input("\tUsername: ")
-        passwd = raw_input("\tPassword: ")
+        passwd = getpass.getpass('\tPassword:')
         print co.ENDC
         try:
             ### TODO send also device id in order to server check if the player is associated with this device
@@ -116,7 +117,7 @@ class Core(object):
                 print co.FAIL+"Invalid content number. Please choose one from your bought list. "+co.ENDC
                 return
 
-            print co.OKBLUE+co.BOLD+"\nPlaying content #"+str(contentID)+co.ENDC
+            print co.OKBLUE+co.BOLD+"\nPlaying content "+co.WARNING+"#"+str(contentID)+co.ENDC
             i = 0
             while i <= pages:
                 i += 1
@@ -131,7 +132,7 @@ class Core(object):
                     decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
                     f1.close()
                     os.remove(cfname)
-
+                    # save to disk
                     filePath = cfname+'.jpg'
                     f4 = open(filePath, 'w')
                     f4.write(decifrado)
@@ -160,7 +161,7 @@ class Core(object):
             print co.ENDC
 
     def genFileKey(self):
-        return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+        return ("+bananasbananas+","+bananasbananas+")
 
 
     def generateFileKey(self):

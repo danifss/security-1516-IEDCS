@@ -146,21 +146,21 @@ class CryptoModule(object):
 
 
 
-f = CryptoModule()
+# f = CryptoModule()
 
 ### Testing RSA
 
-key = f.generateRsa()
-pubkey = f.publicRsa(key)
-pub = key.publickey().exportKey('PEM')
-pu_n = f.rsaImport(pub)
+# key = f.generateRsa()
+# pubkey = f.publicRsa(key)
+# pub = key.publickey().exportKey('PEM')
+# pu_n = f.rsaImport(pub)
 
 
 # print p
-a = f.rsaCipher(pu_n, "ola")
-print "cifrado", a
-b = f.rsaDecipher(key,a)
-print b
+# a = f.rsaCipher(pu_n, "ola")
+# print "cifrado", a
+# b = f.rsaDecipher(key,a)
+# print b
 # privkey = f.rsaExport(key, 'xixa')
 # nkey = f.rsaImport(privkey, 'xixa')
 #

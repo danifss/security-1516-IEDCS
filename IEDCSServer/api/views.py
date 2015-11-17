@@ -132,7 +132,7 @@ class UserDevice(generics.ListCreateAPIView):
             int_id = int(pk)
             hash_str = str(hash)
             user = User.objects.get(userID=int_id)
-            player = Player.objects.all().filter(userID=user.userID)
+            player = Player.objects.get(user=user)
             device = Device.objects.all().filter(player=player,deviceHash=hash_str)
             if len(device) == 0:
                 self.queryset = []
@@ -190,8 +190,8 @@ class UserDeviceCreate(generics.ListCreateAPIView):
         omit_parameters:
             - form
         """
-        # print request.META
-        # X-CSRFToken: Zp5dgB965IKXQmSyzYaqoXrKfUTWSKsq
+        # print request.META['CSRF_COOKIE']
+        # X-CSRFToken: zhOXQAEtUqXoolDN66tlSJ76zKLPl48N
         # {
         # "hash" : "ola",
         # "userID" : "1",
@@ -203,7 +203,7 @@ class UserDeviceCreate(generics.ListCreateAPIView):
                 deviceHash = request.data['hash']
                 userID = int(request.data['userID'])
                 user = User.objects.get(userID=userID)
-                player = Player.objects.get(userID=user.userID)
+                player = Player.objects.get(user=user)
                 deviceKey = request.data['deviceKey']
                 # create Device and save it
                 new_device = Device(deviceKey=deviceKey, player=player, deviceHash=deviceHash)
@@ -261,11 +261,12 @@ class PlayContent(generics.ListCreateAPIView):
                 if content.pages > 0 and int_page > 0 and int_page <= content.pages:
                     try:
                         crypto = CryptoModule()
-                        # fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
-                        fileKey = genFileKey()
-                        # TODO correct path
+
+                        player = Player.objects.all().filter(user=user)
+                        device = Device.objects.all().filter(player=player)
+                        fileKey = genFileKey(user, player, device)
                         fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
-                        print fpath
+                        # print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
                         # save to disk
@@ -281,14 +282,21 @@ class PlayContent(generics.ListCreateAPIView):
                     return Response(status=status.HTTP_200_OK, data={'path': cipheredFileName})
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
-            # return Response(status=status.HTTP_200_OK, data={'path': ''})
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-def genFileKey():
-
-    return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+def genFileKey(user=None, player=None, device=None):
+    if user==None or player==None or device==None:
+        return ("+bananasbananas+","+bananasbananas+")
+    else:
+        userkey = user.userKey
+        print userkey
+        playerKey = player.playerKey
+        print playerKey
+        deviceKey = device.deviceKey
+        print deviceKey
+        return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
 
 
 class ContentPages(generics.ListCreateAPIView):
