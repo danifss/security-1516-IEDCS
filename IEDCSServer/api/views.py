@@ -262,8 +262,8 @@ class PlayContent(generics.ListCreateAPIView):
                     try:
                         crypto = CryptoModule()
 
-                        player = Player.objects.all().filter(user=user)
-                        device = Device.objects.all().filter(player=player)
+                        player = Player.objects.get(user=user)
+                        device = Device.objects.get(player=player)
                         fileKey = genFileKey(user, player, device)
                         fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
                         # print fpath
@@ -291,12 +291,36 @@ def genFileKey(user=None, player=None, device=None):
         return ("+bananasbananas+","+bananasbananas+")
     else:
         userkey = user.userKey
-        print userkey
         playerKey = player.playerKey
-        print playerKey
         deviceKey = device.deviceKey
-        print deviceKey
-        return ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
+
+        crypto = CryptoModule()
+        ### TODO calculate auxiliar key with userKey and magic value
+        aux = crypto.hashingSHA256("+bananasbananas+")
+        pk = crypto.hashingSHA256(str(playerKey))
+        dk = crypto.hashingSHA256(str(deviceKey))
+
+        xor1 = ""
+        for i in range(0, len(pk)):
+            xor1 += str(logical_function(aux[i], pk[i]))
+        hash_xor1 = crypto.hashingSHA256(xor1)
+        # print hash_xor1
+
+        fileKey = ""
+        for i in range(0, len(dk)):
+            fileKey += logical_function(hash_xor1[i], dk[i])
+        fileKey = crypto.hashingSHA256(fileKey)
+        # print fileKey
+
+        p1 = fileKey[9:24]
+        p2 = fileKey[len(fileKey)-27:len(fileKey)-12]
+        # print p1
+        # print p2
+
+        return ("+bananasbananas+","+bananasbananas+")
+
+def logical_function(str1, str2):
+    return str1 + str2
 
 
 class ContentPages(generics.ListCreateAPIView):
