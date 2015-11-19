@@ -1,6 +1,3 @@
-# import sys
-# import fcntl
-# import struct
 import os
 import socket
 import subprocess

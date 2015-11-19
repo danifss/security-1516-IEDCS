@@ -31,7 +31,8 @@ class CryptoModule(object):
 
         try:
             # Construct a new key carrying only the public information.
-            return pairKey.publickey()
+            # print pairKey.publickey().exportKey()
+            return pairKey.publickey().exportKey()
         except Exception as e:
             print "Key not valid: ", e
             return None
@@ -144,9 +145,11 @@ class CryptoModule(object):
         hex_dig = hash_object.hexdigest()
 
         return hex_dig
+    """
+        hash device fingerprint
+    """
 
     def hashDevice(self):
-
         finger = hwFingerprint()
         hashfinger = self.hashingSHA256(finger)
         return hashfinger
@@ -155,12 +158,25 @@ class CryptoModule(object):
 
 
 
+
 # f = CryptoModule()
-
-### Testing RSA
-
+#
+# ### Testing RSA
+#
 # key = f.generateRsa()
 # pubkey = f.publicRsa(key)
+# # pub = key.publickey().exportKey('PEM')
+# pu_n = f.rsaImport(pubkey)
+#
+# # # print p
+# a = f.rsaCipher(pu_n, "Mas que belo dia Alice")
+# print "cifrado", a
+# b = f.rsaDecipher(key,a)
+# print b
+# a = f.rsaCipher(pu_n, "ola")
+# print "cifrado", a
+# b = f.rsaDecipher(key,a)
+# print b
 # privkey = f.rsaExport(key, 'xixa')
 # nkey = f.rsaImport(privkey, 'xixa')
 #

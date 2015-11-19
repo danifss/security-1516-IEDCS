@@ -195,8 +195,12 @@ class Core(object):
             rsadevice = self.crypt.generateRsa()
             devkey = self.crypt.rsaExport(rsadevice, hashdevice)
 
+            devpub = self.crypt.publicRsa(rsadevice)
+
+
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
-            devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devkey)
+            devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devpub)
+
             r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
