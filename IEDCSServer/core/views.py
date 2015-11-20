@@ -11,6 +11,9 @@ from .forms import registerUserForm, loginForm
 from CryptoModule import *
 
 import sys
+import os
+import zipfile
+import StringIO
 
 
 def index(request):
@@ -115,7 +118,6 @@ def logout(request):
 
 @csrf_protect
 def register(request):
-    # template = loader.get_template('core/Account/register.html')
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
@@ -134,7 +136,6 @@ def register(request):
 
             # apply SHA256 to password
             form.password = crypt.hashingSHA256(password)
-
 
             # Generate symmetric userKey with AES from user details
             # uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
@@ -163,6 +164,10 @@ def register(request):
             f.write(playerPublicSafe)
             f.close()
 
+            # Create Player zip for download
+            user = User.objects.get(username=username)
+            createDownloadZip(user.userID, user.username)
+
             # passphrase playerHash
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
@@ -170,7 +175,7 @@ def register(request):
                 new_player = Player(playerKey=playerKey, userID=User.objects.get(username=username))
 
             except :
-                print "Error getting the new register user."
+                print "Error getting creating new Player."
                 return HttpResponseRedirect('../register/')
 
             # Save new Player in DB
@@ -185,6 +190,33 @@ def register(request):
 
     return render(request, 'core/Account/register.html', {'form': form})
 
+# Function to create zip file to be downaloaded by a specific user
+def createDownloadZip(userID, username):
+    # files to zip
+    base = settings.MEDIA_URL+'player_keys/'
+    # playerDir = base+'IEDCSPlayer/'
+    filenames = [base+'player'+username+'.pub', base+'Core.py', base+'CryptoModule.py', \
+                 base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
+
+    # zip name
+    zip_subdir = 'download'+str(userID)
+    zip_filename = "%s.zip" % zip_subdir
+
+    # Open StringIO to grab in-memory ZIP contents
+    s = StringIO.StringIO()
+
+    # The zip compressor
+    zf = zipfile.ZipFile(s, "w")
+
+    for fpath in filenames:
+        # Calculate path for file in zip
+        fdir, fname = os.path.split(fpath)
+        zip_path = os.path.join(zip_subdir, fname)
+
+        # Add file, at correct path
+        zf.write(fpath, zip_path)
+    zf.close()
+
 
 def manage(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
@@ -195,13 +227,16 @@ def manage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
+        playerUrl = settings.MEDIA_URL+'player_keys/download'+user.userID+'.zip'
+        print playerUrl
         context = RequestContext(request, {
             'username' : user.username,
             'email' : user.email,
             'firstName' : user.firstName,
             'lastName' : user.lastName,
             'createdOn' : user.createdOn,
-            'loggedIn' : request.session['loggedIn']
+            'playerUrl' : playerUrl,
+            'loggedIn' : request.session['loggedIn'],
         })
 
     except Exception as e:
