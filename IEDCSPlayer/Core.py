@@ -183,7 +183,6 @@ class Core(object):
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
         key = self.getDeviceKey(hashdevice)
-
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
@@ -203,7 +202,7 @@ class Core(object):
             # print "Status post: ", r.status_code
             print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
         else:
-            print co.OKGREEN+co.BOLD+"Yes, this is not your first time!\n"+co.ENDC
+            print co.OKGREEN+co.BOLD+"Yes, this is not your first time! (Device Validated)\n"+co.ENDC
 
 
     def getDeviceKey(self, hashdevice):
@@ -214,10 +213,12 @@ class Core(object):
             f.close()
 
             hashdevice = self.crypt.hashDevice()
-            devkey = self.crypt.rsaImport(key, hashdevice)
+            devsafe = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key)
+            devkey = self.crypt.rsaImport(devsafe, hashdevice)
+
             if devkey is None:
-                print "Device Not Valid!!! Player Terminating"
-                sys.exit()
+                print "\033[91mDevice Not Valid!!! Player Terminating\n\n\033[0m"
+                os._exit(0)
             return devkey
         except:
             return None
