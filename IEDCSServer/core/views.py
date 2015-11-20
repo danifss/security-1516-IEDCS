@@ -164,15 +164,12 @@ def register(request):
             f.write(playerPublicSafe)
             f.close()
 
-            # Create Player zip for download
-            user = User.objects.get(username=username)
-            createDownloadZip(user.userID, user.username)
-
             # passphrase playerHash
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
+            user = User.objects.get(username=username)
             try:
-                new_player = Player(playerKey=playerKey, userID=User.objects.get(username=username))
+                new_player = Player(playerKey=playerKey, user=user)
 
             except :
                 print "Error getting creating new Player."
@@ -181,8 +178,8 @@ def register(request):
             # Save new Player in DB
             new_player.save()
 
-            ### TO DO create Player file to download
-            # maybe this is only done when the user makes download of program from webpage
+            ### Create Player file to download
+            createDownloadZip(user.userID, user.username)
 
             return HttpResponseRedirect('../login/')
     else:
@@ -193,7 +190,7 @@ def register(request):
 # Function to create zip file to be downaloaded by a specific user
 def createDownloadZip(userID, username):
     # files to zip
-    base = settings.MEDIA_URL+'player_keys/'
+    base = 'media/player_keys/'
     # playerDir = base+'IEDCSPlayer/'
     filenames = [base+'player'+username+'.pub', base+'Core.py', base+'CryptoModule.py', \
                  base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
@@ -202,20 +199,20 @@ def createDownloadZip(userID, username):
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
 
-    # Open StringIO to grab in-memory ZIP contents
-    s = StringIO.StringIO()
-
     # The zip compressor
-    zf = zipfile.ZipFile(s, "w")
+    try:
+        zf = zipfile.ZipFile('media/player_keys/'+zip_filename, "w")
+        for fpath in filenames:
+            # Calculate path for file in zip
+            fdir, fname = os.path.split(fpath)
+            # print fdir, fname
+            zip_path = os.path.join('IEDCSPlayer', fname)
+            # Add file, at correct path
+            zf.write(fpath, zip_path)
 
-    for fpath in filenames:
-        # Calculate path for file in zip
-        fdir, fname = os.path.split(fpath)
-        zip_path = os.path.join(zip_subdir, fname)
-
-        # Add file, at correct path
-        zf.write(fpath, zip_path)
-    zf.close()
+        zf.close()
+    except Exception as e:
+        print "ERROR ", e
 
 
 def manage(request):
@@ -227,8 +224,8 @@ def manage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
-        playerUrl = settings.MEDIA_URL+'player_keys/download'+user.userID+'.zip'
-        print playerUrl
+        playerUrl = settings.MEDIA_URL+'player_keys/download'+str(user.userID)+'.zip'
+        # print playerUrl
         context = RequestContext(request, {
             'username' : user.username,
             'email' : user.email,
