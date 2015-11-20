@@ -19,7 +19,7 @@ class Core(object):
     lastName = "Silva"
     createdOn = "06/11/2015"
     loggedIn = False
-
+    # dasd
 
     def __init__(self):
 
