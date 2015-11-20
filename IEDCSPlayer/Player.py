@@ -4,6 +4,9 @@ from Core import *
 import sys
 from webbrowser import open as browser
 
+import py_compile
+py_compile.compile('Player.py')
+
 
 try:
     ### Initialize core of the system
