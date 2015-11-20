@@ -13,7 +13,6 @@ import time
 class Core(object):
     userID = "1"
     username = "daniel"
-    # password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
     email = "daniel.silva@ua.pt"
     firstName = "Daniel"
     lastName = "Silva"
@@ -134,6 +133,7 @@ class Core(object):
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
+                    # TODO use cStringIO to do everything in memory
                     f4 = open(filePath, 'w')
                     f4.write(decifrado)
                     f4.close()

@@ -194,7 +194,6 @@ def createDownloadZip(userID, username):
     # playerDir = base+'IEDCSPlayer/'
     filenames = [base+'player'+username+'.pub', base+'Core.py', base+'CryptoModule.py', \
                  base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
-
     # zip name
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
@@ -224,8 +223,10 @@ def manage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
-        playerUrl = settings.MEDIA_URL+'player_keys/download'+str(user.userID)+'.zip'
-        # print playerUrl
+        playerUrl = 'media/player_keys/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
+        if not os.path.isfile(playerUrl):
+            playerUrl = '#'
+
         context = RequestContext(request, {
             'username' : user.username,
             'email' : user.email,
