@@ -41,7 +41,7 @@ class CryptoModule(object):
         RSA export
     """
     #
-    def rsaExport(self, pairKey, data = None):
+    def rsaExport(self, pairKey, data=None):
 
         try:
             if not pairKey.has_private() :
@@ -66,7 +66,7 @@ class CryptoModule(object):
     """
         RSA import
     """
-    def rsaImport(self, key, data = None):
+    def rsaImport(self, key, data=None):
 
         try:
             pairKey = RSA.importKey(key, data)
@@ -136,7 +136,8 @@ class CryptoModule(object):
     """
         hashing method
     """
-    def hashingSHA256(self, data):
+    @staticmethod
+    def hashingSHA256(data):
         d = str.encode(data)
         type(d) # insures its bytes
         # apply sintese

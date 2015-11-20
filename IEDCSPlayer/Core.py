@@ -114,7 +114,7 @@ class Core(object):
                 res = json.loads(result.text)
                 pages = int(res['pages'])
             else:
-                print co.FAIL+"Invalid content number. Please choose one from your bought list. "+co.ENDC
+                print co.FAIL+"Invalid content number. Please choose one from your bought list."+co.ENDC
                 return
 
             print co.OKBLUE+co.BOLD+"\nPlaying content "+co.WARNING+"#"+str(contentID)+co.ENDC
@@ -162,12 +162,6 @@ class Core(object):
 
     def genFileKey(self):
         return ("+bananasbananas+","+bananasbananas+")
-
-
-    def generateFileKey(self):
-        hash_player = self.playerHash
-        hash_device = self.crypt.hashingSHA256(self.deviceKey)
-        return (hash_player,hash_device)
 
 
     ### Show personal information

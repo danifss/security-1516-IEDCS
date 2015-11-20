@@ -8,6 +8,7 @@ from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
 from core.CryptoModule import *
 import json
+import time, datetime
 
 
 class UserLogin(generics.ListCreateAPIView):
@@ -289,35 +290,46 @@ class PlayContent(generics.ListCreateAPIView):
 def genFileKey(user=None, player=None, device=None):
     if user==None or player==None or device==None:
         return ("+bananasbananas+","+bananasbananas+")
-    else:
-        userkey = user.userKey
-        playerKey = player.playerKey
-        deviceKey = device.deviceKey
 
-        crypto = CryptoModule()
-        ### TODO calculate auxiliar key with userKey and magic value
-        aux = crypto.hashingSHA256("+bananasbananas+")
-        pk = crypto.hashingSHA256(str(playerKey))
-        dk = crypto.hashingSHA256(str(deviceKey))
+    crypto = CryptoModule()
 
-        xor1 = ""
-        for i in range(0, len(pk)):
-            xor1 += str(logical_function(aux[i], pk[i]))
-        hash_xor1 = crypto.hashingSHA256(xor1)
-        # print hash_xor1
+    userkey = user.userKey
+    playerKey = player.playerKey
+    deviceKey = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+    # deviceKey = device.deviceKey
 
-        fileKey = ""
-        for i in range(0, len(dk)):
-            fileKey += logical_function(hash_xor1[i], dk[i])
-        fileKey = crypto.hashingSHA256(fileKey)
-        # print fileKey
 
-        p1 = fileKey[9:24]
-        p2 = fileKey[len(fileKey)-27:len(fileKey)-12]
-        # print p1
-        # print p2
+    # Calculate auxiliar key with userKey and magic value
+    magic = CryptoModule.hashingSHA256('prettywomen'+datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M'))
+    # print magic
+    aux = getAuxKey(userkey, magic)
+    pk = CryptoModule.hashingSHA256(str(playerKey))
+    dk = CryptoModule.hashingSHA256(str(deviceKey))
 
-        return ("+bananasbananas+","+bananasbananas+")
+    xor1 = ""
+    for i in range(0, len(pk)):
+        xor1 += str(logical_function(aux[i], pk[i]))
+    hash_xor1 = CryptoModule.hashingSHA256(xor1)
+    # print hash_xor1
+
+    fileKey = ""
+    for i in range(0, len(dk)):
+        fileKey += logical_function(hash_xor1[i], dk[i])
+    fileKey = CryptoModule.hashingSHA256(fileKey)
+    # print fileKey
+
+    p1 = fileKey[9:24]
+    p2 = fileKey[37:52]
+
+    # return (p1,p2)
+    return ("+bananasbananas+","+bananasbananas+")
+
+def getAuxKey(userKey, magic):
+    if userKey is None or magic is None:
+        return CryptoModule.hashingSHA256("+bananasbananas+")
+
+    auxKey = CryptoModule.hashingSHA256("+bananasbananas+")
+    return auxKey
 
 def logical_function(str1, str2):
     return str1 + str2
