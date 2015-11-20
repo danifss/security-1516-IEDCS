@@ -34,7 +34,7 @@ class Core(object):
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
 
-        f = open('../IEDCSServer/media/player_keys/player'+self.username+'.pub', 'r')
+        f = open('player'+self.username+'.pub', 'r')
         playerPublic = f.read()
         player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
         self.playerHash = self.crypt.hashingSHA256(player)
@@ -194,6 +194,9 @@ class Core(object):
 
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
             devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devpub)
+            f = open('device.priv', 'w')
+            f.write(devsafe)
+            f.close()
 
             r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
@@ -205,6 +208,24 @@ class Core(object):
 
     def getDeviceKey(self, hashdevice):
 
+        try:
+            f = open('device.priv', 'r')
+            key = f.read()
+            f.close()
+
+            hashdevice = self.crypt.hashDevice()
+            devkey = self.crypt.rsaImport(key, hashdevice)
+            if devkey is None:
+                print "Device Not Valid!!! Player Terminating"
+                sys.exit()
+            return devkey
+        except:
+            return None
+
+    # GET DEVICE KEY TO SERVER
+    """
+    def getDeviceKey(self, hashdevice):
+
         # with userID and hash get device key
         try:
             result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
@@ -214,7 +235,7 @@ class Core(object):
                 res = json.loads(result.text)
                 dados = res['results']
                 key_ciphered = dados[0]['deviceKey']
-
+                print dados
                 hashdevice = self.crypt.hashDevice()
                 key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
                 return self.crypt.rsaImport(key, hashdevice)
@@ -230,4 +251,6 @@ class Core(object):
             print co.FAIL+"ERROR!", e
             print co.ENDC
             return None
+        """""
+
 
