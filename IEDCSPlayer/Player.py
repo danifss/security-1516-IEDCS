@@ -32,6 +32,7 @@ try:
         if op == '1': # login/logout
             # core.show_my_info()
             core.logout() if core.loggedIn else core.login()
+
         elif op == '2' and core.loggedIn: # personal info
             core.show_my_info()
         elif op == '3' and core.loggedIn: # show my purchases
