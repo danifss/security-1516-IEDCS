@@ -35,20 +35,28 @@ def index(request):
 
 
 def about(request):
-    if 'loggedIn' not in request.session:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
+
     template = loader.get_template('core/about.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 def contact(request):
-    if 'loggedIn' not in request.session:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
+
     template = loader.get_template('core/contact.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 def login(request):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
+        request.session['loggedIn'] = False
+
     msgError = ''
     if request.method == 'POST':
         form = loginForm(request.POST)
@@ -90,7 +98,8 @@ def login(request):
     context = RequestContext(request, {
         'error_message' : msgError,
     })
-    return render(request, 'core/Account/login.html', {'form': form, 'loggedIn' : request.session['loggedIn']})
+    return render(request, 'core/Account/login.html', {'form': form, \
+                   'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
 def authenticate(username, password):
     try:
@@ -113,11 +122,15 @@ def logout(request):
     request.session['firstName'] = "Visitante"
     request.session['loggedIn'] = False
     template = loader.get_template('core/Account/logout.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 @csrf_protect
 def register(request):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
+        request.session['loggedIn'] = False
+
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
@@ -185,7 +198,8 @@ def register(request):
     else:
         form = registerUserForm()
 
-    return render(request, 'core/Account/register.html', {'form': form})
+    return render(request, 'core/Account/register.html', {'form': form, \
+                  'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
 # Function to create zip file to be downaloaded by a specific user
 def createDownloadZip(userID, username):
@@ -214,7 +228,7 @@ def createDownloadZip(userID, username):
         print "ERROR ", e
 
 
-def manage(request):
+def accountManage(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
         request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
@@ -247,15 +261,17 @@ def manage(request):
 
 def listContent(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
         template = loader.get_template('core/index.html')
-        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
     try:
         content = Content.objects.all()
         context = RequestContext(request, {
             'content' : content,
-            'loggedIn' : request.session['loggedIn']
+            'loggedIn' : request.session['loggedIn'],
+            'firstName' : request.session['fisrtName'],
         })
     except Exception as e:
         print "Error getting Content.", e

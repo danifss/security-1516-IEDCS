@@ -17,7 +17,7 @@ urlpatterns = [
     # ex: /Account/register/
     url(r'^Account/register/$', views.register, name='register'),
     # ex: /Account/manage/
-    url(r'^Account/manage/$', views.manage, name='manage'),
+    url(r'^Account/manage/$', views.accountManage, name='manage'),
     # ex: /content/
     url(r'^content/$', views.listContent, name='content'),
     # ex: /content/buy/1
