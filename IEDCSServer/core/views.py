@@ -208,18 +208,23 @@ def register(request):
 
 # Function to write personal data of user into file and then cipher the file
 def writeUserData(user=None):
-    if user is None or player is None:
+    if user is None:
         print 'Error writing User data - No User or Player'
         return
     # create user info object
     userInfo = UserInfo(user)
-    # open file to write object
-    f = open('media/player_keys/user'+user.username+'.pkl', 'wb')
-    # write object to file
-    pickle.dump(userInfo, f, pickle.HIGHEST_PROTOCOL)
-    # close file
-    f.close()
+    # buffer and pickler
+    src = StringIO()
+    p = pickle.Pickler(src)
+    # write object
+    p.dump(userInfo)
     ### TODO cipher file
+    crypt = CryptoModule()
+    c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
+    # open file to write ciphered pickled object
+    f = open('media/player_keys/user'+user.username, 'wb')
+    f.write(c)
+    f.close()
 
 # Function to create zip file to be downaloaded by a specific user
 def createDownloadZip(userID, username):
