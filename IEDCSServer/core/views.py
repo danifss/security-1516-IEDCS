@@ -15,7 +15,8 @@ import sys
 import os
 import pickle
 import zipfile
-import StringIO
+# import StringIO
+from cStringIO import StringIO
 
 
 def index(request):
@@ -219,11 +220,11 @@ def writeUserData(user=None):
     p = pickle.Pickler(src)
     # write object
     p.dump(userInfo)
-    ### TODO cipher file
+    # cipher file
     crypt = CryptoModule()
     c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
     # open file to write ciphered pickled object
-    f = open('media/player_keys/user'+user.username, 'wb')
+    f = open('media/player_keys/user'+user.username+'.pkl', 'wb')
     f.write(c)
     f.close()
 
