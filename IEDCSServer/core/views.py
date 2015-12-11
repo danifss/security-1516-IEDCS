@@ -197,6 +197,7 @@ def register(request):
             ### Write static data to specific user
             writeUserData(user)
             ### Create Player file to download
+            ## TODO change this to nuikta
             createDownloadZip(user.userID, user.username)
 
             return HttpResponseRedirect('../login/')
