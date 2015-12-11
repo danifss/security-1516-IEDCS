@@ -1,0 +1,72 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IEDCS</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!--<link rel="stylesheet" href="http://bootswatch.com/yeti/bootstrap.css">-->
+    <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
+    <link rel="stylesheet" href="{% static 'web/css/bootstrap.min.css' %}">
+    <script src="{% static 'web/js/bootstrap.min.js' %}"></script>
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">IEDCS</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+                {% if loggedIn %}
+                <li><a href="/content">What we have</a></li>
+                {% endif %}
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if loggedIn %}
+                <li><a href="/Account/logout">Log out</a></li>
+                {% else %}
+                <li><a href="/Account/register">Register</a></li>
+                <li><a href="/Account/login">Log in</a></li>
+                {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if loggedIn %}
+                <li><a href="/Account/manage" title="Manage your account">Hello {{ firstName }}</a></li>
+                {% else %}
+                <li><a href="#">Hello {{ firstName }}</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="container body-content">
+
+    <div class="jumbotron">
+
+        {% block content %}
+
+        <h1>Identity Enabled Distribution Control System</h1>
+        <!--<img src="http://www.dietaja.org/wp-content/uploads/2015/04/manga.jpg" width="40%">-->
+        <img src="{% static 'web/img/manga.jpg' %}" width="40%">
+
+        {% endblock %}
+
+        <!--<p><a class="btn btn-primary btn-lg" href="/about">Learn more</a></p>-->
+
+    </div>
+    <footer>
+        <p>&copy; 2015 - Daniel - 51908 //\\Tiago Oliveira - 51687</p>
+    </footer>
+</div>
+
+</body>
+</html>
