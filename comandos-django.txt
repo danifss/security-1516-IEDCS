@@ -1,0 +1,69 @@
+Correr servidor:
+    1 - python manage.py runserver
+    ou (definir porta)
+    2 - python manage.py runserver 8000
+    ou (definir ip para acesso publico)
+    3 - python manage.py runserver 0.0.0.0:8000
+
+
+##-------------------------------------------------------------------
+Criar uma app: (por exemplo api ou core do sistema)
+    1 - python manage.py startapp nomeDaApp
+    2 - ir a settings.py dos ficheiros iniciais do django e adicionar as
+        INSTALLED_APPS no final 'nomeDaApp' :
+            INSTALLED_APPS = (
+                    ... ,
+                    'nomeDaApp',
+            )
+    3 - python manage.py makemigrations nomeDaApp
+    4 - se quisermos o codigo sql gerado faz-se:
+        python manage.py sqlmigrate nomeDaApp 0001
+    5 - python manage.py migrate
+
+
+##-------------------------------------------------------------------
+Depois de criar ou editar models.py: (da uma dada app)
+    1 - python manage.py makemigrations to create migrations
+    2 - python manage.py migrate to apply the changes to the database
+
+
+##-------------------------------------------------------------------
+Criar um super utilizador (inicio da base de dados):
+    1 - python manage.py createsuperuser
+    2 - depois ele pede username email e password
+
+
+##-------------------------------------------------------------------
+Registar a nossa app no backend:
+    1 - ir a pasta da app > admin.py > escrever algo do genero:
+        from django.contrib import admin
+
+        from .models import NomeDoModelo1, NomeDoModelo2, ...
+
+        admin.site.register(NomeDoModelo1)
+        admin.site.register(NomeDoModelo2) ...
+
+
+##-------------------------------------------------------------------
+Personalizar formularios etc no admin (apenas no backend):
+    1 - ir a admin.py :
+        from django.contrib import admin
+        from .models import Question
+
+        class QuestionAdmin(admin.ModelAdmin):
+            fields = ['pub_date', 'question_text']
+
+            list_display = ('question_text', 'pub_date', 'was_published_recently')
+
+            list_filter = ['pub_date']
+
+            search_fields = ['question_text']
+
+        admin.site.register(Question, QuestionAdmin)
+
+    fields - está-se a definir os campos.
+    list_display - muda-se aquilo que é mostrado quando se vê a listagem de registos na base de dados.
+    list_field - definir um filtro.
+    search_fields - uma caixa de texto para procurar pelo que éescolhido.
+    
+

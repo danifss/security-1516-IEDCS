@@ -1,0 +1,48 @@
+Installation:
+Configuring all system
+● sudo apt­get install python­dev imagemagick
+● pip install virtualenv
+● $ git clone ​https://code.ua.pt/git/security2015­p2g5
+● $ cd security2015­p2g5
+● $ virtualenv venv
+● $ . venv/bin/activate
+● pip install ­r requirements.txt
+
+Start Server
+● $ cd security2015­p2g5
+● $ . venv/bin/activate
+● $ cd IEDCSServer
+● $ python manage.py runserver 8000
+
+Website
+● First start Server
+● Go to browser and open ​
+● http://localhost:8000
+● Now, it's just a normal website
+        ○ Register
+        ○ Log in
+        ○ Buy something
+        ○ Logout
+
+Start Player
+● $ cd security2015­p2g5
+● $ . venv/bin/activate
+● $ cd IEDCSPlayer
+● $ python Player.py Credentials
+
+
+
+
+Server Admin:​ http://localhost:8000/admin
+● username: admin
+● password: admin
+
+Website:​​ http://localhost:8000/Account/login/
+● You can user Register page to create new user
+● Or you can use one existing:
+    ○ username: user
+    ○ password: user
+
+Player:
+● Use the same credentials as on website
+
