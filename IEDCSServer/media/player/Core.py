@@ -34,7 +34,7 @@ class Core(object):
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
 
-        f = open('../IEDCSServer/media/player_keys/player'+self.username+'.pub', 'r')
+        f = open('../IEDCSServer/media/player/player'+self.username+'.pub', 'r')
         playerPublic = f.read()
         player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
         self.playerHash = self.crypt.hashingSHA256(player)

@@ -9,7 +9,6 @@ import datetime
 import decimal
 import json
 import sys
-import uuid
 
 from django.core.serializers.base import DeserializationError
 from django.core.serializers.python import (
@@ -87,7 +86,7 @@ def Deserializer(stream_or_string, **options):
 
 class DjangoJSONEncoder(json.JSONEncoder):
     """
-    JSONEncoder subclass that knows how to encode date/time, decimal types and UUIDs.
+    JSONEncoder subclass that knows how to encode date/time and decimal types.
     """
     def default(self, o):
         # See "Date Time String Format" in the ECMA-262 specification.
@@ -108,8 +107,6 @@ class DjangoJSONEncoder(json.JSONEncoder):
                 r = r[:12]
             return r
         elif isinstance(o, decimal.Decimal):
-            return str(o)
-        elif isinstance(o, uuid.UUID):
             return str(o)
         else:
             return super(DjangoJSONEncoder, self).default(o)

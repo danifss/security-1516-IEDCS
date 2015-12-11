@@ -1,9 +1,9 @@
 import warnings
 
 from django.template.context_processors import *  # NOQA
-from django.utils.deprecation import RemovedInDjango110Warning
+from django.utils.deprecation import RemovedInDjango20Warning
 
 warnings.warn(
     "django.core.context_processors is deprecated in favor of "
     "django.template.context_processors.",
-    RemovedInDjango110Warning, stacklevel=2)
+    RemovedInDjango20Warning, stacklevel=2)

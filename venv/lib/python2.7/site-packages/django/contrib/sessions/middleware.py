@@ -31,12 +31,11 @@ class SessionMiddleware(object):
             # First check if we need to delete this cookie.
             # The session should be deleted only if the session is entirely empty
             if settings.SESSION_COOKIE_NAME in request.COOKIES and empty:
-                response.delete_cookie(settings.SESSION_COOKIE_NAME,
-                    domain=settings.SESSION_COOKIE_DOMAIN)
+                response.delete_cookie(settings.SESSION_COOKIE_NAME)
             else:
                 if accessed:
                     patch_vary_headers(response, ('Cookie',))
-                if (modified or settings.SESSION_SAVE_EVERY_REQUEST) and not empty:
+                if modified or settings.SESSION_SAVE_EVERY_REQUEST:
                     if request.session.get_expire_at_browser_close():
                         max_age = None
                         expires = None

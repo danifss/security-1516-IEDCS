@@ -236,9 +236,6 @@ class BaseManager(object):
     def __ne__(self, other):
         return not (self == other)
 
-    def __hash__(self):
-        return id(self)
-
 
 class Manager(BaseManager.from_queryset(QuerySet)):
     pass
