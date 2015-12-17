@@ -1,14 +1,13 @@
 # This file is distributed under the same license as the Django package.
 #
 # Translators:
-# Viktar Palstsiuk <vipals@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: django\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-03-18 09:16+0100\n"
-"PO-Revision-Date: 2015-04-08 13:04+0000\n"
-"Last-Translator: Viktar Palstsiuk <vipals@gmail.com>\n"
+"PO-Revision-Date: 2015-03-18 10:30+0000\n"
+"Last-Translator: Jannis Leidel <jannis@leidel.info>\n"
 "Language-Team: Belarusian (http://www.transifex.com/projects/p/django/"
 "language/be/)\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +28,7 @@ msgstr "Важныя даты"
 
 #, python-format
 msgid "%(name)s object with primary key %(key)r does not exist."
-msgstr "Аб'ект %(name)s з першасным ключом %(key)r не існуе."
+msgstr ""
 
 msgid "Password changed successfully."
 msgstr "Пароль зьмянілі."
@@ -39,13 +38,13 @@ msgid "Change password: %s"
 msgstr "Зьмяніць пароль: %s"
 
 msgid "Authentication and Authorization"
-msgstr "Аўтэнтыфікацыя і аўтарызацыя"
+msgstr ""
 
 msgid "No password set."
-msgstr "Пароль не зададзены."
+msgstr ""
 
 msgid "Invalid password format or unknown hashing algorithm."
-msgstr "Няправільны фармат паролю або невядомы алгарытм хэшавання."
+msgstr ""
 
 msgid "The two password fields didn't match."
 msgstr "Не супадаюць паролі ў двух палях."
@@ -72,14 +71,12 @@ msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "
 "be case-sensitive."
 msgstr ""
-"Калі ласка, увядзіце правільны %(username)s і пароль. Адзначым, што абодва "
-"палі могуць быць адчувальныя да рэгістра."
 
 msgid "This account is inactive."
 msgstr "Рахунак ня дзейнічае."
 
 msgid "Email"
-msgstr "Электронная пошта"
+msgstr ""
 
 msgid "New password"
 msgstr "Новы пароль"
@@ -151,14 +148,12 @@ msgid ""
 "The groups this user belongs to. A user will get all permissions granted to "
 "each of their groups."
 msgstr ""
-"Суполкі, у якія ўваходзіць карыстальнік. Карыстальнік атрымае дазволы, якія "
-"мае кожная ягоная суполка."
 
 msgid "user permissions"
 msgstr "дазволы карыстальніка"
 
 msgid "Specific permissions for this user."
-msgstr "Адмысловыя правы для гэтага карыстальніка."
+msgstr ""
 
 msgid "username"
 msgstr "імя карыстальніка"
@@ -172,8 +167,6 @@ msgid ""
 "Enter a valid username. This value may contain only letters, numbers and @/./"
 "+/-/_ characters."
 msgstr ""
-"Увядзіце імя карыстальніка. Гэта значэнне можа ўтрымліваць толькі літары, "
-"лічбы і сімвалы @/./+/-/_."
 
 msgid "A user with that username already exists."
 msgstr "Карыстальнік з такім іменем ужо існуе."
@@ -185,7 +178,7 @@ msgid "last name"
 msgstr "прозьвішча"
 
 msgid "email address"
-msgstr "адрас электроннай пошты"
+msgstr ""
 
 msgid "staff status"
 msgstr "становішча"
@@ -220,22 +213,22 @@ msgid "Logged out"
 msgstr "Не ўвайшоў"
 
 msgid "Password reset"
-msgstr "Аднаўленне пароля"
+msgstr ""
 
 msgid "Password reset sent"
-msgstr "Запыт на аднаўленне пароля адасланы"
+msgstr ""
 
 msgid "Enter new password"
-msgstr "Пазначце новы пароль"
+msgstr ""
 
 msgid "Password reset unsuccessful"
-msgstr "Не ўдалося аднавіць пароль"
+msgstr ""
 
 msgid "Password reset complete"
-msgstr "Аднаўленне пароля скончана"
+msgstr ""
 
 msgid "Password change"
-msgstr "Змена пароля"
+msgstr ""
 
 msgid "Password change successful"
-msgstr "Змена пароля прайшла паспяхова"
+msgstr ""

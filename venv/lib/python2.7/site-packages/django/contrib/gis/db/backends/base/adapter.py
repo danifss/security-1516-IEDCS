@@ -12,9 +12,6 @@ class WKTAdapter(object):
             return False
         return self.wkt == other.wkt and self.srid == other.srid
 
-    def __hash__(self):
-        return hash((self.wkt, self.srid))
-
     def __str__(self):
         return self.wkt
 

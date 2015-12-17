@@ -14,8 +14,10 @@ from UserInfo import *
 import sys
 import os
 import pickle
-import zipfile
-import StringIO
+import subprocess
+# import zipfile
+# import StringIO
+from cStringIO import StringIO
 
 
 def index(request):
@@ -176,7 +178,7 @@ def register(request):
             playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
 
             # write public key into file
-            f = open(settings.MEDIA_ROOT+'/player_keys/player'+username+'.pub', 'w')
+            f = open(settings.MEDIA_ROOT+'/player/resources/player'+username+'.pub', 'w')
             f.write(playerPublicSafe)
             f.close()
 
@@ -197,8 +199,7 @@ def register(request):
             ### Write static data to specific user
             writeUserData(user)
             ### Create Player file to download
-            ## TODO change this to nuikta
-            createDownloadZip(user.userID, user.username)
+            createDownloadFile(user.userID)
 
             return HttpResponseRedirect('../login/')
     else:
@@ -210,7 +211,7 @@ def register(request):
 # Function to write personal data of user into file and then cipher the file
 def writeUserData(user=None):
     if user is None:
-        print 'Error writing User data - No User or Player'
+        print 'Error writing User data - No User'
         return
     # create user info object
     userInfo = UserInfo(user)
@@ -219,42 +220,57 @@ def writeUserData(user=None):
     p = pickle.Pickler(src)
     # write object
     p.dump(userInfo)
-    ### TODO cipher file
+    # cipher file
     crypt = CryptoModule()
     c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
     # open file to write ciphered pickled object
-    f = open('media/player_keys/user'+user.username, 'wb')
+    f = open('media/player/resources/user'+user.username+'.pkl', 'wb')
     f.write(c)
     f.close()
 
 # Function to create zip file to be downaloaded by a specific user
-def createDownloadZip(userID, username):
-    # files to zip
-    base = 'media/player_keys/'
-    # playerDir = base+'IEDCSPlayer/'
-    filenames = [base+'player'+username+'.pub', base+'user'+username+'.pkl', base+'Core.py', base+'CryptoModule.py', \
-                 base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
-    # zip name
-    zip_subdir = 'download'+str(userID)
-    zip_filename = "%s.zip" % zip_subdir
+### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
+def createDownloadFile(userID):
+    # execute nuitka
+    # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
+    command = ["--recurse-all", "--recurse-directory=media/player/resources/", \
+               "--output-dir=media/player/", "--remove-output", "media/player/Player.py"]
+    p = subprocess.Popen(["nuitka"]+command)
+    p.wait()
 
-    # The zip compressor
-    try:
-        zf = zipfile.ZipFile(base+zip_filename, "w")
-        for fpath in filenames:
-            # Calculate path for file in zip
-            fdir, fname = os.path.split(fpath)
-            # print fdir, fname
-            zip_path = os.path.join('IEDCSPlayer', fname)
-            # Add file, at correct path
-            zf.write(fpath, zip_path)
+    # Change exec output name
+    if os.path.isfile('media/player/Player.exe'):
+        os.rename('media/player/Player.exe', 'media/player/Player'+str(userID)+'.exe')
 
-        zf.close()
-        # clean pub and pkl files
-        os.remove(base+'player'+username+'.pub')
-        os.remove(base+'user'+username+'.pkl')
-    except Exception as e:
-        print "ERROR ", e
+
+    # clean pub and pkl files
+    # os.remove(base+'resources/player'+username+'.pub')
+    # os.remove(base+'resources/user'+username+'.pkl')
+
+    # # playerDir = base+'IEDCSPlayer/'
+    # filenames = [base+'player'+username+'.pub', base+'user'+username+'.pkl', base+'Core.py', base+'CryptoModule.py', \
+    #              base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
+    # # zip name
+    # zip_subdir = 'download'+str(userID)
+    # zip_filename = "%s.zip" % zip_subdir
+    #
+    # # The zip compressor
+    # try:
+    #     zf = zipfile.ZipFile(base+zip_filename, "w")
+    #     for fpath in filenames:
+    #         # Calculate path for file in zip
+    #         fdir, fname = os.path.split(fpath)
+    #         # print fdir, fname
+    #         zip_path = os.path.join('IEDCSPlayer', fname)
+    #         # Add file, at correct path
+    #         zf.write(fpath, zip_path)
+    #
+    #     zf.close()
+    #     # clean pub and pkl files
+    #     os.remove(base+'player'+username+'.pub')
+    #     os.remove(base+'user'+username+'.pkl')
+    # except Exception as e:
+    #     print "ERROR ", e
 
 
 def accountManage(request):
@@ -266,7 +282,7 @@ def accountManage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
-        playerUrl = 'media/player_keys/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
+        playerUrl = 'media/player/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
         if not os.path.isfile(playerUrl):
             playerUrl = '#'
 

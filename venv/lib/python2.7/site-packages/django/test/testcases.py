@@ -38,7 +38,7 @@ from django.test.utils import (
     override_settings,
 )
 from django.utils import six
-from django.utils.deprecation import RemovedInDjango110Warning
+from django.utils.deprecation import RemovedInDjango20Warning
 from django.utils.encoding import force_text
 from django.utils.six.moves.urllib.parse import (
     unquote, urlparse, urlsplit, urlunsplit,
@@ -206,9 +206,9 @@ class SimpleTestCase(unittest.TestCase):
         if hasattr(self, 'urls'):
             warnings.warn(
                 "SimpleTestCase.urls is deprecated and will be removed in "
-                "Django 1.10. Use @override_settings(ROOT_URLCONF=...) "
+                "Django 2.0. Use @override_settings(ROOT_URLCONF=...) "
                 "in %s instead." % self.__class__.__name__,
-                RemovedInDjango110Warning, stacklevel=2)
+                RemovedInDjango20Warning, stacklevel=2)
             set_urlconf(None)
             self._old_root_urlconf = settings.ROOT_URLCONF
             settings.ROOT_URLCONF = self.urls
@@ -565,7 +565,8 @@ class SimpleTestCase(unittest.TestCase):
             msg_prefix + "Template '%s' was used unexpectedly in rendering"
             " the response" % template_name)
 
-    def assertRaisesMessage(self, expected_exception, expected_message, *args, **kwargs):
+    def assertRaisesMessage(self, expected_exception, expected_message,
+                           callable_obj=None, *args, **kwargs):
         """
         Asserts that the message in a raised exception matches the passed
         value.
@@ -573,17 +574,12 @@ class SimpleTestCase(unittest.TestCase):
         Args:
             expected_exception: Exception class expected to be raised.
             expected_message: expected error message string value.
-            args: Function to be called and extra positional args.
+            callable_obj: Function to be called.
+            args: Extra args.
             kwargs: Extra kwargs.
         """
-        # callable_obj was a documented kwarg in older version of Django, but
-        # had to be removed due to a bad fix for http://bugs.python.org/issue24134
-        # inadvertently making its way into Python 2.7.10.
-        callable_obj = kwargs.pop('callable_obj', None)
-        if callable_obj:
-            args = (callable_obj,) + args
         return six.assertRaisesRegex(self, expected_exception,
-                re.escape(expected_message), *args, **kwargs)
+                re.escape(expected_message), callable_obj, *args, **kwargs)
 
     def assertFieldOutput(self, fieldclass, valid, invalid, field_args=None,
             field_kwargs=None, empty_value=''):
@@ -958,11 +954,7 @@ class TestCase(TransactionTestCase):
                     except Exception:
                         cls._rollback_atomics(cls.cls_atomics)
                         raise
-        try:
-            cls.setUpTestData()
-        except Exception:
-            cls._rollback_atomics(cls.cls_atomics)
-            raise
+        cls.setUpTestData()
 
     @classmethod
     def tearDownClass(cls):

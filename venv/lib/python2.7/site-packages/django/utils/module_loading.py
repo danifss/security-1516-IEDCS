@@ -29,7 +29,7 @@ def import_string(dotted_path):
         return getattr(module, class_name)
     except AttributeError:
         msg = 'Module "%s" does not define a "%s" attribute/class' % (
-            module_path, class_name)
+            dotted_path, class_name)
         six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 
