@@ -15,7 +15,7 @@ import sys
 import os
 import pickle
 import subprocess
-import zipfile
+# import zipfile
 # import StringIO
 from cStringIO import StringIO
 
@@ -229,18 +229,14 @@ def writeUserData(user=None):
     f.close()
 
 # Function to create zip file to be downaloaded by a specific user
+### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
 def createDownloadFile(userID):
-    ### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
-    # directory path
-    base = 'media/player/'
     # execute nuitka
     # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
-    # print 'Comando: ', command
-    # cmd = command.split(' ')
-    # print 'Split cmd: ', cmd
     command = ["--recurse-all", "--recurse-directory=media/player/resources/", \
                "--output-dir=media/player/", "--remove-output", "media/player/Player.py"]
     p = subprocess.Popen(["nuitka"]+command)
+    p.wait()
 
     # Change exec output name
     if os.path.isfile('media/player/Player.exe'):
