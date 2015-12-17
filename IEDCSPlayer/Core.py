@@ -8,6 +8,7 @@ import json
 import subprocess
 import time
 import pickle
+from cStringIO import StringIO
 # from PIL import Image
 
 
@@ -57,8 +58,10 @@ class Core(object):
 
         ## Load user info
         f = open('resources/user.pkl', 'rb')
-        userInfo = pickle.load(f)
+        decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
         f.close()
+        src = StringIO(decipheredFile)
+        userInfo = pickle.Unpickler(src)
         # Import user info
         self.userID = userInfo.userID
         self.username = userInfo.username

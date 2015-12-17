@@ -20,6 +20,7 @@ from django.template.engine import Engine
 from django.utils import six
 from django.utils._os import upath
 from django.utils.decorators import method_decorator
+from django.utils.inspect import func_has_no_args
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 
@@ -247,7 +248,7 @@ class ModelDetailView(BaseAdminDocsView):
 
         # Gather model methods.
         for func_name, func in model.__dict__.items():
-            if (inspect.isfunction(func) and len(inspect.getargspec(func)[0]) == 1):
+            if inspect.isfunction(func) and func_has_no_args(func):
                 try:
                     for exclude in MODEL_METHODS_EXCLUDE:
                         if func_name.startswith(exclude):
@@ -266,8 +267,8 @@ class ModelDetailView(BaseAdminDocsView):
         # Gather related objects
         for rel in opts.related_objects:
             verbose = _("related `%(app_label)s.%(object_name)s` objects") % {
-                'app_label': rel.opts.app_label,
-                'object_name': rel.opts.object_name,
+                'app_label': rel.related_model._meta.app_label,
+                'object_name': rel.related_model._meta.object_name,
             }
             accessor = rel.get_accessor_name()
             fields.append({

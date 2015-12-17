@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core import serializers
 from django.db import router
 from django.db.backends.utils import truncate_name
-from django.utils.deprecation import RemovedInDjango20Warning
+from django.utils.deprecation import RemovedInDjango110Warning
 from django.utils.encoding import force_bytes
 from django.utils.six import StringIO
 from django.utils.six.moves import input
@@ -191,7 +191,7 @@ class BaseDatabaseCreation(object):
         """
         warnings.warn("DatabaseCreation.sql_indexes_for_model is deprecated, "
                       "use the equivalent method of the schema editor instead.",
-                      RemovedInDjango20Warning)
+                      RemovedInDjango110Warning)
         if not model._meta.managed or model._meta.proxy or model._meta.swapped:
             return []
         output = []
@@ -365,7 +365,7 @@ class BaseDatabaseCreation(object):
             verbosity=max(verbosity - 1, 0),
             interactive=False,
             database=self.connection.alias,
-            test_flush=True,
+            test_flush=not keepdb,
         )
 
         # We then serialize the current state of the database into a string
@@ -427,7 +427,7 @@ class BaseDatabaseCreation(object):
         Internal implementation - returns the name of the test DB that will be
         created. Only useful when called from create_test_db() and
         _create_test_db() and when no external munging is done with the 'NAME'
-        or 'TEST_NAME' settings.
+        settings.
         """
         if self.connection.settings_dict['TEST']['NAME']:
             return self.connection.settings_dict['TEST']['NAME']
@@ -514,7 +514,7 @@ class BaseDatabaseCreation(object):
         # ourselves. Connect to the previous database (not the test database)
         # to do so, because it's not allowed to delete a database while being
         # connected to it.
-        with self._nodb_connection.cursor() as cursor:
+        with self.connection._nodb_connection.cursor() as cursor:
             # Wait to avoid "database is being accessed by other users" errors.
             time.sleep(1)
             cursor.execute("DROP DATABASE %s"

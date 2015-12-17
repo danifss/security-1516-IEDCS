@@ -1,9 +1,14 @@
+from __future__ import absolute_import
+
 import inspect
 import warnings
 
 
-class RemovedInDjango20Warning(PendingDeprecationWarning):
+class RemovedInDjango110Warning(PendingDeprecationWarning):
     pass
+
+# for backwards compatibility in Django 1.8.3
+RemovedInDjango20Warning = PendingDeprecationWarning
 
 
 class RemovedInDjango19Warning(DeprecationWarning):

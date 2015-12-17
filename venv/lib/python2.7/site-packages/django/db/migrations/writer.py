@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import collections
 import datetime
 import decimal
-import inspect
 import math
 import os
 import re
@@ -14,10 +13,12 @@ from importlib import import_module
 from django.apps import apps
 from django.db import migrations, models
 from django.db.migrations.loader import MigrationLoader
+from django.db.migrations.operations.base import Operation
 from django.utils import datetime_safe, six
 from django.utils._os import upath
 from django.utils.encoding import force_text
 from django.utils.functional import Promise
+from django.utils.inspect import get_func_args
 from django.utils.timezone import utc
 from django.utils.version import get_docs_version
 
@@ -39,11 +40,10 @@ class SettingsReference(str):
 
 
 class OperationWriter(object):
-    indentation = 2
-
-    def __init__(self, operation):
+    def __init__(self, operation, indentation=2):
         self.operation = operation
         self.buff = []
+        self.indentation = indentation
 
     def serialize(self):
 
@@ -56,7 +56,14 @@ class OperationWriter(object):
                     for key, value in _arg_value.items():
                         key_string, key_imports = MigrationWriter.serialize(key)
                         arg_string, arg_imports = MigrationWriter.serialize(value)
-                        self.feed('%s: %s,' % (key_string, arg_string))
+                        args = arg_string.splitlines()
+                        if len(args) > 1:
+                            self.feed('%s: %s' % (key_string, args[0]))
+                            for arg in args[1:-1]:
+                                self.feed(arg)
+                            self.feed('%s,' % args[-1])
+                        else:
+                            self.feed('%s: %s,' % (key_string, arg_string))
                         imports.update(key_imports)
                         imports.update(arg_imports)
                     self.unindent()
@@ -66,18 +73,31 @@ class OperationWriter(object):
                     self.indent()
                     for item in _arg_value:
                         arg_string, arg_imports = MigrationWriter.serialize(item)
-                        self.feed('%s,' % arg_string)
+                        args = arg_string.splitlines()
+                        if len(args) > 1:
+                            for arg in args[:-1]:
+                                self.feed(arg)
+                            self.feed('%s,' % args[-1])
+                        else:
+                            self.feed('%s,' % arg_string)
                         imports.update(arg_imports)
                     self.unindent()
                     self.feed('],')
             else:
                 arg_string, arg_imports = MigrationWriter.serialize(_arg_value)
-                self.feed('%s=%s,' % (_arg_name, arg_string))
+                args = arg_string.splitlines()
+                if len(args) > 1:
+                    self.feed('%s=%s' % (_arg_name, args[0]))
+                    for arg in args[1:-1]:
+                        self.feed(arg)
+                    self.feed('%s,' % args[-1])
+                else:
+                    self.feed('%s=%s,' % (_arg_name, arg_string))
                 imports.update(arg_imports)
 
         imports = set()
         name, args, kwargs = self.operation.deconstruct()
-        argspec = inspect.getargspec(self.operation.__init__)
+        operation_args = get_func_args(self.operation.__init__)
 
         # See if this operation is in django.db.migrations. If it is,
         # We can just use the fact we already have that imported,
@@ -90,16 +110,15 @@ class OperationWriter(object):
 
         self.indent()
 
-        # Start at one because argspec includes "self"
-        for i, arg in enumerate(args, 1):
+        for i, arg in enumerate(args):
             arg_value = arg
-            arg_name = argspec.args[i]
+            arg_name = operation_args[i]
             _write(arg_name, arg_value)
 
         i = len(args)
         # Only iterate over remaining arguments
-        for arg_name in argspec.args[i + 1:]:
-            if arg_name in kwargs:
+        for arg_name in operation_args[i:]:
+            if arg_name in kwargs:  # Don't sort to maintain signature order
                 arg_value = kwargs[arg_name]
                 _write(arg_name, arg_value)
 
@@ -323,6 +342,9 @@ class MigrationWriter(object):
             if isinstance(value, datetime_safe.time):
                 value_repr = "datetime.%s" % value_repr
             return value_repr, {"import datetime"}
+        # Timedeltas
+        elif isinstance(value, datetime.timedelta):
+            return repr(value), {"import datetime"}
         # Settings references
         elif isinstance(value, SettingsReference):
             return "settings.%s" % value.setting_name, {"from django.conf import settings"}
@@ -373,6 +395,10 @@ class MigrationWriter(object):
                 return "%s.as_manager()" % name, imports
             else:
                 return cls.serialize_deconstructed(manager_path, args, kwargs)
+        elif isinstance(value, Operation):
+            string, imports = OperationWriter(value, indentation=0).serialize()
+            # Nested operation, trailing comma is handled in upper OperationWriter._write()
+            return string.rstrip(','), imports
         # Anything that knows how to deconstruct itself.
         elif hasattr(value, 'deconstruct'):
             return cls.serialize_deconstructed(*value.deconstruct())
@@ -443,7 +469,7 @@ MIGRATION_TEMPLATE = """\
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 %(imports)s
 
 class Migration(migrations.Migration):

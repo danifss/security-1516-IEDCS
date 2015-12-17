@@ -20,7 +20,7 @@ from django.db.migrations.autodetector import MigrationAutodetector
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.loader import AmbiguityError
 from django.db.migrations.state import ProjectState
-from django.utils.deprecation import RemovedInDjango20Warning
+from django.utils.deprecation import RemovedInDjango110Warning
 from django.utils.module_loading import module_has_submodule
 
 
@@ -44,13 +44,13 @@ class Command(BaseCommand):
             default=DEFAULT_DB_ALIAS, help='Nominates a database to synchronize. '
                 'Defaults to the "default" database.')
         parser.add_argument('--fake', action='store_true', dest='fake', default=False,
-            help='Mark migrations as run without actually running them')
+            help='Mark migrations as run without actually running them.')
         parser.add_argument('--fake-initial', action='store_true', dest='fake_initial', default=False,
             help='Detect if tables already exist and fake-apply initial migrations if so. Make sure '
                  'that the current database schema matches your initial migration before using this '
                  'flag. Django will only check for an existing table name.')
         parser.add_argument('--list', '-l', action='store_true', dest='list', default=False,
-            help='Show a list of all known migrations and which are applied')
+            help='Show a list of all known migrations and which are applied.')
 
     def handle(self, *args, **options):
 
@@ -73,7 +73,7 @@ class Command(BaseCommand):
         if options.get("list", False):
             warnings.warn(
                 "The 'migrate --list' command is deprecated. Use 'showmigrations' instead.",
-                RemovedInDjango20Warning, stacklevel=2)
+                RemovedInDjango110Warning, stacklevel=2)
             self.stdout.ending = None  # Remove when #21429 is fixed
             return call_command(
                 'showmigrations',
@@ -197,6 +197,7 @@ class Command(BaseCommand):
         if self.verbosity >= 1:
             self.stdout.write(self.style.MIGRATE_HEADING("Running migrations:"))
         if not plan:
+            executor.check_replacements()
             if self.verbosity >= 1:
                 self.stdout.write("  No migrations to apply.")
                 # If there's changes that aren't in migrations yet, tell them how to fix it.

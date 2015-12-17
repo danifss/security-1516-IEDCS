@@ -2,9 +2,8 @@
 This module converts requested URLs to callback view functions.
 
 RegexURLResolver is the main class here. Its resolve() method takes a URL (as
-a string) and returns a tuple in this format:
-
-    (view_function, function_args, function_kwargs)
+a string) and returns a ResolverMatch object which provides access to all
+attributes of the resolved URL match.
 """
 from __future__ import unicode_literals
 
@@ -18,7 +17,7 @@ from django.core.exceptions import ImproperlyConfigured, ViewDoesNotExist
 from django.http import Http404
 from django.utils import lru_cache, six
 from django.utils.datastructures import MultiValueDict
-from django.utils.deprecation import RemovedInDjango20Warning
+from django.utils.deprecation import RemovedInDjango110Warning
 from django.utils.encoding import force_str, force_text, iri_to_uri
 from django.utils.functional import lazy
 from django.utils.http import RFC3986_SUBDELIMS, urlquote
@@ -442,7 +441,7 @@ class RegexURLResolver(LocaleRegexProvider):
             if not callable(original_lookup) and callable(lookup_view):
                 warnings.warn(
                     'Reversing by dotted path is deprecated (%s).' % original_lookup,
-                    RemovedInDjango20Warning, stacklevel=3
+                    RemovedInDjango110Warning, stacklevel=3
                 )
         possibilities = self.reverse_dict.getlist(lookup_view)
 

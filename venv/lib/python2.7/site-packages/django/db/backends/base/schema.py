@@ -9,9 +9,13 @@ from django.utils.log import getLogger
 logger = getLogger('django.db.backends.schema')
 
 
-def _related_non_m2m_objects(opts):
-    # filters out m2m objects from reverse relations.
-    return (obj for obj in opts.related_objects if not obj.field.many_to_many)
+def _related_non_m2m_objects(old_field, new_field):
+    # Filters out m2m objects from reverse relations.
+    # Returns (old_relation, new_relation) tuples.
+    return zip(
+        (obj for obj in old_field.model._meta.related_objects if not obj.field.many_to_many),
+        (obj for obj in new_field.model._meta.related_objects if not obj.field.many_to_many)
+    )
 
 
 class BaseDatabaseSchemaEditor(object):
@@ -313,15 +317,7 @@ class BaseDatabaseSchemaEditor(object):
         news = set(tuple(fields) for fields in new_unique_together)
         # Deleted uniques
         for fields in olds.difference(news):
-            columns = [model._meta.get_field(field).column for field in fields]
-            constraint_names = self._constraint_names(model, columns, unique=True)
-            if len(constraint_names) != 1:
-                raise ValueError("Found wrong number (%s) of constraints for %s(%s)" % (
-                    len(constraint_names),
-                    model._meta.db_table,
-                    ", ".join(columns),
-                ))
-            self.execute(self._delete_constraint_sql(self.sql_delete_unique, model, constraint_names[0]))
+            self._delete_composed_index(model, fields, {'unique': True}, self.sql_delete_unique)
         # Created uniques
         for fields in news.difference(olds):
             columns = [model._meta.get_field(field).column for field in fields]
@@ -337,19 +333,22 @@ class BaseDatabaseSchemaEditor(object):
         news = set(tuple(fields) for fields in new_index_together)
         # Deleted indexes
         for fields in olds.difference(news):
-            columns = [model._meta.get_field(field).column for field in fields]
-            constraint_names = self._constraint_names(model, list(columns), index=True)
-            if len(constraint_names) != 1:
-                raise ValueError("Found wrong number (%s) of constraints for %s(%s)" % (
-                    len(constraint_names),
-                    model._meta.db_table,
-                    ", ".join(columns),
-                ))
-            self.execute(self._delete_constraint_sql(self.sql_delete_index, model, constraint_names[0]))
+            self._delete_composed_index(model, fields, {'index': True}, self.sql_delete_index)
         # Created indexes
         for field_names in news.difference(olds):
             fields = [model._meta.get_field(field) for field in field_names]
             self.execute(self._create_index_sql(model, fields, suffix="_idx"))
+
+    def _delete_composed_index(self, model, fields, constraint_kwargs, sql):
+        columns = [model._meta.get_field(field).column for field in fields]
+        constraint_names = self._constraint_names(model, columns, **constraint_kwargs)
+        if len(constraint_names) != 1:
+            raise ValueError("Found wrong number (%s) of constraints for %s(%s)" % (
+                len(constraint_names),
+                model._meta.db_table,
+                ", ".join(columns),
+            ))
+        self.execute(self._delete_constraint_sql(sql, model, constraint_names[0]))
 
     def alter_db_table(self, model, old_db_table, new_db_table):
         """
@@ -456,7 +455,8 @@ class BaseDatabaseSchemaEditor(object):
         old_type = old_db_params['type']
         new_db_params = new_field.db_parameters(connection=self.connection)
         new_type = new_db_params['type']
-        if (old_type is None and old_field.rel is None) or (new_type is None and new_field.rel is None):
+        if ((old_type is None and old_field.rel is None) or
+                (new_type is None and new_field.rel is None)):
             raise ValueError(
                 "Cannot alter field %s into %s - they do not properly define "
                 "db_type (are you using PostGIS 1.5 or badly-written custom "
@@ -517,10 +517,12 @@ class BaseDatabaseSchemaEditor(object):
         if old_field.primary_key and new_field.primary_key and old_type != new_type:
             # '_meta.related_field' also contains M2M reverse fields, these
             # will be filtered out
-            for rel in _related_non_m2m_objects(new_field.model._meta):
-                rel_fk_names = self._constraint_names(rel.related_model, [rel.field.column], foreign_key=True)
+            for _old_rel, new_rel in _related_non_m2m_objects(old_field, new_field):
+                rel_fk_names = self._constraint_names(
+                    new_rel.related_model, [new_rel.field.column], foreign_key=True
+                )
                 for fk_name in rel_fk_names:
-                    self.execute(self._delete_constraint_sql(self.sql_delete_fk, rel.related_model, fk_name))
+                    self.execute(self._delete_constraint_sql(self.sql_delete_fk, new_rel.related_model, fk_name))
         # Removed an index? (no strict check, as multiple indexes are possible)
         if (old_field.db_index and not new_field.db_index and
                 not old_field.unique and not
@@ -542,19 +544,16 @@ class BaseDatabaseSchemaEditor(object):
                 self.execute(self._delete_constraint_sql(self.sql_delete_check, model, constraint_name))
         # Have they renamed the column?
         if old_field.column != new_field.column:
-            self.execute(self.sql_rename_column % {
-                "table": self.quote_name(model._meta.db_table),
-                "old_column": self.quote_name(old_field.column),
-                "new_column": self.quote_name(new_field.column),
-                "type": new_type,
-            })
+            self.execute(self._rename_field_sql(model._meta.db_table, old_field, new_field, new_type))
         # Next, start accumulating actions to do
         actions = []
         null_actions = []
         post_actions = []
         # Type change?
         if old_type != new_type:
-            fragment, other_actions = self._alter_column_type_sql(model._meta.db_table, new_field.column, new_type)
+            fragment, other_actions = self._alter_column_type_sql(
+                model._meta.db_table, old_field, new_field, new_type
+            )
             actions.append(fragment)
             post_actions.extend(other_actions)
         # When changing a column NULL constraint to NOT NULL with a given
@@ -660,7 +659,9 @@ class BaseDatabaseSchemaEditor(object):
             for sql, params in post_actions:
                 self.execute(sql, params)
         # Added a unique?
-        if not old_field.unique and new_field.unique:
+        if (not old_field.unique and new_field.unique) or (
+            old_field.primary_key and not new_field.primary_key and new_field.unique
+        ):
             self.execute(self._create_unique_sql(model, [new_field.column]))
         # Added an index?
         if (not old_field.db_index and new_field.db_index and
@@ -671,7 +672,7 @@ class BaseDatabaseSchemaEditor(object):
         # referring to us.
         rels_to_update = []
         if old_field.primary_key and new_field.primary_key and old_type != new_type:
-            rels_to_update.extend(_related_non_m2m_objects(new_field.model._meta))
+            rels_to_update.extend(_related_non_m2m_objects(old_field, new_field))
         # Changed to become primary key?
         # Note that we don't detect unsetting of a PK, as we assume another field
         # will always come along and replace it.
@@ -694,20 +695,23 @@ class BaseDatabaseSchemaEditor(object):
                 }
             )
             # Update all referencing columns
-            rels_to_update.extend(_related_non_m2m_objects(new_field.model._meta))
+            rels_to_update.extend(_related_non_m2m_objects(old_field, new_field))
         # Handle our type alters on the other end of rels from the PK stuff above
-        for rel in rels_to_update:
-            rel_db_params = rel.field.db_parameters(connection=self.connection)
+        for old_rel, new_rel in rels_to_update:
+            rel_db_params = new_rel.field.db_parameters(connection=self.connection)
             rel_type = rel_db_params['type']
+            fragment, other_actions = self._alter_column_type_sql(
+                new_rel.related_model._meta.db_table, old_rel.field, new_rel.field, rel_type
+            )
             self.execute(
                 self.sql_alter_column % {
-                    "table": self.quote_name(rel.related_model._meta.db_table),
-                    "changes": self.sql_alter_column_type % {
-                        "column": self.quote_name(rel.field.column),
-                        "type": rel_type,
-                    }
-                }
+                    "table": self.quote_name(new_rel.related_model._meta.db_table),
+                    "changes": fragment[0],
+                },
+                fragment[1],
             )
+            for sql, params in other_actions:
+                self.execute(sql, params)
         # Does it have a foreign key?
         if (new_field.rel and
                 (fks_dropped or not old_field.rel or not old_field.db_constraint) and
@@ -742,7 +746,7 @@ class BaseDatabaseSchemaEditor(object):
         if self.connection.features.connection_persists_old_columns:
             self.connection.close()
 
-    def _alter_column_type_sql(self, table, column, type):
+    def _alter_column_type_sql(self, table, old_field, new_field, new_type):
         """
         Hook to specialize column type alteration for different backends,
         for cases when a creation type is different to an alteration type
@@ -755,8 +759,8 @@ class BaseDatabaseSchemaEditor(object):
         return (
             (
                 self.sql_alter_column_type % {
-                    "column": self.quote_name(column),
-                    "type": type,
+                    "column": self.quote_name(new_field.column),
+                    "type": new_type,
                 },
                 [],
             ),
@@ -858,6 +862,14 @@ class BaseDatabaseSchemaEditor(object):
             fields = [model._meta.get_field(field) for field in field_names]
             output.append(self._create_index_sql(model, fields, suffix="_idx"))
         return output
+
+    def _rename_field_sql(self, table, old_field, new_field, new_type):
+        return self.sql_rename_column % {
+            "table": self.quote_name(table),
+            "old_column": self.quote_name(old_field.column),
+            "new_column": self.quote_name(new_field.column),
+            "type": new_type,
+        }
 
     def _create_fk_sql(self, model, field, suffix):
         from_table = model._meta.db_table

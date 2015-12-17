@@ -18,7 +18,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.color import color_style, no_style
 from django.db import connections
 from django.utils.deprecation import (
-    RemovedInDjango19Warning, RemovedInDjango20Warning,
+    RemovedInDjango19Warning, RemovedInDjango110Warning,
 )
 from django.utils.encoding import force_str
 
@@ -174,7 +174,8 @@ class BaseCommand(object):
     ``option_list``
         This is the list of ``optparse`` options which will be fed
         into the command's ``OptionParser`` for parsing arguments.
-        Deprecated and will be removed in Django 2.0.
+        Deprecated and will be removed in Django 1.10.
+        Use ``add_arguments`` instead.
 
     ``output_transaction``
         A boolean indicating whether the command outputs SQL
@@ -300,15 +301,18 @@ class BaseCommand(object):
 
         """
         if not self.use_argparse:
+            def store_as_int(option, opt_str, value, parser):
+                setattr(parser.values, option.dest, int(value))
+
             # Backwards compatibility: use deprecated optparse module
             warnings.warn("OptionParser usage for Django management commands "
                           "is deprecated, use ArgumentParser instead",
-                          RemovedInDjango20Warning)
+                          RemovedInDjango110Warning)
             parser = OptionParser(prog=prog_name,
                                 usage=self.usage(subcommand),
                                 version=self.get_version())
-            parser.add_option('-v', '--verbosity', action='store', dest='verbosity', default='1',
-                type='choice', choices=['0', '1', '2', '3'],
+            parser.add_option('-v', '--verbosity', action='callback', dest='verbosity', default=1,
+                type='choice', choices=['0', '1', '2', '3'], callback=store_as_int,
                 help='Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output')
             parser.add_option('--settings',
                 help=(
@@ -645,9 +649,9 @@ class NoArgsCommand(BaseCommand):
 
     def __init__(self):
         warnings.warn(
-            "NoArgsCommand class is deprecated and will be removed in Django 2.0. "
+            "NoArgsCommand class is deprecated and will be removed in Django 1.10. "
             "Use BaseCommand instead, which takes no arguments by default.",
-            RemovedInDjango20Warning
+            RemovedInDjango110Warning
         )
         super(NoArgsCommand, self).__init__()
 

@@ -13,7 +13,7 @@ from django.db.models.sql.datastructures import EmptyResultSet
 from django.db.models.sql.query import Query, get_order_dir
 from django.db.transaction import TransactionManagementError
 from django.db.utils import DatabaseError
-from django.utils.deprecation import RemovedInDjango20Warning
+from django.utils.deprecation import RemovedInDjango110Warning
 from django.utils.six.moves import zip
 
 
@@ -145,9 +145,12 @@ class SQLCompiler(object):
             # then also add having expressions to group by.
             pk = None
             for expr in expressions:
-                if (expr.output_field.primary_key and
-                        getattr(expr.output_field, 'model') == self.query.model):
+                # Is this a reference to query's base table primary key? If the
+                # expression isn't a Col-like, then skip the expression.
+                if (getattr(expr, 'target', None) == self.query.model._meta.pk and
+                        getattr(expr, 'alias', None) == self.query.tables[0]):
                     pk = expr
+                    break
             if pk:
                 expressions = [pk] + [expr for expr in expressions if expr in having]
         return expressions
@@ -253,9 +256,16 @@ class SQLCompiler(object):
             descending = True if order == 'DESC' else False
 
             if col in self.query.annotation_select:
+                # Reference to expression in SELECT clause
                 order_by.append((
                     OrderBy(Ref(col, self.query.annotation_select[col]), descending=descending),
                     True))
+                continue
+            if col in self.query.annotations:
+                # References to an expression which is masked out of the SELECT clause
+                order_by.append((
+                    OrderBy(self.query.annotations[col], descending=descending),
+                    False))
                 continue
 
             if '.' in field:
@@ -319,7 +329,7 @@ class SQLCompiler(object):
         warnings.warn(
             "Calling a SQLCompiler directly is deprecated. "
             "Call compiler.quote_name_unless_alias instead.",
-            RemovedInDjango20Warning, stacklevel=2)
+            RemovedInDjango110Warning, stacklevel=2)
         return self.quote_name_unless_alias(name)
 
     def quote_name_unless_alias(self, name):
@@ -331,7 +341,8 @@ class SQLCompiler(object):
         if name in self.quote_cache:
             return self.quote_cache[name]
         if ((name in self.query.alias_map and name not in self.query.table_map) or
-                name in self.query.extra_select or name in self.query.external_aliases):
+                name in self.query.extra_select or (
+                    name in self.query.external_aliases and name not in self.query.table_map)):
             self.quote_cache[name] = name
             return name
         r = self.connection.ops.quote_name(name)
@@ -975,7 +986,7 @@ class SQLDeleteCompiler(SQLCompiler):
         Creates the SQL for this query. Returns the SQL string and list of
         parameters.
         """
-        assert len(self.query.tables) == 1, \
+        assert len([t for t in self.query.tables if self.query.alias_refcount[t] > 0]) == 1, \
             "Can only delete from one table at a time."
         qn = self.quote_name_unless_alias
         result = ['DELETE FROM %s' % qn(self.query.tables[0])]
@@ -1006,7 +1017,10 @@ class SQLUpdateCompiler(SQLCompiler):
                     raise FieldError("Aggregate functions are not allowed in this query")
             elif hasattr(val, 'prepare_database_save'):
                 if field.rel:
-                    val = val.prepare_database_save(field)
+                    val = field.get_db_prep_save(
+                        val.prepare_database_save(field),
+                        connection=self.connection,
+                    )
                 else:
                     raise TypeError("Database is trying to update a relational field "
                                     "of type %s with a value of type %s. Make sure "

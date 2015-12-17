@@ -2,7 +2,7 @@
 Classes to represent the definitions of aggregate functions.
 """
 from django.core.exceptions import FieldError
-from django.db.models.expressions import Func, Value
+from django.db.models.expressions import Func, Star
 from django.db.models.fields import FloatField, IntegerField
 
 __all__ = [
@@ -41,7 +41,7 @@ class Aggregate(Func):
     def _patch_aggregate(self, query):
         """
         Helper method for patching 3rd party aggregates that do not yet support
-        the new way of subclassing. This method should be removed in 2.0
+        the new way of subclassing. This method will be removed in Django 1.10.
 
         add_to_query(query, alias, col, source, is_summary) will be defined on
         legacy aggregates which, in turn, instantiates the SQL implementation of
@@ -90,7 +90,7 @@ class Count(Aggregate):
 
     def __init__(self, expression, distinct=False, **extra):
         if expression == '*':
-            expression = Value(expression)
+            expression = Star()
         super(Count, self).__init__(
             expression, distinct='DISTINCT ' if distinct else '', output_field=IntegerField(), **extra)
 
