@@ -199,8 +199,7 @@ def register(request):
             ### Write static data to specific user
             writeUserData(user)
             ### Create Player file to download
-            ## TODO change this to nuitka
-            createDownloadFile(user.userID, user.username)
+            createDownloadFile(user.userID)
 
             return HttpResponseRedirect('../login/')
     else:
@@ -230,15 +229,22 @@ def writeUserData(user=None):
     f.close()
 
 # Function to create zip file to be downaloaded by a specific user
-def createDownloadFile(userID, username):
+def createDownloadFile(userID):
     ### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
     # directory path
     base = 'media/player/'
     # execute nuitka
-    # p = subprocess.Popen(['nuitka', ' --recurse-all', ' --recurse-directory='+base+'resources '+'--output-dir='+base, \
-    #                                 base+'Player.py' ])
-    # p = subprocess.Popen(['nuitka --recurse-all --recurse-directory=media/player/resources --output-dir=media/player --remove-output media/player/Player.py'])
-    p = subprocess.check_call(['nuitka --recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py'])
+    # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
+    # print 'Comando: ', command
+    # cmd = command.split(' ')
+    # print 'Split cmd: ', cmd
+    command = ["--recurse-all", "--recurse-directory=media/player/resources/", \
+               "--output-dir=media/player/", "--remove-output", "media/player/Player.py"]
+    p = subprocess.Popen(["nuitka"]+command)
+
+    # Change exec output name
+    if os.path.isfile('media/player/Player.exe'):
+        os.rename('media/player/Player.exe', 'media/player/Player'+str(userID)+'.exe')
 
 
     # clean pub and pkl files
