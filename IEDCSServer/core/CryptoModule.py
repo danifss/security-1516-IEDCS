@@ -31,7 +31,8 @@ class CryptoModule(object):
 
         try:
             # Construct a new key carrying only the public information.
-            return pairKey.publickey()
+            # print pairKey.publickey().exportKey()
+            return pairKey.publickey().exportKey()
         except Exception as e:
             print "Key not valid: ", e
             return None
@@ -148,16 +149,19 @@ class CryptoModule(object):
 
 
 # f = CryptoModule()
-
-### Testing RSA
-
+#
+# ### Testing RSA
+#
 # key = f.generateRsa()
 # pubkey = f.publicRsa(key)
-# pub = key.publickey().exportKey('PEM')
-# pu_n = f.rsaImport(pub)
-
-
-# print p
+# # pub = key.publickey().exportKey('PEM')
+# pu_n = f.rsaImport(pubkey)
+#
+# # # print p
+# a = f.rsaCipher(pu_n, "Mas que belo dia Alice")
+# print "cifrado", a
+# b = f.rsaDecipher(key,a)
+# print b
 # a = f.rsaCipher(pu_n, "ola")
 # print "cifrado", a
 # b = f.rsaDecipher(key,a)
