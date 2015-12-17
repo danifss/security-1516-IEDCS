@@ -60,8 +60,8 @@ class Core(object):
         f = open('resources/user.pkl', 'rb')
         decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
         f.close()
-        src = StringIO(decipheredFile)
-        userInfo = pickle.Unpickler(src)
+        fileInMem = StringIO(decipheredFile)
+        userInfo = pickle.Unpickler(fileInMem)
         # Import user info
         self.userID = userInfo.userID
         self.username = userInfo.username
