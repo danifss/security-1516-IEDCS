@@ -61,15 +61,18 @@ class Core(object):
         decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
         f.close()
         fileInMem = StringIO(decipheredFile)
-        userInfo = pickle.Unpickler(fileInMem)
-        # Import user info
-        self.userID = userInfo.userID
-        self.username = userInfo.username
-        self.password = userInfo.password
-        self.email = userInfo.email
-        self.firstName = userInfo.firstName
-        self.lastName = userInfo.lastName
-        self.createdOn = userInfo.createdOn
+        try:
+            userInfo = pickle.Unpickler(fileInMem)
+            # Import user info
+            self.userID = userInfo.userID
+            self.username = userInfo.username
+            self.password = userInfo.password
+            self.email = userInfo.email
+            self.firstName = userInfo.firstName
+            self.lastName = userInfo.lastName
+            self.createdOn = userInfo.createdOn
+        except Exception as ex:
+            print "Error:", ex
 
         try:
             hash_pass = self.crypt.hashingSHA256(passwd)
