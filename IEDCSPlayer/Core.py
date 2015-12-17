@@ -7,23 +7,25 @@ import requests
 import json
 import subprocess
 import time
+import pickle
 # from PIL import Image
 
 
 class Core(object):
-    userID = "1"
-    username = "daniel"
-    email = "daniel.silva@ua.pt"
-    firstName = "Daniel"
-    lastName = "Silva"
-    createdOn = "06/11/2015"
+    # userID = ""
+    # username = ""
+    # password = ""
+    # email = ""
+    # firstName = ""
+    # lastName = ""
+    # createdOn = ""
     loggedIn = False
 
 
     def __init__(self):
-
         self.crypt = CryptoModule()
 
+        # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
             self.login()
@@ -35,6 +37,7 @@ class Core(object):
 
         f = open('resources/player'+self.username+'.pub', 'r')
         playerPublic = f.read()
+        f.close()
         player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
         self.playerHash = self.crypt.hashingSHA256(player)
         # self.playerKey = self.crypt.rsaImport(player)
@@ -50,33 +53,48 @@ class Core(object):
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
+
+        ## Load user info
+        f = open('resources/user.pkl', 'rb')
+        userInfo = pickle.load(f)
+        f.close()
+        # Import user info
+        self.userID = userInfo.userID
+        self.username = userInfo.username
+        self.password = userInfo.password
+        self.email = userInfo.email
+        self.firstName = userInfo.firstName
+        self.lastName = userInfo.lastName
+        self.createdOn = userInfo.createdOn
+
         try:
-            ### TODO send also device id in order to server check if the player is associated with this device
             hash_pass = self.crypt.hashingSHA256(passwd)
-            result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-
-
+            # result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
+            nice_try = True if hash_pass == self.password else False
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
-        if result.status_code == 200:
-            res = json.loads(result.text)
-            self.username = username
-            self.userID = res['id']
-            self.email = res['email']
-            self.firstName = res['first_name']
-            self.lastName = res['last_name']
+        # if result.status_code == 200:
+        if nice_try:
+            # res = json.loads(result.text)
+            # self.username = username
+            # self.userID = res['id']
+            # self.email = res['email']
+            # self.firstName = res['first_name']
+            # self.lastName = res['last_name']
             self.loggedIn = True
 
             # if everything ok, lets generate device key or not
             self.deviceKey = self.generateDevice()
         else:
-            print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
+            print co.FAIL+"\tFail doing login."+co.ENDC #+str(result.status_code)+co.ENDC
 
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.email = self.firstName = self.lastName = ""
+        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
+        self.deviceKey = self.playerHash = ""
+        self.crypt = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
@@ -174,6 +192,8 @@ class Core(object):
               co.OKGREEN+self.firstName+co.ENDC
         print co.HEADER+co.BOLD+"Last Name : "+co.ENDC+ \
               co.OKGREEN+self.lastName+co.ENDC
+        print co.HEADER+co.BOLD+"Created On: "+co.ENDC+ \
+              co.OKGREEN+self.createdOn+co.ENDC
 
 
     # generates device key if first run

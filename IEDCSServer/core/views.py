@@ -225,7 +225,7 @@ def writeUserData(user=None):
     crypt = CryptoModule()
     c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
     # open file to write ciphered pickled object
-    f = open('media/player/resources/user'+user.username+'.pkl', 'wb')
+    f = open('media/player/resources/user.pkl', 'wb')
     f.write(c)
     f.close()
 
@@ -237,10 +237,8 @@ def createDownloadFile(userID, username):
     command = ["--recurse-all", "--recurse-directory=media/player/resources/", \
                "--output-dir=media/player/", "--remove-output", "media/player/Player.py"]
     p = subprocess.Popen(["nuitka"]+command)
+    # Wait for the command to finish
     p.wait()
-    # Change exec output name
-    # if os.path.isfile('media/player/Player.exe'):
-    #     os.rename('media/player/Player.exe', 'media/player/Player.exe')
 
     # Making zip file to be downloaded
     filenames = ['media/player/Player.exe']
@@ -261,7 +259,7 @@ def createDownloadFile(userID, username):
         zf.close()
         # clean files
         os.remove('media/player/resources/player'+username+'.pub')
-        os.remove('media/player/resources/user'+username+'.pkl')
+        os.remove('media/player/resources/user.pkl')
         os.remove('media/player/Player.exe')
     except Exception as e:
         print "ERROR ", e
