@@ -1,4 +1,5 @@
 {% extends "core/index.html" %}
+{% load staticfiles %}
 
 {% block content %}
 
@@ -66,10 +67,19 @@
                 <div class="form-group">
                     <div class="col-lg-10 col-lg-offset-0">
                         <button type="reset" class="btn btn-xs btn-default">Cancel</button>
-                        <button type="submit" class="btn btn-xs btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-xs btn-primary" id="btnSubmit" onclick="showSpinner()">Submit</button>
                     </div>
                 </div>
             </fieldset>
         </form>
+
+        <script>
+            function showSpinner(){
+                document.getElementById("loading").style.display="block";
+            }
+        </script>
+        <div id="loading">
+            <img id="loading-image" src="{% static 'web/img/spiral-spinner.gif' %}" alt="Loading..." />
+        </div>
 
 {% endblock %}
