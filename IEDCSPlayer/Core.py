@@ -9,7 +9,6 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
-from UserInfo import *
 # from PIL import Image
 
 
