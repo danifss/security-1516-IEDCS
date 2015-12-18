@@ -50,8 +50,8 @@ class UserLogin(generics.ListCreateAPIView):
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
                 if passwd == user.password:
-                    return Response(status=status.HTTP_200_OK, data={'id': user.userID, 'first_name': user.firstName,
-                                                                     'last_name': user.lastName, 'email': user.email})
+                    return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
+                                                                     #'last_name': user.lastName, 'email': user.email})
                 else:
                     return Response(status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:

@@ -67,3 +67,6 @@ Personalizar formularios etc no admin (apenas no backend):
     search_fields - uma caixa de texto para procurar pelo que éescolhido.
     
 
+##-------------------------------------------------------------------
+Reset do sequienceID de uma tabela:
+    UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='core_user';

@@ -7,13 +7,21 @@ import requests
 import json
 import subprocess
 import time
-import cPickle as pickle
+import pickle
 from cStringIO import StringIO
 # from PIL import Image
 
 
 class Core(object):
+    # userID = ""
+    # username = ""
+    # password = ""
+    # email = ""
+    # firstName = ""
+    # lastName = ""
+    # createdOn = ""
     loggedIn = False
+
 
     def __init__(self):
 
@@ -48,35 +56,48 @@ class Core(object):
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
+        ## Load user info
+        f = open('resources/user.pkl', 'rb')
+        decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
+        f.close()
+        # src = StringIO(decipheredFile)
         try:
-            ## Load user info
-            f = open('resources/user'+username+'.pkl', 'r')
-            decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
-            f.close()
-            src = StringIO(decipheredFile)
-
-            userInfo = pickle.load(src)
+            # up = pickle.Unpickler(src)
+            # up.persistent_load = persistent_load
+            userInfo = pickle.Unpickler(decipheredFile).load()
             # Import user info
-            self.userID = userInfo["userId"]
-            self.username = userInfo["username"]
-            self.password = userInfo["password"]
-            self.email = userInfo["email"]
-            self.firstName = userInfo["firstName"]
-            self.lastName = userInfo["lastName"]
-            self.createdOn = userInfo["createdOn"]
+            self.userID = userInfo.userID
+            self.username = userInfo.username
+            self.password = userInfo.password
+            self.email = userInfo.email
+            self.firstName = userInfo.firstName
+            self.lastName = userInfo.lastName
+            self.createdOn = userInfo.createdOn
         except Exception as ex:
-            print co.FAIL+"\tFail doing login."+co.ENDC
-            return
+            print co.FAIL+"Error:", ex
+            print co.ENDC
 
-        hash_pass = self.crypt.hashingSHA256(passwd)
-        nice_try = True if hash_pass == self.password else False
+        try:
+            hash_pass = self.crypt.hashingSHA256(passwd)
+            # result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
+            nice_try = True if hash_pass == self.password else False
+        except requests.ConnectionError:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return
+        # if result.status_code == 200:
         if nice_try:
+            # res = json.loads(result.text)
+            # self.username = username
+            # self.userID = res['id']
+            # self.email = res['email']
+            # self.firstName = res['first_name']
+            # self.lastName = res['last_name']
             self.loggedIn = True
+
             # if everything ok, lets generate device key or not
             self.deviceKey = self.generateDevice()
         else:
-            self.loggedIn = False
-            print co.FAIL+"\tFail doing login."+co.ENDC
+            print co.FAIL+"\tFail doing login."+co.ENDC #+str(result.status_code)+co.ENDC
 
 
     ### Logout
@@ -262,3 +283,10 @@ class Core(object):
             print co.ENDC
             return None
         """""
+
+def persistent_load(persid):
+    if persid.startswith('the value '):
+        value = int(persid.split()[2])
+        return FancyInteger(value)
+    else:
+        raise pickle.UnpicklingError, 'Invalid persistent id'

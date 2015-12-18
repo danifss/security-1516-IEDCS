@@ -8,6 +8,8 @@ Configuring all system
 ● $ . venv/bin/activate
 ● pip install ­r requirements.txt
 
+Intall package: cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+
 Start Server
 ● $ cd security2015­p2g5
 ● $ . venv/bin/activate
