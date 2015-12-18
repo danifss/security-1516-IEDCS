@@ -8,6 +8,7 @@ import json
 import subprocess
 import time
 import pickle
+from cStringIO import StringIO
 # from PIL import Image
 
 
@@ -23,6 +24,7 @@ class Core(object):
 
 
     def __init__(self):
+
         self.crypt = CryptoModule()
 
         # Check if it is the real user
@@ -56,16 +58,24 @@ class Core(object):
 
         ## Load user info
         f = open('resources/user.pkl', 'rb')
-        userInfo = pickle.load(f)
+        decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
         f.close()
-        # Import user info
-        self.userID = userInfo.userID
-        self.username = userInfo.username
-        self.password = userInfo.password
-        self.email = userInfo.email
-        self.firstName = userInfo.firstName
-        self.lastName = userInfo.lastName
-        self.createdOn = userInfo.createdOn
+        # src = StringIO(decipheredFile)
+        try:
+            # up = pickle.Unpickler(src)
+            # up.persistent_load = persistent_load
+            userInfo = pickle.Unpickler(decipheredFile).load()
+            # Import user info
+            self.userID = userInfo.userID
+            self.username = userInfo.username
+            self.password = userInfo.password
+            self.email = userInfo.email
+            self.firstName = userInfo.firstName
+            self.lastName = userInfo.lastName
+            self.createdOn = userInfo.createdOn
+        except Exception as ex:
+            print co.FAIL+"Error:", ex
+            print co.ENDC
 
         try:
             hash_pass = self.crypt.hashingSHA256(passwd)
@@ -203,22 +213,48 @@ class Core(object):
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
         key = self.getDeviceKey(hashdevice)
-
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
             devkey = self.crypt.rsaExport(rsadevice, hashdevice)
 
+            devpub = self.crypt.publicRsa(rsadevice)
+
+
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
-            devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devkey)
+            devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devpub)
+            f = open('device.priv', 'w')
+            f.write(devsafe)
+            f.close()
+
             r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
             print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
         else:
-            print co.OKGREEN+co.BOLD+"Yes, this is not your first time!\n"+co.ENDC
+            print co.OKGREEN+co.BOLD+"Yes, this is not your first time! (Device Validated)\n"+co.ENDC
 
 
+    def getDeviceKey(self, hashdevice):
+
+        try:
+            f = open('device.priv', 'r')
+            key = f.read()
+            f.close()
+
+            hashdevice = self.crypt.hashDevice()
+            devsafe = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key)
+            devkey = self.crypt.rsaImport(devsafe, hashdevice)
+
+            if devkey is None:
+                print "\033[91mDevice Not Valid!!! Player Terminating\n\n\033[0m"
+                os._exit(0)
+            return devkey
+        except:
+            return None
+
+    # GET DEVICE KEY TO SERVER
+    """
     def getDeviceKey(self, hashdevice):
 
         # with userID and hash get device key
@@ -230,7 +266,7 @@ class Core(object):
                 res = json.loads(result.text)
                 dados = res['results']
                 key_ciphered = dados[0]['deviceKey']
-
+                print dados
                 hashdevice = self.crypt.hashDevice()
                 key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
                 return self.crypt.rsaImport(key, hashdevice)
@@ -246,4 +282,11 @@ class Core(object):
             print co.FAIL+"ERROR!", e
             print co.ENDC
             return None
+        """""
 
+def persistent_load(persid):
+    if persid.startswith('the value '):
+        value = int(persid.split()[2])
+        return FancyInteger(value)
+    else:
+        raise pickle.UnpicklingError, 'Invalid persistent id'

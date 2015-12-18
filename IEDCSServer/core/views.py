@@ -13,12 +13,11 @@ from UserInfo import *
 
 import sys
 import os
-import pickle
+import cPickle as pickle
+from cStringIO import StringIO
 import subprocess
 import time
 import zipfile
-# import StringIO
-from cStringIO import StringIO
 
 
 def index(request):
@@ -215,17 +214,25 @@ def writeUserData(user=None):
         print 'Error writing User data - No User'
         return
     # create user info object
-    userInfo = UserInfo(user)
-    # buffer and pickler
+    # userInfo = UserInfo(1, user)
+    userInfo = {}
+    userInfo["userId"] = user.userID
+    userInfo["username"] = user.username
+    userInfo["password"] = user.password
+    userInfo["email"] = user.email
+    userInfo["firstName"] = user.firstName
+    userInfo["lastName"] = user.lastName
+    userInfo["createdOn"] = user.createdOn
+    # buffer
     src = StringIO()
-    p = pickle.Pickler(src)
     # write object
-    p.dump(userInfo)
+    # pickle.Pickler(src,pickle.HIGHEST_PROTOCOL).dump(userInfo)
+    pickle.dump(userInfo, src)
     # cipher file
     crypt = CryptoModule()
     c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
     # open file to write ciphered pickled object
-    f = open('media/player/resources/user.pkl', 'wb')
+    f = open('media/player/resources/user'+user.username+'.pkl', 'w')
     f.write(c)
     f.close()
 
@@ -234,21 +241,21 @@ def writeUserData(user=None):
 def createDownloadFile(userID, username):
     # execute nuitka
     # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
-    command = ["--recurse-all", "--recurse-directory=media/player/resources/", \
-               "--output-dir=media/player/", "--remove-output", "media/player/Player.py"]
-    p = subprocess.Popen(["nuitka"]+command)
+    options = ["--recurse-all", "--output-dir=media/download/", "--recurse-directory=media/player/resources/", \
+               "--remove-output", "media/player/Player.py"]
+    p = subprocess.Popen(["nuitka"]+options)
     # Wait for the command to finish
     p.wait()
 
     # Making zip file to be downloaded
-    filenames = ['media/player/Player.exe']
+    filenames = ['media/download/Player.exe']
     # zip name
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
 
     # zip compressor
     try:
-        zf = zipfile.ZipFile('media/player/'+zip_filename, "w")
+        zf = zipfile.ZipFile('media/download/'+zip_filename, "w")
         for fpath in filenames:
             # Calculate path for file in zip
             fdir, fname = os.path.split(fpath)
@@ -259,8 +266,8 @@ def createDownloadFile(userID, username):
         zf.close()
         # clean files
         os.remove('media/player/resources/player'+username+'.pub')
-        os.remove('media/player/resources/user.pkl')
-        os.remove('media/player/Player.exe')
+        os.remove('media/player/resources/user'+username+'.pkl')
+        os.remove('media/download/Player.exe')
     except Exception as e:
         print "ERROR ", e
 
@@ -274,7 +281,7 @@ def accountManage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
-        playerUrl = 'media/player/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
+        playerUrl = 'media/download/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
         if not os.path.isfile(playerUrl):
             playerUrl = '#'
 
