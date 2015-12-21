@@ -7,23 +7,19 @@ import requests
 import json
 import subprocess
 import time
+import cPickle as pickle
+from cStringIO import StringIO
 # from PIL import Image
 
 
 class Core(object):
-    userID = "1"
-    username = "daniel"
-    email = "daniel.silva@ua.pt"
-    firstName = "Daniel"
-    lastName = "Silva"
-    createdOn = "06/11/2015"
     loggedIn = False
-    # dasd
 
     def __init__(self):
 
         self.crypt = CryptoModule()
 
+        # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
             self.login()
@@ -33,10 +29,11 @@ class Core(object):
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
 
-        f = open('player'+self.username+'.pub', 'r')
+        f = open('resources/player'+self.username+'.pub', 'r')
         playerPublic = f.read()
+        f.close()
         player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
-        self.playerHash = self.crypt.hashingSHA256(player)
+        self.playerHash = CryptoModule.hashingSHA256(player)
         # self.playerKey = self.crypt.rsaImport(player)
 
         ### print welcome message
@@ -50,33 +47,46 @@ class Core(object):
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
+
+        hash_pass = CryptoModule.hashingSHA256(passwd)
         try:
-            ### TODO send also device id in order to server check if the player is associated with this device
-            hash_pass = self.crypt.hashingSHA256(passwd)
+            # Verify user in server
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
+            if result.status_code == 200:
+                ## Load user info
+                f = open('resources/user'+username+'.pkl', 'r')
+                decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
+                f.close()
+                src = StringIO(decipheredFile)
 
+                userInfo = pickle.load(src)
+                # Import user info
+                self.userID = userInfo["userId"]
+                self.username = userInfo["username"]
+                self.password = userInfo["password"]
+                self.email = userInfo["email"]
+                self.firstName = userInfo["firstName"]
+                self.lastName = userInfo["lastName"]
+                self.createdOn = userInfo["createdOn"]
 
+                if hash_pass == self.password:
+                    self.loggedIn = True
+                    # if everything ok, lets generate device key or not
+                    self.deviceKey = self.generateDevice()
+                    return
+            # else:
+            self.loggedIn = False
+            print co.FAIL+"\tFail doing login."+co.ENDC
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
-        if result.status_code == 200:
-            res = json.loads(result.text)
-            self.username = username
-            self.userID = res['id']
-            self.email = res['email']
-            self.firstName = res['first_name']
-            self.lastName = res['last_name']
-            self.loggedIn = True
-
-            # if everything ok, lets generate device key or not
-            self.deviceKey = self.generateDevice()
-        else:
-            print co.FAIL+"\tFail doing log in. Error: "+str(result.status_code)+co.ENDC
 
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.email = self.firstName = self.lastName = ""
+        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
+        self.deviceKey = self.playerHash = ""
+        self.crypt = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
@@ -104,11 +114,25 @@ class Core(object):
 
 
     ### Play content bought by the logged client
-    def play_my_content(self, contentID):
+    def play_my_content(self):
+        hasContent = self.hasContentToPlay()
+        if not hasContent:
+            print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
+            return
+
         try:
+            print co.OKGREEN+co.BOLD
+            opt = raw_input("\tWhat do you wanna watch? "+co.ENDC)
+            contentID = int(opt)
+
             # Get pages number to view one by one
             pages = 0
-            result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
+            try:
+                result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
+            except requests.ConnectionError:
+                print co.FAIL+"Error connecting with server!\n"+co.ENDC
+                return
+
             if result.status_code == 200:
                 res = json.loads(result.text)
                 pages = int(res['pages'])
@@ -120,7 +144,11 @@ class Core(object):
             i = 0
             while i <= pages:
                 i += 1
-                result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
+                try:
+                    result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
+                except requests.ConnectionError:
+                    print co.FAIL+"Error connecting with server!\n"+co.ENDC
+                    return
                 if result.status_code == 200:
                     res = json.loads(result.text)
                     cfname = res['path']
@@ -133,7 +161,7 @@ class Core(object):
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
-                    # TODO use cStringIO to do everything in memory
+                    ## TODO use StringIO to use opencv or something (if we have time)
                     f4 = open(filePath, 'w')
                     f4.write(decifrado)
                     f4.close()
@@ -161,8 +189,18 @@ class Core(object):
             print co.ENDC
 
     def genFileKey(self):
+        ## TODO finish this!
         return ("+bananasbananas+","+bananasbananas+")
 
+
+    ### Verify if user has something to Play
+    def hasContentToPlay(self):
+        try:
+            result = requests.get(api.HAS_CONTENT_TO_PLAY+str(self.userID))
+            return True if result.status_code == 200 else False
+        except requests.ConnectionError:
+            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            return
 
     ### Show personal information
     def show_my_info(self):
@@ -174,6 +212,8 @@ class Core(object):
               co.OKGREEN+self.firstName+co.ENDC
         print co.HEADER+co.BOLD+"Last Name : "+co.ENDC+ \
               co.OKGREEN+self.lastName+co.ENDC
+        print co.HEADER+co.BOLD+"Created On: "+co.ENDC+ \
+              co.OKGREEN+str(self.createdOn)[:-13]+co.ENDC
 
 
     # generates device key if first run
@@ -193,10 +233,11 @@ class Core(object):
 
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
             devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devpub)
-            f = open('device.priv', 'w')
+            f = open('resources/device.priv', 'w')
             f.write(devsafe)
             f.close()
 
+            ## TODO do this inside a try catch
             r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
@@ -208,7 +249,7 @@ class Core(object):
     def getDeviceKey(self, hashdevice):
 
         try:
-            f = open('device.priv', 'r')
+            f = open('resources/device.priv', 'r')
             key = f.read()
             f.close()
 
@@ -253,5 +294,3 @@ class Core(object):
             print co.ENDC
             return None
         """""
-
-

@@ -50,8 +50,8 @@ class UserLogin(generics.ListCreateAPIView):
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
                 if passwd == user.password:
-                    return Response(status=status.HTTP_200_OK, data={'id': user.userID, 'first_name': user.firstName,
-                                                                     'last_name': user.lastName, 'email': user.email})
+                    return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
+                                                                     #'last_name': user.lastName, 'email': user.email})
                 else:
                     return Response(status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
@@ -87,6 +87,7 @@ class ContentByUser(generics.ListCreateAPIView):
         omit_parameters:
         - form
         """
+        # print request.META['CSRF_COOKIE']
         try:
             int_id = int(pk)
             user = User.objects.get(userID=int_id)
@@ -98,6 +99,47 @@ class ContentByUser(generics.ListCreateAPIView):
         except:
             self.queryset = []
         return self.list(request)
+
+
+class UserHasContent(generics.ListCreateAPIView):
+    """<b>Check if User has Content</b>"""
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Check if given User has any Content
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 204 NO CONTENT
+
+        ---
+        omit_parameters:
+        - form
+        """
+        # print request.META['CSRF_COOKIE']
+        try:
+            int_id = int(pk)
+            user = User.objects.get(userID=int_id)
+            purchases = Purchase.objects.all().filter(user=user)
+            if len(purchases) > 0:
+                return Response(status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserDevice(generics.ListCreateAPIView):
@@ -212,7 +254,7 @@ class UserDeviceCreate(generics.ListCreateAPIView):
                 return Response(status=status.HTTP_200_OK)
             except Exception as e:
                 print "Error creating new Device.", e
-                Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -374,82 +416,3 @@ class ContentPages(generics.ListCreateAPIView):
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
-# class ContentNames(generics.ListCreateAPIView):
-#     """<b>Content file name</b>"""
-#     queryset = Content.objects.all()
-#     serializer_class = ContentSerializer
-#     allowed_methods = ['get']
-#
-#     def get(self, request, pk=None):
-#         """
-#         Gets file name of given content id
-#
-#
-#
-#
-#         <b>Details</b>
-#
-#         METHODS : GET
-#
-#
-#
-#         <b>RETURNS:</b>
-#
-#         - 200 OK.
-#
-#         - 400 BAD REQUEST
-#
-#         ---
-#         omit_parameters:
-#         - form
-#         """
-#         try:
-#             int_id = int(pk)
-#             content = Content.objects.get(contentID=int_id)
-#             file_name = str(content.fileName)
-#
-#             return Response(status=status.HTTP_200_OK, data={'file_name': file_name})
-#         except:
-#             pass
-#         return Response(status=status.HTTP_400_BAD_REQUEST)
-#
-#
-# class ContentFilePath(generics.ListCreateAPIView):
-#     """<b>Content file path</b>"""
-#     queryset = Content.objects.all()
-#     serializer_class = ContentSerializer
-#     allowed_methods = ['get']
-#
-#     def get(self, request, pk=None):
-#         """
-#         Gets file path of given content id
-#
-#
-#
-#
-#         <b>Details</b>
-#
-#         METHODS : GET
-#
-#
-#
-#         <b>RETURNS:</b>
-#
-#         - 200 OK.
-#
-#         - 400 BAD REQUEST
-#
-#         ---
-#         omit_parameters:
-#         - form
-#         """
-#         try:
-#             int_id = int(pk)
-#             content = Content.objects.get(contentID=int_id)
-#             file_path = str(content.filepath)
-#
-#             return Response(status=status.HTTP_200_OK, data={'file_path': file_path})
-#         except:
-#             pass
-#         return Response(status=status.HTTP_400_BAD_REQUEST)

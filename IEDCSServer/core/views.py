@@ -12,8 +12,11 @@ from CryptoModule import *
 
 import sys
 import os
+import cPickle as pickle
+from cStringIO import StringIO
+import subprocess
+import time
 import zipfile
-import StringIO
 
 
 def index(request):
@@ -35,20 +38,28 @@ def index(request):
 
 
 def about(request):
-    if 'loggedIn' not in request.session:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
+
     template = loader.get_template('core/about.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 def contact(request):
-    if 'loggedIn' not in request.session:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
+
     template = loader.get_template('core/contact.html')
-    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 def login(request):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
+        request.session['loggedIn'] = False
+
     msgError = ''
     if request.method == 'POST':
         form = loginForm(request.POST)
@@ -90,7 +101,8 @@ def login(request):
     context = RequestContext(request, {
         'error_message' : msgError,
     })
-    return render(request, 'core/Account/login.html', {'form': form, 'loggedIn' : request.session['loggedIn']})
+    return render(request, 'core/Account/login.html', {'form': form, \
+                   'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
 def authenticate(username, password):
     try:
@@ -113,11 +125,15 @@ def logout(request):
     request.session['firstName'] = "Visitante"
     request.session['loggedIn'] = False
     template = loader.get_template('core/Account/logout.html')
-    return HttpResponse(template.render())
+    return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']}))
 
 
 @csrf_protect
 def register(request):
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
+        request.session['loggedIn'] = False
+
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
@@ -160,7 +176,8 @@ def register(request):
             playerPublic = playerRsa.publickey().exportKey("PEM")
             playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
 
-            f = open(settings.MEDIA_ROOT+'/player_keys/player'+username+'.pub', 'w')
+            # write public key into file
+            f = open(settings.MEDIA_ROOT+'/player/resources/player'+username+'.pub', 'w')
             f.write(playerPublicSafe)
             f.close()
 
@@ -178,29 +195,67 @@ def register(request):
             # Save new Player in DB
             new_player.save()
 
+            ### Write static data to specific user
+            writeUserData(user)
             ### Create Player file to download
-            createDownloadZip(user.userID, user.username)
+            createDownloadFile(user.userID, user.username)
 
             return HttpResponseRedirect('../login/')
     else:
         form = registerUserForm()
 
-    return render(request, 'core/Account/register.html', {'form': form})
+    return render(request, 'core/Account/register.html', {'form': form, \
+                  'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
+
+# Function to write personal data of user into file and then cipher the file
+def writeUserData(user=None):
+    if user is None:
+        print 'Error writing User data - No User'
+        return
+    # create user info dictionary
+    userInfo = {}
+    userInfo["userId"] = user.userID
+    userInfo["username"] = user.username
+    userInfo["password"] = user.password
+    userInfo["email"] = user.email
+    userInfo["firstName"] = user.firstName
+    userInfo["lastName"] = user.lastName
+    userInfo["createdOn"] = user.createdOn
+    # buffer for pickle dump
+    src = StringIO()
+    # pickle data to string io
+    pickle.dump(userInfo, src)
+    # cipher file
+    crypt = CryptoModule()
+    c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
+    # open file to write ciphered pickled object
+    f = open('media/player/resources/user'+user.username+'.pkl', 'w')
+    f.write(c)
+    f.close()
 
 # Function to create zip file to be downaloaded by a specific user
-def createDownloadZip(userID, username):
-    # files to zip
-    base = 'media/player_keys/'
-    # playerDir = base+'IEDCSPlayer/'
-    filenames = [base+'player'+username+'.pub', base+'Core.py', base+'CryptoModule.py', \
-                 base+'Fingerprint.py', base+'Player.py', base+'Resources.py']
+### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
+def createDownloadFile(userID, username):
+    # execute nuitka
+    # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
+    options = ["--recurse-all", "--output-dir=media/download/", "--recurse-directory=media/player/resources/", \
+               "--remove-output", "media/player/Player.py"]
+    p = subprocess.Popen(["nuitka"]+options)
+    # Wait for the command to finish
+    p.wait()
+
+    # Making zip file to be downloaded
+    ### TODO move files in player/resources folder to zip file
+    filenames = ['media/download/Player.exe', 'media/player/resources',
+                    'media/player/resources/player'+username+'.pub',
+                    'media/player/resources/user'+username+'.pkl']
     # zip name
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
 
-    # The zip compressor
+    # zip compressor
     try:
-        zf = zipfile.ZipFile('media/player_keys/'+zip_filename, "w")
+        zf = zipfile.ZipFile('media/download/'+zip_filename, "w")
         for fpath in filenames:
             # Calculate path for file in zip
             fdir, fname = os.path.split(fpath)
@@ -208,13 +263,16 @@ def createDownloadZip(userID, username):
             zip_path = os.path.join('IEDCSPlayer', fname)
             # Add file, at correct path
             zf.write(fpath, zip_path)
-
         zf.close()
+        # clean files
+        os.remove('media/player/resources/player'+username+'.pub')
+        os.remove('media/player/resources/user'+username+'.pkl')
+        os.remove('media/download/Player.exe')
     except Exception as e:
         print "ERROR ", e
 
 
-def manage(request):
+def accountManage(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
         request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
@@ -223,7 +281,7 @@ def manage(request):
 
     try:
         user = User.objects.get(username=request.session['username'])
-        playerUrl = 'media/player_keys/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
+        playerUrl = 'media/download/download'+str(user.userID)+'.zip' # settings.MEDIA_URL
         if not os.path.isfile(playerUrl):
             playerUrl = '#'
 
@@ -247,15 +305,18 @@ def manage(request):
 
 def listContent(request):
     if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
         template = loader.get_template('core/index.html')
-        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], \
+                             'firstName' : request.session['firstName']}))
 
     try:
         content = Content.objects.all()
         context = RequestContext(request, {
             'content' : content,
-            'loggedIn' : request.session['loggedIn']
+            'loggedIn' : request.session['loggedIn'],
+            'firstName' : request.session['firstName'],
         })
     except Exception as e:
         print "Error getting Content.", e
@@ -266,10 +327,12 @@ def listContent(request):
 
 
 def buyContent(request, pk=None):
-    if 'loggedIn' not in request.session or request.session['loggedIn'] == False:
+    if 'loggedIn' not in request.session or request.session['loggedIn'] == False or 'username' not in request.session:
+        request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
         template = loader.get_template('core/index.html')
-        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn']}))
+        return HttpResponse(template.render({'loggedIn' : request.session['loggedIn'], \
+                             'firstName' : request.session['firstName']}))
 
     result = False
     try:

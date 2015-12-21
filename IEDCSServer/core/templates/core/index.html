@@ -4,10 +4,11 @@
 <head>
     <title>IEDCS</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" href="http://bootswatch.com/yeti/bootstrap.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <!--<link rel="stylesheet" href="{ % static 'core/css/bootstrap.min.css' % }">-->
-    <!--<script src="{ % static 'core/js/bootstrap.min.js' % }"></script>-->
+    <!--<link rel="stylesheet" href="http://bootswatch.com/yeti/bootstrap.css">-->
+    <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
+    <link rel="stylesheet" href="{% static 'web/css/bootstrap.paper.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web/css/Site.css' %}">
+    <script src="{% static 'web/js/bootstrap.min.js' %}"></script>
 </head>
 <body>
 <div class="navbar navbar-inverse navbar-fixed-top">
@@ -55,8 +56,8 @@
         {% block content %}
 
         <h1>Identity Enabled Distribution Control System</h1>
-        <img src="http://www.dietaja.org/wp-content/uploads/2015/04/manga.jpg" width="40%">
-        <!--<img src="{ % static 'core/img/manga.jpg' % }" width="40%">-->
+        <!--<img src="http://www.dietaja.org/wp-content/uploads/2015/04/manga.jpg" width="40%">-->
+        <img src="{% static 'web/img/manga.jpg' %}" width="40%" alt="IEDCS Manga" />
 
         {% endblock %}
 
