@@ -84,9 +84,9 @@ class Core(object):
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
                 return
-            # else
-            self.loggedIn = False
-            print co.FAIL+"\tFail doing login."+co.ENDC
+
+        self.loggedIn = False
+        print co.FAIL+"\tFail doing login."+co.ENDC
 
 
 
@@ -94,7 +94,6 @@ class Core(object):
     def logout(self):
         self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
         self.deviceKey = self.playerHash = None
-        #self.crypt = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
@@ -230,7 +229,6 @@ class Core(object):
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
         key = self.getDeviceKey()
-
 
         if key is None:
 
