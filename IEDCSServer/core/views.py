@@ -151,7 +151,8 @@ def register(request):
             form = form.save(commit=False)
 
             # apply SHA256 to password
-            form.password = crypt.hashingSHA256(password)
+            passwdHash = crypt.hashingSHA256(password)
+            form.password = passwdHash
 
             # Generate symmetric userKey with AES with user details
             uk = email+username+lastName+password+firstName
@@ -167,7 +168,8 @@ def register(request):
             form.save()
 
             # Create new Player with associated playerKey
-            pk = email[:len(email)/2]+password[len(password)/2:]+username
+            pk = email[:len(email)/2]+passwdHash[len(passwdHash)/2:]+username
+
             playerHash = crypt.hashingSHA256(pk)
             playerRsa = crypt.generateRsa()
 
@@ -184,6 +186,8 @@ def register(request):
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
             user = User.objects.get(username=username)
+
+
             try:
                 new_player = Player(playerKey=playerKey, user=user)
 

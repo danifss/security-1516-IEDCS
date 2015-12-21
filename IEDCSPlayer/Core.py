@@ -176,7 +176,7 @@ class Core(object):
                     try:
                         p = subprocess.Popen(["display", filePath])
                         time.sleep(0.3)
-                        os.remove(filePath)
+                        #os.remove(filePath)
                         while True:
                             opt = raw_input("Next image? (y/n/x) ")
                             if opt=='y':
@@ -248,7 +248,6 @@ class Core(object):
             #except requests.ConnectionError:
             #    print co.FAIL+"Error connecting with server!\n"+co.ENDC
             #    return
-            print r.status_code
 
             if r.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC

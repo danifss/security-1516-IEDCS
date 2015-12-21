@@ -7,8 +7,10 @@ from django.conf import settings
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
 from CryptoModuleA import *
+import os
 import json
 import time, datetime
+
 
 
 class UserLogin(generics.ListCreateAPIView):
@@ -315,11 +317,32 @@ class PlayContent(generics.ListCreateAPIView):
                         # save to disk
                         cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
                         f2 = open(cipheredFileName, 'w')
-                        f2.write(fcifra)
+                        f2.write(str(len(user.magicKey))+" "+str(user.magicKey)+fcifra)
                         f2.close()
+                        #
+                        # with open(cipheredFileName, "r+") as f:
+                        #     old = f.read() # read everything in the file
+                        #     f.seek(0) # rewind
+                        #     f.write('ola'+str(user.magicKey)+old) # write the new line before
+
+                        # with open(cipheredFileName, 'r') as f:
+                        #     first_line = f.readline()
+
+                        f = open(cipheredFileName, 'r')
+                        ch = ""
+                        while len(user.magicKey):
+                            ch += f.read(1)
+                            if not ch:
+                                print "fim"
+                                break
+                        print ch
+
+                        print "Magic", str(user.magicKey)
+                        #print "First", first_line
                         f1.close()
+
                     except Exception as e:
-                        print "Error while encrypting! ", e
+                        print "Error while encrypting!", e
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
                     return Response(status=status.HTTP_200_OK, data={'path': cipheredFileName})
@@ -331,6 +354,7 @@ class PlayContent(generics.ListCreateAPIView):
 
 def genFileKey(user=None, player=None, device=None):
     if user==None or player==None or device==None:
+        print " TRUE: user==None or player==None or device==None"
         return ("+bananasbananas+","+bananasbananas+")
 
     crypto = CryptoModule()
@@ -338,47 +362,51 @@ def genFileKey(user=None, player=None, device=None):
 
     userkey = user.userKey
     playerKey = player.playerKey
-    playerKeyPub = crypto.publicRsa(playerKey)
-    deviceKey = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+    pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
+    playerHash = crypto.hashingSHA256(str(pkhash))
+    playerIm = crypto.rsaImport(playerKey, playerHash)
+    playerKeyPub = crypto.publicRsa(playerIm)
 
-    # deviceKey = device.deviceKey
+    deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
 
-
-    # Calculate auxiliar key with userKey and magic value
-    magic = CryptoModule.hashingSHA256('prettywomen'+datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M'))
+    # magic used to -> Calculate auxiliar key with userKey and magic value
+    magic = CryptoModule.hashingSHA256(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M'))
     # Save ciphered magicKey on database
     magicKey = crypto.cipherAES(magic[0:16], magic[32:48], magic)
-    user.magicKey=magicKey
+    user.magicKey = magicKey
+    # user.save() -> post modifications to DB
     user.save()
 
     aux = getAuxKey(userkey, magic)
-    pk = CryptoModule.hashingSHA256(str(playerKey))
-    dk = CryptoModule.hashingSHA256(str(deviceKey))
+    pk = CryptoModule.hashingSHA256(str(playerKeyPub))
+    dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
 
     xor1 = ""
     for i in range(0, len(pk)):
         xor1 += str(logical_function(aux[i], pk[i]))
     hash_xor1 = CryptoModule.hashingSHA256(xor1)
-    # print hash_xor1
 
     fileKey = ""
     for i in range(0, len(dk)):
         fileKey += logical_function(hash_xor1[i], dk[i])
     fileKey = CryptoModule.hashingSHA256(fileKey)
-    # print fileKey
 
-    p1 = fileKey[9:24]
-    p2 = fileKey[37:52]
+    p1 = fileKey[8:24]
+    p2 = fileKey[37:53]
 
-    # return (p1,p2)
-    return ("+bananasbananas+","+bananasbananas+")
+    return (p1,p2)
+    #return ("+bananasbananas+","+bananasbananas+")
+
 
 def getAuxKey(userKey, magic):
     if userKey is None or magic is None:
+        print "TRUE userKey is None or magic is None"
         return CryptoModule.hashingSHA256("+bananasbananas+")
 
-    auxKey = CryptoModule.hashingSHA256("+bananasbananas+")
+    tmp = str(userKey)+str(magic)
+    auxKey = CryptoModule.hashingSHA256(tmp)
     return auxKey
+
 
 def logical_function(str1, str2):
     return str1 + str2
