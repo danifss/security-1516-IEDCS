@@ -84,17 +84,15 @@ class Core(object):
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
                 return
-            # else
-            self.loggedIn = False
-            print co.FAIL+"\tFail doing login."+co.ENDC
 
+        self.loggedIn = False
+        print co.FAIL+"\tFail doing login."+co.ENDC
 
 
     ### Logout
     def logout(self):
         self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
-        self.deviceKey = self.playerHash = ""
-        self.crypt = None
+        self.deviceKey = self.playerHash = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
@@ -250,7 +248,6 @@ class Core(object):
             #except requests.ConnectionError:
             #    print co.FAIL+"Error connecting with server!\n"+co.ENDC
             #    return
-            print r.status_code
 
             if r.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
