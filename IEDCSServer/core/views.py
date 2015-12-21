@@ -8,7 +8,7 @@ from django.template import RequestContext, loader
 from .models import User, Player, Content, Purchase
 from .forms import registerUserForm, loginForm
 
-from CryptoModule import *
+from CryptoModuleS import *
 
 import sys
 import os
@@ -153,14 +153,13 @@ def register(request):
             # apply SHA256 to password
             form.password = crypt.hashingSHA256(password)
 
-            # Generate symmetric userKey with AES from user details
-            # uk = email[:len(email)/2]+username+lastName[len(lastName)/2:]+password[len(password)/2:]+firstName[len(firstName)/2:]
+            # Generate symmetric userKey with AES with user details
             uk = email+username+lastName+password+firstName
             userkeyHash = crypt.hashingSHA256(uk)
 
             # userkeyHash[0:16], userkeyHash[48:64]
             # just a decoy, the user key is the hash
-            userkeyString = crypt.cipherAES(userkeyHash[0:16], userkeyHash[48:64], "bananas")
+            userkeyString = crypt.cipherAES("uBAcxUXs1tJY/FSI", "vp71cNkWd/SAPXp4", userkeyHash)
 
             form.userKey = userkeyString
 
@@ -177,7 +176,7 @@ def register(request):
             playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
 
             # write public key into file
-            f = open(settings.MEDIA_ROOT+'/player/resources/player'+username+'.pub', 'w')
+            f = open(settings.MEDIA_ROOT+'/tmp/resources/player'+username+'.pub', 'w')
             f.write(playerPublicSafe)
             f.close()
 
@@ -229,7 +228,7 @@ def writeUserData(user=None):
     crypt = CryptoModule()
     c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
     # open file to write ciphered pickled object
-    f = open('media/player/resources/user'+user.username+'.pkl', 'w')
+    f = open('media/tmp/resources/user'+user.username+'.pkl', 'w')
     f.write(c)
     f.close()
 
@@ -238,36 +237,41 @@ def writeUserData(user=None):
 def createDownloadFile(userID, username):
     # execute nuitka
     # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
-    options = ["--recurse-all", "--output-dir=media/download/", "--recurse-directory=media/player/resources/", \
+    """
+    options = ["--recurse-all", "--output-dir=media/tmp/", "--recurse-directory=media/player/resources/", \
                "--remove-output", "media/player/Player.py"]
     p = subprocess.Popen(["nuitka"]+options)
     # Wait for the command to finish
     p.wait()
-
+    """
     # Making zip file to be downloaded
     ### TODO move files in player/resources folder to zip file
     filenames = ['media/download/Player.exe', 'media/player/resources',
                     'media/player/resources/player'+username+'.pub',
                     'media/player/resources/user'+username+'.pkl']
-    # zip name
+    # zip names
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
+    zip_path = 'media/tmp/'
 
     # zip compressor
     try:
         zf = zipfile.ZipFile('media/download/'+zip_filename, "w")
-        for fpath in filenames:
-            # Calculate path for file in zip
-            fdir, fname = os.path.split(fpath)
-            # print fdir, fname
-            zip_path = os.path.join('IEDCSPlayer', fname)
-            # Add file, at correct path
-            zf.write(fpath, zip_path)
+        for root, dirs, files in os.walk(zip_path):
+            for file in files:
+                zf.write(os.path.join(root, file))
+                # for fpath in filenames:
+                # Calculate path for file in zip
+                # fdir, fname = os.path.split(fpath)
+                # print fdir, fname
+                # zip_path = os.path.join('IEDCSPlayer', fname)
+                # Add file, at correct path
+                # zf.write(fpath, zip_path)
         zf.close()
         # clean files
-        os.remove('media/player/resources/player'+username+'.pub')
-        os.remove('media/player/resources/user'+username+'.pkl')
-        os.remove('media/download/Player.exe')
+        os.remove('media/tmp/resources/player'+username+'.pub')
+        os.remove('media/tmp/resources/user'+username+'.pkl')
+        # os.remove('media/download/Player.exe')
     except Exception as e:
         print "ERROR ", e
 

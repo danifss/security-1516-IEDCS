@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from Resources import *
-from CryptoModule import *
+from CryptoModuleP import *
 import sys, os
 import getpass
 import requests
@@ -238,7 +238,7 @@ class Core(object):
             f.close()
 
             ## TODO do this inside a try catch
-            r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
+            r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": str(self.userID), "deviceKey": devsafe})
 
             # print "Status post: ", r.status_code
             print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
