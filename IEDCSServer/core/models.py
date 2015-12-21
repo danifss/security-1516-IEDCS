@@ -13,8 +13,7 @@ class User(models.Model):
     password = models.CharField(max_length=100)
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
-    fileKey = models.CharField(max_length=keySize, blank=True)
-    # playerID = models.ForeignKey(Player)
+    magicKey = models.CharField(max_length=keySize, blank=True)
     createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
@@ -47,7 +46,6 @@ class Device(models.Model):
     deviceKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
     player = models.ForeignKey(Player)
-    # player = models.ManyToManyField(Player) # ManyToMany relation
     deviceHash = models.CharField(max_length=keySize)
 
     def __unicode__(self):

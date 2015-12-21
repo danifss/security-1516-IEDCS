@@ -319,7 +319,7 @@ class PlayContent(generics.ListCreateAPIView):
                         f2.close()
                         f1.close()
                     except Exception as e:
-                        print "Error encrypting! ", e
+                        print "Error while encrypting! ", e
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
                     return Response(status=status.HTTP_200_OK, data={'path': cipheredFileName})
@@ -334,8 +334,8 @@ def genFileKey(user=None, player=None, device=None):
         return ("+bananasbananas+","+bananasbananas+")
 
     crypto = CryptoModule()
+    #user = User.objects.all().filter(user=user)
 
-    ## TODO change this to use public keys
     userkey = user.userKey
     playerKey = player.playerKey
     playerKeyPub = crypto.publicRsa(playerKey)
@@ -346,7 +346,11 @@ def genFileKey(user=None, player=None, device=None):
 
     # Calculate auxiliar key with userKey and magic value
     magic = CryptoModule.hashingSHA256('prettywomen'+datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M'))
-    # print magic
+    # Save ciphered magicKey on database
+    magicKey = crypto.cipherAES(magic[0:16], magic[32:48], magic)
+    user.magicKey=magicKey
+    user.save()
+
     aux = getAuxKey(userkey, magic)
     pk = CryptoModule.hashingSHA256(str(playerKey))
     dk = CryptoModule.hashingSHA256(str(deviceKey))
