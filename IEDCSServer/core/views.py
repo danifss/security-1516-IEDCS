@@ -256,7 +256,7 @@ def createDownloadFile(userID, username):
     os.rename(zip_filename, 'media/download/'+zip_filename)
     os.remove('media/tmp/resources/player'+username+'.pub')
     os.remove('media/tmp/resources/user'+username+'.pkl')
-    os.remove('media/download/Player.exe')
+    os.remove('media/tmp/Player.exe')
 
 
 def zipper(dir, zip_file):
