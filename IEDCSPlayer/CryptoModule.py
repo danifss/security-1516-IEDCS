@@ -137,7 +137,8 @@ class CryptoModule(object):
     """
         hashing method
     """
-    def hashingSHA256(self, data):
+    @staticmethod
+    def hashingSHA256(data):
         d = str.encode(data)
         type(d) # insures its bytes
         # apply sintese

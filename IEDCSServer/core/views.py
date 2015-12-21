@@ -9,7 +9,6 @@ from .models import User, Player, Content, Purchase
 from .forms import registerUserForm, loginForm
 
 from CryptoModule import *
-from UserInfo import *
 
 import sys
 import os
@@ -213,8 +212,7 @@ def writeUserData(user=None):
     if user is None:
         print 'Error writing User data - No User'
         return
-    # create user info object
-    # userInfo = UserInfo(1, user)
+    # create user info dictionary
     userInfo = {}
     userInfo["userId"] = user.userID
     userInfo["username"] = user.username
@@ -223,10 +221,9 @@ def writeUserData(user=None):
     userInfo["firstName"] = user.firstName
     userInfo["lastName"] = user.lastName
     userInfo["createdOn"] = user.createdOn
-    # buffer
+    # buffer for pickle dump
     src = StringIO()
-    # write object
-    # pickle.Pickler(src,pickle.HIGHEST_PROTOCOL).dump(userInfo)
+    # pickle data to string io
     pickle.dump(userInfo, src)
     # cipher file
     crypt = CryptoModule()
@@ -248,7 +245,10 @@ def createDownloadFile(userID, username):
     p.wait()
 
     # Making zip file to be downloaded
-    filenames = ['media/download/Player.exe']
+    ### TODO move files in player/resources folder to zip file
+    filenames = ['media/download/Player.exe', 'media/player/resources',
+                    'media/player/resources/player'+username+'.pub',
+                    'media/player/resources/user'+username+'.pkl']
     # zip name
     zip_subdir = 'download'+str(userID)
     zip_filename = "%s.zip" % zip_subdir
