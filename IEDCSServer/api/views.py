@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
-from core.CryptoModule import *
+from CryptoModuleA import *
 import json
 import time, datetime
 
@@ -335,6 +335,7 @@ def genFileKey(user=None, player=None, device=None):
 
     crypto = CryptoModule()
 
+    ## TODO change this to use public keys
     userkey = user.userKey
     playerKey = player.playerKey
     deviceKey = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)

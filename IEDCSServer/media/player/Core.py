@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from Resources import *
-from CryptoModule import *
+from CryptoModuleP import *
 import sys, os
 import getpass
 import requests
