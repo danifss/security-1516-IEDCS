@@ -338,7 +338,9 @@ def genFileKey(user=None, player=None, device=None):
     ## TODO change this to use public keys
     userkey = user.userKey
     playerKey = player.playerKey
+    playerKeyPub = crypto.publicRsa(playerKey)
     deviceKey = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+
     # deviceKey = device.deviceKey
 
 
