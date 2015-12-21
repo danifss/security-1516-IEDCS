@@ -92,9 +92,9 @@ class Core(object):
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
-        self.deviceKey = self.playerHash = ""
-        self.crypt = None
+        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
+        self.deviceKey = self.playerHash = None
+        #self.crypt = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
