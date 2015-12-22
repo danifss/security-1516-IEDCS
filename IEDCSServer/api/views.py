@@ -324,8 +324,6 @@ class PlayContent(generics.ListCreateAPIView):
                         deviceKeyPubObj = crypto.rsaImport(deviceKeyPub)
 
                         # cipher magicKey with device key PUBLIC
-                        #magicSafe = deviceKeyPubObj.encrypt(str(user.magicKey), 32)
-                        #magicSafe = str(deviceKeyPubObj.encrypt(str(user.magicKey), 32)).encode('base64')
                         magicSafe = crypto.rsaCipher(deviceKeyPubObj,user.magicKey)
                         fcifraSafe = str(fcifra).encode('base64')
 
@@ -363,10 +361,7 @@ def genFileKey(user=None, player=None, device=None):
     #user = User.objects.all().filter(user=user)
 
     userkey = user.userKey
-    playerKey = player.playerKey
-    pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
-    playerHash = crypto.hashingSHA256(str(pkhash))
-    playerIm = crypto.rsaImport(playerKey, playerHash)
+    playerIm = getPlayerKey(user, player)
     playerKeyPub = crypto.publicRsa(playerIm)
 
     deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
@@ -408,6 +403,25 @@ def getAuxKey(userKey, magic):
     tmp = str(userKey)+str(magic)
     auxKey = CryptoModule.hashingSHA256(tmp)
     return auxKey
+
+#
+def verifyMagic(magicCiphered,user=None, player=None):
+
+    magicKey = user.magicKey
+    playerKeyPub = getPlayerKey(user, player)
+
+
+
+def getPlayerKey(user=None, player=None):
+    crypto = CryptoModule()
+
+    playerKey = player.playerKey
+    pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
+    playerHash = crypto.hashingSHA256(str(pkhash))
+    a = crypto.rsaImport(playerKey, playerHash)
+
+
+    return a
 
 
 def logical_function(str1, str2):
