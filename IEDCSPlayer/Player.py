@@ -33,7 +33,6 @@ try:
 
         ### Handling options
         if op == '1': # login/logout
-            # core.show_my_info()
             core.logout() if core.loggedIn else core.login()
 
         elif op == '2' and core.loggedIn: # personal info
@@ -42,13 +41,6 @@ try:
             core.list_my_content()
         elif op == '4' and core.loggedIn: # play some content
             core.play_my_content()
-            # print co.OKGREEN+co.BOLD
-            # opt = raw_input("\tWhat do you wanna watch? "+co.ENDC)
-            # try:
-            #     int_opt = int(opt)
-            #     core.play_my_content(int_opt)
-            # except Exception as e:
-            #     print co.FAIL+"Invalid option, sorry!"
         elif op == '5' and core.loggedIn: # go to webpage
             browser(api.HOMEPAGE)
 
