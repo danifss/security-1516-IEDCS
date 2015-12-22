@@ -9,6 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
+from base64 import b64decode
 # from PIL import Image
 
 
@@ -19,6 +20,7 @@ class Core(object):
 
         self.crypt = CryptoModule()
         self.deviceKey = None
+        self.playerKey = None
         # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
@@ -69,17 +71,9 @@ class Core(object):
             self.createdOn = userInfo["createdOn"]
 
             if hash_pass == self.password:
-                try:
-                    f = open('resources/player'+self.username+'.pub', 'r')
-                    playerPublic = f.read()
-                    f.close()
-                    player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
-                    self.playerHash = CryptoModule.hashingSHA256(player)
-                    # self.playerKey = self.crypt.rsaImport(player)
-                except:
-                    print co.FAIL+"\tFail loading files."+co.ENDC
-                    os._exit(0)
 
+                # verifies if can open player key pub
+                self.getPlayerKey()
                 # if everything ok, lets generate device key or not
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
@@ -93,9 +87,25 @@ class Core(object):
     ### Logout
     def logout(self):
         self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
-        self.deviceKey = self.playerHash = None
+        #self.deviceKey = self.playerHash = None
+        self.deviceKey = self.playerKey = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
+
+    def getPlayerKey(self):
+
+        try:
+            f = open('resources/player'+self.username+'.pub', 'r')
+            playerPublic = f.read()
+            f.close()
+            # TODO rain check public player key with server DB
+            player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            self.playerKey = self.crypt.rsaImport(player)
+            #self.playerHash = CryptoModule.hashingSHA256(player)
+
+        except:
+            print co.FAIL+"\tFail loading files."+co.ENDC
+            os._exit(0)
 
 
     ### List content from logged user
@@ -161,7 +171,7 @@ class Core(object):
                     cfname = res['path']
 
                     # decipher content
-                    fileKey = self.genFileKey()
+                    fileKey = self.genFileKey(cfname)
                     f1 = open(cfname, 'r')
                     decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
                     f1.close()
@@ -169,6 +179,7 @@ class Core(object):
                     # save to disk
                     filePath = cfname+'.jpg'
                     ## TODO use StringIO to use opencv or something (if we have time)
+
                     f4 = open(filePath, 'w')
                     f4.write(decifrado)
                     f4.close()
@@ -195,8 +206,27 @@ class Core(object):
             print co.FAIL+"Error occurred!! ", e
             print co.ENDC
 
-    def genFileKey(self):
-        ## TODO finish this!
+    def genFileKey(self, cfname):
+
+        # 1 step: decipher magic key with devicekey key
+        if self.deviceKey is not None:
+            with open(cfname, "r+") as f:
+                all = f.read()
+
+            header = all.split('#')
+            magicProtected = header[1]
+            magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
+            # 2 step: cipher magic key with player
+            magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
+
+            # 3 step: send magicSend to server and receive aux key to start decrypting file
+            #
+            #
+            #
+            print "Magic Plyer:", magicPlain
+        else:
+            print "No DEVICE KEY FOUND"
+
         return ("+bananasbananas+","+bananasbananas+")
 
 

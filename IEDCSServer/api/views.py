@@ -10,6 +10,7 @@ from CryptoModuleA import *
 import os
 import json
 import time, datetime
+from base64 import b64decode
 
 
 
@@ -314,32 +315,33 @@ class PlayContent(generics.ListCreateAPIView):
                         # print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
+                        f1.close()
                         # save to disk
                         cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
-                        f2 = open(cipheredFileName, 'w')
-                        f2.write(str(len(user.magicKey))+" "+str(user.magicKey)+fcifra)
+
+                        f2 = open(cipheredFileName, 'wb')
+                        deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+                        deviceKeyPubObj = crypto.rsaImport(deviceKeyPub)
+
+                        # cipher magicKey with device key PUBLIC
+                        #magicSafe = deviceKeyPubObj.encrypt(str(user.magicKey), 32)
+                        #magicSafe = str(deviceKeyPubObj.encrypt(str(user.magicKey), 32)).encode('base64')
+                        magicSafe = crypto.rsaCipher(deviceKeyPubObj,user.magicKey)
+                        fcifraSafe = str(fcifra).encode('base64')
+
+                        # cardinal don't belong to base64, for split
+                        f2.write("#"+magicSafe+"#"+fcifraSafe)
                         f2.close()
+
+                        #print "Magic Server Safe:", magicSafe
+                        print "Magic Server:", user.magicKey
+                        # with open(cipheredFileName+".txt", "r+") as f:
+                        #     c = f.read()
                         #
-                        # with open(cipheredFileName, "r+") as f:
-                        #     old = f.read() # read everything in the file
-                        #     f.seek(0) # rewind
-                        #     f.write('ola'+str(user.magicKey)+old) # write the new line before
+                        # # print "C",c
+                        # a = c.split('#')
+                        # print a[1]
 
-                        # with open(cipheredFileName, 'r') as f:
-                        #     first_line = f.readline()
-
-                        f = open(cipheredFileName, 'r')
-                        ch = ""
-                        while len(user.magicKey):
-                            ch += f.read(1)
-                            if not ch:
-                                print "fim"
-                                break
-                        print ch
-
-                        print "Magic", str(user.magicKey)
-                        #print "First", first_line
-                        f1.close()
 
                     except Exception as e:
                         print "Error while encrypting!", e
