@@ -234,7 +234,7 @@ class Core(object):
         # api = self.userID, magicSend
         url = api.CHALLENGE
         data = { "userId": str(self.userID), "magicKey": magicSend }
-        result = self.request(url, data)
+        result = self.request(url, data=data, method='POST')
         if result is None:
             return
 
