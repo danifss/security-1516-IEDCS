@@ -244,9 +244,9 @@ def createDownloadFile(userID, username):
     # """
     options = ["--recurse-all", "--output-dir=media/tmp/", "--recurse-directory=media/player/resources/", \
                "--remove-output", "media/player/Player.py"]
-    p = subprocess.Popen(["nuitka"]+options)
+    #p = subprocess.Popen(["nuitka"]+options)
     # Wait for the command to finish
-    p.wait()
+    #p.wait()
     # """
 
     # Making zip file to be downloaded
@@ -260,7 +260,7 @@ def createDownloadFile(userID, username):
     os.rename(zip_filename, 'media/download/'+zip_filename)
     os.remove('media/tmp/resources/player'+username+'.pub')
     os.remove('media/tmp/resources/user'+username+'.pkl')
-    os.remove('media/tmp/Player.exe')
+    #os.remove('media/tmp/Player.exe')
 
 
 def zipper(dir, zip_file):
