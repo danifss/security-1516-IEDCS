@@ -472,9 +472,9 @@ class ChallengeKey(generics.ListCreateAPIView):
     """<b>Get the auxiliar key to produce FileKey</b>"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    allowed_methods = ['get']
+    allowed_methods = ['post']
 
-    def get(self, request):
+    def post(self, request):
         """
         Gets the auxiliar token for produce the FileKey
 
@@ -483,7 +483,7 @@ class ChallengeKey(generics.ListCreateAPIView):
 
         <b>Details</b>
 
-        METHODS : GET
+        METHODS : POST
 
 
         <b>Example:</b>
@@ -508,6 +508,7 @@ class ChallengeKey(generics.ListCreateAPIView):
         omit_parameters:
         - form
         """
+        # print request.META['CSRF_COOKIE']
         try:
             if 'userId' in request.data and 'magicKey' in request.data:
                 int_id = int(request.data['userId'])
