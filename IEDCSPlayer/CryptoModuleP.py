@@ -126,12 +126,17 @@ class CryptoModule(object):
     """
         decypherAES method
     """
+
     def decipherAES(self, key, vi, data):
-        # Decryption mode
-        decryption_suite = AES.new(key, AES.MODE_CFB, vi)
-        # decrypt
-        plain_text = decryption_suite.decrypt(b64decode(data))
-        return plain_text
+        try:
+            # Decryption mode
+            decryption_suite = AES.new(key, AES.MODE_CFB, vi)
+            # decrypt
+            plain_text = decryption_suite.decrypt(b64decode(data))
+            return plain_text
+        except Exception as e:
+            print e
+            return None
 
 
     """

@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.Hash import SHA
 from Resources import *
 from CryptoModuleP import *
 import sys, os
@@ -100,6 +102,7 @@ class Core(object):
             f.close()
             # TODO rain check public player key with server DB
             player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
             #self.playerHash = CryptoModule.hashingSHA256(player)
 
@@ -172,13 +175,17 @@ class Core(object):
 
                     # decipher content, dataKey ((f1,f2), dataCiphered)
                     dataKey = self.genFileKey(cfname)
+                    if dataKey is None:
+                        raise Exception("Don't have permissions to open the file")
 
-                    #f1 = open(cfname, 'r')
-                    decifrado = self.crypt.decipherAES(dataKey[0][0], dataKey[1][0], dataKey[1])
-                    #f1.close()
+                    key = dataKey[0][0]
+                    vi = dataKey[0][1]
+                    data = dataKey[1].decode('base64')
+                    decifrado = self.crypt.decipherAES(key, vi, data)
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
+
                     ## TODO use StringIO to use opencv or something (if we have time)
 
                     f4 = open(filePath, 'w')
@@ -187,14 +194,14 @@ class Core(object):
 
                     try:
                         p = subprocess.Popen(["display", filePath])
-                        time.sleep(0.3)
-                        #os.remove(filePath)
+                        time.sleep(0.1)
+                        os.remove(filePath)
                         while True:
                             opt = raw_input("Next image? (y/n/x) ")
-                            if opt=='y':
+                            if opt == 'y':
                                 p.kill()
                                 break
-                            elif opt=='x':
+                            elif opt == 'x':
                                 i = pages + 1
                                 p.kill()
                                 break
@@ -209,41 +216,39 @@ class Core(object):
 
     def genFileKey(self, cfname):
 
+        if self.playerKey is None or self.deviceKey is None:
+            return None
+
         # 1 step: decipher magic key with devicekey key
-        if self.deviceKey is not None:
-            with open(cfname, "r+") as f:
-                all = f.read()
+        with open(cfname, "r+") as f:
+            fileCiphered = f.read()
 
-            header = all.split('#')
-            magicProtected = header[1]
-            magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
-            # 2 step: cipher magic key with player
-            magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
+        header = fileCiphered.split('#')
+        magicProtected = header[1]
+        magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
 
-            # 3 step: send magicSend to server and receive aux key to start decrypting file
-            # api = self.userID, magicSend
-            result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
+        # 2 step: cipher magic key with player key Public
+        magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
 
-            if result.status_code == 200:
-                res = json.loads(result.text)
-                auxServer = res['challenge']
-                fileKey = self.auxFileKey(auxServer)
-                return (fileKey,header[2])
+        # 3 step: send magicSend to server and receive aux key to start decrypting file
+        result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
 
-            #print "Magic Plyer:", magicPlain
+        if result.status_code == 200:
+            res = json.loads(result.text)
+            auxServer = res['challenge']
+            fileKey = self.auxFileKey(auxServer)
+            return (fileKey,header[2])
         else:
-            print "No DEVICE KEY FOUND"
-
-        return ("+bananasbananas+","+bananasbananas+")
+            return None
 
     def auxFileKey(self,aux):
 
         if self.playerKey is None or self.deviceKey is None:
-            print "error"
             return None
+
         deviceKeyPub = self.crypt.publicRsa(self.deviceKey)
 
-        pk = CryptoModule.hashingSHA256(str(self.playerKey))
+        pk = CryptoModule.hashingSHA256(str(self.playerKey.exportKey()))
         dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
 
         xor1 = ""
@@ -258,9 +263,7 @@ class Core(object):
 
         p1 = fileKey[8:24]
         p2 = fileKey[37:53]
-
         return (p1,p2)
-
 
     def logical_function(self, str1, str2):
         return str1 + str2
@@ -346,34 +349,3 @@ class Core(object):
             return devkey
         except:
             return None
-
-    # GET DEVICE KEY TO SERVER
-    """
-    def getDeviceKey(self, hashdevice):
-
-        # with userID and hash get device key
-        try:
-            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
-            # print result.text
-            if result.status_code == 200:
-                # print result.text
-                res = json.loads(result.text)
-                dados = res['results']
-                key_ciphered = dados[0]['deviceKey']
-                print dados
-                hashdevice = self.crypt.hashDevice()
-                key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
-                return self.crypt.rsaImport(key, hashdevice)
-
-            # 204 - no content found
-            if result.status_code == 204:
-                return None
-
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return None
-        except Exception as e:
-            print co.FAIL+"ERROR!", e
-            print co.ENDC
-            return None
-        """

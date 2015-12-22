@@ -1,3 +1,5 @@
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.Hash import SHA
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
@@ -10,7 +12,7 @@ from CryptoModuleA import *
 import os
 import json
 import time, datetime
-from base64 import b64decode
+
 
 
 
@@ -324,22 +326,12 @@ class PlayContent(generics.ListCreateAPIView):
                         deviceKeyPubObj = crypto.rsaImport(deviceKeyPub)
 
                         # cipher magicKey with device key PUBLIC
-                        magicSafe = crypto.rsaCipher(deviceKeyPubObj,user.magicKey)
+                        magicSafe = crypto.rsaCipher(deviceKeyPubObj, user.magicKey)
                         fcifraSafe = str(fcifra).encode('base64')
 
-                        # cardinal don't belong to base64, for split
+                        # cardinal don't belong to base64, to do split by #
                         f2.write("#"+magicSafe+"#"+fcifraSafe)
                         f2.close()
-
-                        #print "Magic Server Safe:", magicSafe
-                        #print "Magic Server:", user.magicKey
-                        # with open(cipheredFileName+".txt", "r+") as f:
-                        #     c = f.read()
-                        #
-                        # # print "C",c
-                        # a = c.split('#')
-                        # print a[1]
-
 
                     except Exception as e:
                         print "Error while encrypting!", e
@@ -355,10 +347,9 @@ class PlayContent(generics.ListCreateAPIView):
 def genFileKey(user=None, player=None, device=None):
     if user==None or player==None or device==None:
         print " TRUE: user==None or player==None or device==None"
-        return ("+bananasbananas+","+bananasbananas+")
+        return None
 
     crypto = CryptoModule()
-    #user = User.objects.all().filter(user=user)
 
     userkey = user.userKey
     playerIm = getPlayerKey(user, player)
@@ -374,7 +365,7 @@ def genFileKey(user=None, player=None, device=None):
     # user.save() -> post modifications to DB
     user.save()
 
-    aux = getAuxKey(userkey, magic)
+    aux = getAuxKey(userkey, magicKey)
     pk = CryptoModule.hashingSHA256(str(playerKeyPub))
     dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
 
@@ -390,15 +381,13 @@ def genFileKey(user=None, player=None, device=None):
 
     p1 = fileKey[8:24]
     p2 = fileKey[37:53]
-
     return (p1,p2)
-    #return ("+bananasbananas+","+bananasbananas+")
 
 
 def getAuxKey(userKey, magic):
     if userKey is None or magic is None:
         print "TRUE userKey is None or magic is None"
-        return CryptoModule.hashingSHA256("+bananasbananas+")
+        return None
 
     tmp = str(userKey)+str(magic)
     auxKey = CryptoModule.hashingSHA256(tmp)
@@ -408,7 +397,9 @@ def getAuxKey(userKey, magic):
 def verifyMagic(magicCiphered,user=None, player=None):
 
     crypto = CryptoModule()
+
     magicKey = user.magicKey
+
     playerKey = getPlayerKey(user, player)
     magicPlain = crypto.rsaDecipher(playerKey, magicCiphered)
 
@@ -425,9 +416,9 @@ def getPlayerKey(user=None, player=None):
 
     playerKey = player.playerKey
     pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
+
     playerHash = crypto.hashingSHA256(str(pkhash))
     return crypto.rsaImport(playerKey, playerHash)
-
 
 
 def logical_function(str1, str2):
@@ -520,13 +511,12 @@ class ChallengeKey(generics.ListCreateAPIView):
                 int_id = int(request.data['userId'])
                 user = User.objects.get(userID=int_id)
                 player = Player.objects.get(user=user)
-                magicKey = request.data['magicKey']
+                magicKeyCiphered = request.data['magicKey']
 
-                key = verifyMagic(magicKey, user, player)
+                auxKey = verifyMagic(magicKeyCiphered, user, player)
 
-
-                if key is not None:
-                    return Response(status=status.HTTP_200_OK, data={'challenge': key})
+                if auxKey is not None:
+                    return Response(status=status.HTTP_200_OK, data={'challenge': auxKey})
         except:
             print "Error in request!"
         return Response(status=status.HTTP_400_BAD_REQUEST)
