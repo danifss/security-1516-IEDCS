@@ -8,18 +8,20 @@ Configuring all system
 ● $ . venv/bin/activate
 ● pip install ­r requirements.txt
 
-Intall package: cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+Install package: cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+Install Server Certificates (on venv):
+
 
 Start Server
 ● $ cd security2015­p2g5
 ● $ . venv/bin/activate
 ● $ cd IEDCSServer
-● $ python manage.py runserver 8000
+● $ python manage.py runsslserver 8000
 
 Website
 ● First start Server
 ● Go to browser and open ​
-● http://localhost:8000
+● https://localhost:8000
 ● Now, it's just a normal website
         ○ Register
         ○ Log in
@@ -30,16 +32,17 @@ Start Player
 ● $ cd security2015­p2g5
 ● $ . venv/bin/activate
 ● $ cd IEDCSPlayer
-● $ python Player.py Credentials
+● $ python Player.py
 
 
+--------------------------------------------
+Credentials
 
-
-Server Admin:​ http://localhost:8000/admin
+Server Admin:​ https://localhost:8000/admin
 ● username: admin
 ● password: admin
 
-Website:​​ http://localhost:8000/Account/login/
+Website:​​ https://localhost:8000/Account/login/
 ● You can user Register page to create new user
 ● Or you can use one existing:
     ○ username: user

@@ -474,3 +474,58 @@ class ContentPages(generics.ListCreateAPIView):
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
+class ChallengeKey(generics.ListCreateAPIView):
+    """<b>Get the auxiliar key to produce FileKey</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['get']
+
+    def get(self, request):
+        """
+        Gets the auxiliar token for produce the FileKey
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+        <b>Example:</b>
+
+
+        {
+
+            "userId": "12",
+
+            "magicKey": "5i9fh938hf83h893hg9384hg9348hg"
+
+        }
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            if 'userId' in request.data and 'magicKey' in request.data:
+                int_id = int(request.data['userId'])
+                user = User.objects.get(userID=int_id)
+                player = Player.objects.get(user=user)
+                magicKey = request.data['magicKey']
+
+                key = verifyMagic(magicKey, user, player)
+
+                if key != None:
+                    return Response(status=status.HTTP_200_OK, data={'magicKey': key})
+        except:
+            print "Error in request!"
+        return Response(status=status.HTTP_400_BAD_REQUEST)

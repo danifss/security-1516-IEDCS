@@ -23,6 +23,9 @@ urlpatterns = [
     url(r'^content/pages/(?P<pk>[0-9]+)$', views.ContentPages.as_view()),
     # ex: /api/content/play/1/1/1
     url(r'^content/play/(?P<pk>[0-9]+)/(?P<ct>[0-9]+)/(?P<pg>[0-9]+)$', views.PlayContent.as_view()),
+    # ex: /api/content/challenge/ with JSON attach
+    url(r'^content/challenge/$', views.ChallengeKey.as_view()),
+
     # # ex: /api/content/name/1
     # url(r'^content/name/(?P<pk>[0-9]+)$', views.ContentNames.as_view()),
     # # ex: /api/content/filepath/1
