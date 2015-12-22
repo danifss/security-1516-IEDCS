@@ -17,7 +17,6 @@ class Core(object):
     loggedIn = False
 
     def __init__(self):
-
         self.crypt = CryptoModule()
         self.deviceKey = None
         self.playerKey = None
@@ -30,8 +29,6 @@ class Core(object):
                 if op == 'y':
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
-
-
 
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
@@ -46,16 +43,22 @@ class Core(object):
         print co.ENDC
 
         hash_pass = CryptoModule.hashingSHA256(passwd)
-        try:
-            # Verify user in server
-            result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+        # Verify user in server
+        url = api.LOGIN+"?username="+username+"&password="+hash_pass
+        # result = requests.get(pedido, verify='../Certificates/CertificateAuthority/CA-IEDCS.crt')
+        result = self.request(url)
+        if result == None:
             return
 
         if result.status_code == 200:
             ## Load user info
-            f = open('resources/user'+username+'.pkl', 'r')
+            try:
+                f = open('resources/user'+username+'.pkl', 'r')
+            except Exception:
+                self.loggedIn = False
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+
             decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
             f.close()
             src = StringIO(decipheredFile)
@@ -70,8 +73,8 @@ class Core(object):
             self.lastName = userInfo["lastName"]
             self.createdOn = userInfo["createdOn"]
 
-            if hash_pass == self.password:
-
+            # Validation to check if user.pkl was renamed to some other existent user
+            if hash_pass == self.password and username == self.username:
                 # verifies if can open player key pub
                 self.getPlayerKey()
                 # if everything ok, lets generate device key or not
@@ -83,7 +86,6 @@ class Core(object):
         print co.FAIL+"\tFail doing login."+co.ENDC
 
 
-
     ### Logout
     def logout(self):
         self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
@@ -93,7 +95,6 @@ class Core(object):
         print co.WARNING + "Logged out with success." + co.ENDC
 
     def getPlayerKey(self):
-
         try:
             f = open('resources/player'+self.username+'.pub', 'r')
             playerPublic = f.read()
@@ -110,30 +111,30 @@ class Core(object):
 
     ### List content from logged user
     def list_my_content(self):
-        try:
-            result = requests.get(api.GET_CONTENT_BY_USER + str(self.userID), verify=True)
-            if result.status_code == 200:
-                res = json.loads(result.text)['results']
-                if len(res) > 0:
-                    print co.OKBLUE+co.BOLD+"\tThis is your content:\n"+co.ENDC
-                    print co.HEADER+co.BOLD+"  ID  \t   Date of purchase\t\t    Name of product"+co.ENDC
-                    distinct = []
-                    for item in res:
-                        if item not in distinct:
-                            distinct += [item]
-                            print co.OKGREEN+"  "+str(item['contentID'])+"\t"+item['createdOn']+"\t    "+item['name']+co.ENDC
-                else:
-                    print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
-
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+        url = api.GET_CONTENT_BY_USER + str(self.userID)
+        result = self.request(url)
+        if result == None:
             return
+
+        if result.status_code == 200:
+            res = json.loads(result.text)['results']
+            if len(res) > 0:
+                print co.OKBLUE+co.BOLD+"\tThis is your content:\n"+co.ENDC
+                print co.HEADER+co.BOLD+"  ID  \t   Date of purchase\t\t    Name of product"+co.ENDC
+                distinct = []
+                for item in res:
+                    if item not in distinct:
+                        distinct += [item]
+                        print co.OKGREEN+"  "+str(item['contentID'])+"\t"+item['createdOn']+"\t    "+item['name']+co.ENDC
+            else:
+                print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
+
 
 
     ### Play content bought by the logged client
     def play_my_content(self):
         hasContent = self.hasContentToPlay()
-        if not hasContent:
+        if hasContent == None:
             print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
             return
 
@@ -144,10 +145,9 @@ class Core(object):
 
             # Get pages number to view one by one
             pages = 0
-            try:
-                result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
-            except requests.ConnectionError:
-                print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            url = api.GET_CONTENT_PAGES + str(contentID)
+            result = self.request(url)
+            if result == None:
                 return
 
             if result.status_code == 200:
@@ -161,11 +161,11 @@ class Core(object):
             i = 0
             while i <= pages:
                 i += 1
-                try:
-                    result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
-                except requests.ConnectionError:
-                    print co.FAIL+"Error connecting with server!\n"+co.ENDC
+                url = api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i)
+                result = self.request(url)
+                if result == None:
                     return
+
                 if result.status_code == 200:
                     res = json.loads(result.text)
                     cfname = res['path']
@@ -222,7 +222,11 @@ class Core(object):
 
             # 3 step: send magicSend to server and receive aux key to start decrypting file
             # api = self.userID, magicSend
-            result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
+            url = api.CHALLENGE
+            data = { "userId": str(self.userID), "magicKey": magicSend }
+            result = self.request(url, data)
+            if result == None:
+                return
 
             if result.status_code == 200:
                 res = json.loads(result.text)
@@ -267,12 +271,10 @@ class Core(object):
 
     ### Verify if user has something to Play
     def hasContentToPlay(self):
-        try:
-            result = requests.get(api.HAS_CONTENT_TO_PLAY+str(self.userID))
-            return True if result.status_code == 200 else False
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return
+        url = api.HAS_CONTENT_TO_PLAY+str(self.userID)
+        result = self.request(url)
+        return result if result != None else None
+
 
     ### Show personal information
     def show_my_info(self):
@@ -308,11 +310,12 @@ class Core(object):
             f.write(devkey)
             f.close()
 
-            #try:
-            r = requests.post(api.SAVE_DEVICE, data={"hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe})
-            #except requests.ConnectionError:
-            #    print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            #    return
+            # register new device in DB
+            url = api.SAVE_DEVICE
+            data = { "hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe }
+            result = self.request(url, data)
+            if result == None:
+                return
 
             if r.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
@@ -347,33 +350,12 @@ class Core(object):
         except:
             return None
 
-    # GET DEVICE KEY TO SERVER
-    """
-    def getDeviceKey(self, hashdevice):
 
-        # with userID and hash get device key
+    ### Request to server
+    def request(self, url, data=None):
         try:
-            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
-            # print result.text
-            if result.status_code == 200:
-                # print result.text
-                res = json.loads(result.text)
-                dados = res['results']
-                key_ciphered = dados[0]['deviceKey']
-                print dados
-                hashdevice = self.crypt.hashDevice()
-                key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
-                return self.crypt.rsaImport(key, hashdevice)
-
-            # 204 - no content found
-            if result.status_code == 204:
-                return None
-
+            result = requests.get(url, data=data, verify='resources/CA-IEDCS.crt')
+            return result if result.status_code == 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return None
-        except Exception as e:
-            print co.FAIL+"ERROR!", e
-            print co.ENDC
-            return None
-        """
+            return

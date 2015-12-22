@@ -1,7 +1,7 @@
 Installation:
 
 Configuring all system
-● $ sudo apt­get install python­dev imagemagick
+● $ sudo apt­get install python­dev imagemagick libffi-dev libssl-dev
 ● $ pip install virtualenv
 ● $ git clone ​https://code.ua.pt/git/security2015­p2g5
 ● $ cd security2015­p2g5
@@ -14,7 +14,7 @@ Install midleware CC package:
 
 Import Certificate Authority to your browser:
 ● Go to Certificates/CertificateAuthority
-● Open IEDCS-CA.pem with browser
+● Open CA-IEDCS.pem with browser
 
 Install Server Certificates (on venv):
     You need to be on folder security2015-p2g5 and with venv

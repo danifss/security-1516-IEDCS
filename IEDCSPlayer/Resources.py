@@ -3,7 +3,7 @@
 
 serverIp = "localhost"
 serverPort = "8000"
-serverUrl = "http://" + serverIp + ":" + serverPort
+serverUrl = "https://" + serverIp + ":" + serverPort
 
 class api:
     HOMEPAGE = serverUrl + "/"
