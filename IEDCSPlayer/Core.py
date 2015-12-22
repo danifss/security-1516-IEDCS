@@ -170,11 +170,12 @@ class Core(object):
                     res = json.loads(result.text)
                     cfname = res['path']
 
-                    # decipher content
-                    fileKey = self.genFileKey(cfname)
-                    f1 = open(cfname, 'r')
-                    decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
-                    f1.close()
+                    # decipher content, dataKey ((f1,f2), dataCiphered)
+                    dataKey = self.genFileKey(cfname)
+
+                    #f1 = open(cfname, 'r')
+                    decifrado = self.crypt.decipherAES(dataKey[0][0], dataKey[1][0], dataKey[1])
+                    #f1.close()
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
@@ -221,9 +222,15 @@ class Core(object):
 
             # 3 step: send magicSend to server and receive aux key to start decrypting file
             # api = self.userID, magicSend
-            # r = requests.post(api.SAVE_DEVICE, data={"hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe})
-            #
-            print "Magic Plyer:", magicPlain
+            result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
+
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                auxServer = res['challenge']
+                fileKey = self.auxFileKey(auxServer)
+                return (fileKey,header[2])
+
+            #print "Magic Plyer:", magicPlain
         else:
             print "No DEVICE KEY FOUND"
 
