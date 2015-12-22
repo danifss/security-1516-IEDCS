@@ -170,11 +170,12 @@ class Core(object):
                     res = json.loads(result.text)
                     cfname = res['path']
 
-                    # decipher content
-                    fileKey = self.genFileKey(cfname)
-                    f1 = open(cfname, 'r')
-                    decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
-                    f1.close()
+                    # decipher content, dataKey ((f1,f2), dataCiphered)
+                    dataKey = self.genFileKey(cfname)
+
+                    #f1 = open(cfname, 'r')
+                    decifrado = self.crypt.decipherAES(dataKey[0][0], dataKey[1][0], dataKey[1])
+                    #f1.close()
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
@@ -220,15 +221,49 @@ class Core(object):
             magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
 
             # 3 step: send magicSend to server and receive aux key to start decrypting file
-            #
-            #
-            #
-            print "Magic Plyer:", magicPlain
+            # api = self.userID, magicSend
+            result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
+
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                auxServer = res['challenge']
+                fileKey = self.auxFileKey(auxServer)
+                return (fileKey,header[2])
+
+            #print "Magic Plyer:", magicPlain
         else:
             print "No DEVICE KEY FOUND"
 
         return ("+bananasbananas+","+bananasbananas+")
 
+    def auxFileKey(self,aux):
+
+        if self.playerKey is None or self.deviceKey is None:
+            print "error"
+            return None
+        deviceKeyPub = self.crypt.publicRsa(self.deviceKey)
+
+        pk = CryptoModule.hashingSHA256(str(self.playerKey))
+        dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
+
+        xor1 = ""
+        for i in range(0, len(pk)):
+            xor1 += str(self.logical_function(aux[i], pk[i]))
+        hash_xor1 = CryptoModule.hashingSHA256(xor1)
+
+        fileKey = ""
+        for i in range(0, len(dk)):
+            fileKey += self.logical_function(hash_xor1[i], dk[i])
+        fileKey = CryptoModule.hashingSHA256(fileKey)
+
+        p1 = fileKey[8:24]
+        p2 = fileKey[37:53]
+
+        return (p1,p2)
+
+
+    def logical_function(self, str1, str2):
+        return str1 + str2
 
     ### Verify if user has something to Play
     def hasContentToPlay(self):
@@ -294,7 +329,6 @@ class Core(object):
             print co.OKGREEN+co.BOLD+"Yes, this is not your first time! (Device Validated)\n"+co.ENDC
             return key
 
-
     def getDeviceKey(self):
 
         try:
@@ -342,4 +376,4 @@ class Core(object):
             print co.FAIL+"ERROR!", e
             print co.ENDC
             return None
-        """""
+        """

@@ -332,7 +332,7 @@ class PlayContent(generics.ListCreateAPIView):
                         f2.close()
 
                         #print "Magic Server Safe:", magicSafe
-                        print "Magic Server:", user.magicKey
+                        #print "Magic Server:", user.magicKey
                         # with open(cipheredFileName+".txt", "r+") as f:
                         #     c = f.read()
                         #
@@ -404,12 +404,20 @@ def getAuxKey(userKey, magic):
     auxKey = CryptoModule.hashingSHA256(tmp)
     return auxKey
 
-#
+
 def verifyMagic(magicCiphered,user=None, player=None):
 
+    crypto = CryptoModule()
     magicKey = user.magicKey
-    playerKeyPub = getPlayerKey(user, player)
+    playerKey = getPlayerKey(user, player)
+    magicPlain = crypto.rsaDecipher(playerKey, magicCiphered)
 
+    # challenge correct
+    if magicKey == magicPlain:
+        return getAuxKey(user.userKey, magicKey)
+    # challenge not accepted
+    else:
+        return None
 
 
 def getPlayerKey(user=None, player=None):
@@ -418,10 +426,8 @@ def getPlayerKey(user=None, player=None):
     playerKey = player.playerKey
     pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
     playerHash = crypto.hashingSHA256(str(pkhash))
-    a = crypto.rsaImport(playerKey, playerHash)
+    return crypto.rsaImport(playerKey, playerHash)
 
-
-    return a
 
 
 def logical_function(str1, str2):
@@ -518,8 +524,9 @@ class ChallengeKey(generics.ListCreateAPIView):
 
                 key = verifyMagic(magicKey, user, player)
 
-                if key != None:
-                    return Response(status=status.HTTP_200_OK, data={'magicKey': key})
+
+                if key is not None:
+                    return Response(status=status.HTTP_200_OK, data={'challenge': key})
         except:
             print "Error in request!"
         return Response(status=status.HTTP_400_BAD_REQUEST)
