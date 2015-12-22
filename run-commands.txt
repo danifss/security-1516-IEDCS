@@ -1,7 +1,7 @@
 Installation:
 
 Configuring all system
-● $ sudo apt­get install python­dev imagemagick libffi-dev libssl-dev
+● $ sudo apt­get install python­dev encfs imagemagick libffi-dev libssl-dev
 ● $ pip install virtualenv
 ● $ git clone ​https://code.ua.pt/git/security2015­p2g5
 ● $ cd security2015­p2g5

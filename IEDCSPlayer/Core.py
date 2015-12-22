@@ -51,7 +51,7 @@ class Core(object):
         # Verify user in server
         url = api.LOGIN+"?username="+username+"&password="+hash_pass
         result = self.request(url)
-        if result == None:
+        if result is None:
             return
 
         if result.status_code == 200:
@@ -117,7 +117,7 @@ class Core(object):
     def list_my_content(self):
         url = api.GET_CONTENT_BY_USER + str(self.userID)
         result = self.request(url)
-        if result == None:
+        if result is None:
             return
 
         if result.status_code == 200:
@@ -138,7 +138,7 @@ class Core(object):
     ### Play content bought by the logged client
     def play_my_content(self):
         hasContent = self.hasContentToPlay()
-        if hasContent == None:
+        if hasContent is None:
             print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
             return
 
@@ -151,7 +151,7 @@ class Core(object):
             pages = 0
             url = api.GET_CONTENT_PAGES + str(contentID)
             result = self.request(url)
-            if result == None:
+            if result is None:
                 return
 
             if result.status_code == 200:
@@ -167,7 +167,7 @@ class Core(object):
                 i += 1
                 url = api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i)
                 result = self.request(url)
-                if result == None:
+                if result is None:
                     return
 
                 if result.status_code == 200:
@@ -229,7 +229,7 @@ class Core(object):
             url = api.CHALLENGE
             data = { "userId": str(self.userID), "magicKey": magicSend }
             result = self.request(url, data)
-            if result == None:
+            if result is None:
                 return
 
             if result.status_code == 200:
@@ -277,7 +277,7 @@ class Core(object):
     def hasContentToPlay(self):
         url = api.HAS_CONTENT_TO_PLAY+str(self.userID)
         result = self.request(url)
-        return result if result != None else None
+        return result if result is not None else None
 
 
     ### Show personal information
@@ -318,7 +318,7 @@ class Core(object):
             url = api.SAVE_DEVICE
             data = { "hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe }
             result = self.request(url, data=data, method="POST")
-            if result == None:
+            if result is None:
                 return
 
             if result.status_code == 200:
