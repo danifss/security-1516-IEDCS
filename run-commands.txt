@@ -1,16 +1,27 @@
 Installation:
+
 Configuring all system
-● sudo apt­get install python­dev imagemagick
-● pip install virtualenv
+● $ sudo apt­get install python­dev imagemagick
+● $ pip install virtualenv
 ● $ git clone ​https://code.ua.pt/git/security2015­p2g5
 ● $ cd security2015­p2g5
 ● $ virtualenv venv
 ● $ . venv/bin/activate
-● pip install ­r requirements.txt
+● $ pip install ­r requirements.txt
 
-Install package: cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+Install midleware CC package:
+● $ dpkg -i cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+
+Import Certificate Authority to your browser:
+● Go to Certificates/CertificateAuthority
+● Open IEDCS-CA.pem with browser
+
 Install Server Certificates (on venv):
+    You need to be on folder security2015-p2g5 and with venv
+    ● $ ./install_server_certificates.sh
 
+
+--------------------------------------------
 
 Start Server
 ● $ cd security2015­p2g5
@@ -28,11 +39,13 @@ Website
         ○ Buy something
         ○ Logout
 
-Start Player
+Start Player (python files)
 ● $ cd security2015­p2g5
 ● $ . venv/bin/activate
 ● $ cd IEDCSPlayer
 ● $ python Player.py
+
+Start Player (exe file downloaded from website)
 
 
 --------------------------------------------
