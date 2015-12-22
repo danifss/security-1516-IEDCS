@@ -404,12 +404,21 @@ def getAuxKey(userKey, magic):
     auxKey = CryptoModule.hashingSHA256(tmp)
     return auxKey
 
-#
+
 def verifyMagic(magicCiphered,user=None, player=None):
 
-    magicKey = user.magicKey
-    playerKeyPub = getPlayerKey(user, player)
+    crypto = CryptoModule()
 
+    magicKey = user.magicKey
+    playerKey = getPlayerKey(user, player)
+    magicPlain = crypto.rsaDecipher(playerKey, magicCiphered)
+
+    # challenge correct
+    if magicKey == magicPlain:
+        return getAuxKey(user.userKey, magicKey)
+    # challenge not accepted
+    else:
+        return None
 
 
 def getPlayerKey(user=None, player=None):
@@ -418,10 +427,8 @@ def getPlayerKey(user=None, player=None):
     playerKey = player.playerKey
     pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
     playerHash = crypto.hashingSHA256(str(pkhash))
-    a = crypto.rsaImport(playerKey, playerHash)
+    return crypto.rsaImport(playerKey, playerHash)
 
-
-    return a
 
 
 def logical_function(str1, str2):
