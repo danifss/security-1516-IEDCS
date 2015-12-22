@@ -43,10 +43,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # models for DB
+    # models and website
     'core',
     # API
     'api',
+    # SSL
+    'sslapp',
 )
 
 MIDDLEWARE_CLASSES = (

@@ -18,7 +18,7 @@ class Core(object):
     def __init__(self):
 
         self.crypt = CryptoModule()
-
+        self.deviceKey = None
         # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
@@ -29,12 +29,7 @@ class Core(object):
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
 
-        f = open('resources/player'+self.username+'.pub', 'r')
-        playerPublic = f.read()
-        f.close()
-        player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
-        self.playerHash = CryptoModule.hashingSHA256(player)
-        # self.playerKey = self.crypt.rsaImport(player)
+
 
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
@@ -52,41 +47,52 @@ class Core(object):
         try:
             # Verify user in server
             result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-            if result.status_code == 200:
-                ## Load user info
-                f = open('resources/user'+username+'.pkl', 'r')
-                decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
-                f.close()
-                src = StringIO(decipheredFile)
-
-                userInfo = pickle.load(src)
-                # Import user info
-                self.userID = userInfo["userId"]
-                self.username = userInfo["username"]
-                self.password = userInfo["password"]
-                self.email = userInfo["email"]
-                self.firstName = userInfo["firstName"]
-                self.lastName = userInfo["lastName"]
-                self.createdOn = userInfo["createdOn"]
-
-                if hash_pass == self.password:
-                    self.loggedIn = True
-                    # if everything ok, lets generate device key or not
-                    self.deviceKey = self.generateDevice()
-                    return
-            # else:
-            self.loggedIn = False
-            print co.FAIL+"\tFail doing login."+co.ENDC
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
+
+        if result.status_code == 200:
+            ## Load user info
+            f = open('resources/user'+username+'.pkl', 'r')
+            decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
+            f.close()
+            src = StringIO(decipheredFile)
+
+            userInfo = pickle.load(src)
+            # Import user info
+            self.userID = userInfo["userId"]
+            self.username = userInfo["username"]
+            self.password = userInfo["password"]
+            self.email = userInfo["email"]
+            self.firstName = userInfo["firstName"]
+            self.lastName = userInfo["lastName"]
+            self.createdOn = userInfo["createdOn"]
+
+            if hash_pass == self.password:
+                try:
+                    f = open('resources/player'+self.username+'.pub', 'r')
+                    playerPublic = f.read()
+                    f.close()
+                    player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+                    self.playerHash = CryptoModule.hashingSHA256(player)
+                    # self.playerKey = self.crypt.rsaImport(player)
+                except:
+                    print co.FAIL+"\tFail loading files."+co.ENDC
+                    os._exit(0)
+
+                # if everything ok, lets generate device key or not
+                self.deviceKey = self.generateDevice()
+                self.loggedIn = True
+                return
+
+        self.loggedIn = False
+        print co.FAIL+"\tFail doing login."+co.ENDC
 
 
     ### Logout
     def logout(self):
         self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
-        self.deviceKey = self.playerHash = ""
-        self.crypt = None
+        self.deviceKey = self.playerHash = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
 
@@ -215,14 +221,15 @@ class Core(object):
         print co.HEADER+co.BOLD+"Created On: "+co.ENDC+ \
               co.OKGREEN+str(self.createdOn)[:-13]+co.ENDC
 
-
-    # generates device key if first run
+    # generates device key if it's the first run
     def generateDevice(self):
         print co.BOLD+"\nChecking Device integrity..."+co.ENDC
 
         hashdevice = self.crypt.hashDevice()
         # check if hash of the device exists, if exists no need to make device key
-        key = self.getDeviceKey(hashdevice)
+        key = self.getDeviceKey()
+
+
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
@@ -230,36 +237,48 @@ class Core(object):
 
             devpub = self.crypt.publicRsa(rsadevice)
 
-
             # cipher and save key to DB, key = first 16 bits of the hash, vi = more 16bits of the hash
             devsafe = self.crypt.cipherAES(hashdevice[0:16], hashdevice[32:48], devpub)
             f = open('resources/device.priv', 'w')
-            f.write(devsafe)
+            f.write(devkey)
             f.close()
 
-            ## TODO do this inside a try catch
-            r = requests.post(api.SAVE_DEVICE, data={"hash":hashdevice, "userID": self.userID, "deviceKey": devsafe})
+            #try:
+            r = requests.post(api.SAVE_DEVICE, data={"hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe})
+            #except requests.ConnectionError:
+            #    print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            #    return
 
-            # print "Status post: ", r.status_code
-            print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
+            if r.status_code == 200:
+                print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
+            else:
+                # if user on the DB doesn't exits, player has to go down
+                print "\033[91mDevice Not Valid!!! Player Terminating 1\n\n\033[0m"
+                # on second run, the device key would be valid
+                os.remove('resources/device.priv')
+                # shuts down the player
+                os._exit(0)
+
+            return rsadevice
         else:
             print co.OKGREEN+co.BOLD+"Yes, this is not your first time! (Device Validated)\n"+co.ENDC
+            return key
 
 
-    def getDeviceKey(self, hashdevice):
+    def getDeviceKey(self):
 
         try:
             f = open('resources/device.priv', 'r')
             key = f.read()
             f.close()
 
+            # always verifies if it's the right device
             hashdevice = self.crypt.hashDevice()
-            devsafe = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key)
-            devkey = self.crypt.rsaImport(devsafe, hashdevice)
 
+            devkey = self.crypt.rsaImport(key, hashdevice)
             if devkey is None:
-                print "\033[91mDevice Not Valid!!! Player Terminating\n\n\033[0m"
-                os._exit(0)
+                print "\033[91mDevice Not Valid!!! Player Terminating 2\n\n\033[0m"
+                os._exit(0)  #shuts down the player
             return devkey
         except:
             return None

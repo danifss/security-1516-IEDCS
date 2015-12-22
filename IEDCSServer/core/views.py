@@ -241,43 +241,39 @@ def writeUserData(user=None):
 def createDownloadFile(userID, username):
     # execute nuitka
     # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
-    """
+    # """
     options = ["--recurse-all", "--output-dir=media/tmp/", "--recurse-directory=media/player/resources/", \
                "--remove-output", "media/player/Player.py"]
     p = subprocess.Popen(["nuitka"]+options)
     # Wait for the command to finish
     p.wait()
-    """
-    # Making zip file to be downloaded
-    ### TODO move files in player/resources folder to zip file
-    filenames = ['media/download/Player.exe', 'media/player/resources',
-                    'media/player/resources/player'+username+'.pub',
-                    'media/player/resources/user'+username+'.pkl']
-    # zip names
-    zip_subdir = 'download'+str(userID)
-    zip_filename = "%s.zip" % zip_subdir
-    zip_path = 'media/tmp/'
+    # """
 
-    # zip compressor
-    try:
-        zf = zipfile.ZipFile('media/download/'+zip_filename, "w")
-        for root, dirs, files in os.walk(zip_path):
-            for file in files:
-                zf.write(os.path.join(root, file))
-                # for fpath in filenames:
-                # Calculate path for file in zip
-                # fdir, fname = os.path.split(fpath)
-                # print fdir, fname
-                # zip_path = os.path.join('IEDCSPlayer', fname)
-                # Add file, at correct path
-                # zf.write(fpath, zip_path)
-        zf.close()
-        # clean files
-        os.remove('media/tmp/resources/player'+username+'.pub')
-        os.remove('media/tmp/resources/user'+username+'.pkl')
-        # os.remove('media/download/Player.exe')
-    except Exception as e:
-        print "ERROR ", e
+    # Making zip file to be downloaded
+    # zip names
+    zip_filename = 'download'+str(userID)+'.zip'
+    zip_path = 'media/tmp/'
+    # zip file
+    zipper(zip_path, zip_filename)
+
+    # clean and move files
+    os.rename(zip_filename, 'media/download/'+zip_filename)
+    os.remove('media/tmp/resources/player'+username+'.pub')
+    os.remove('media/tmp/resources/user'+username+'.pkl')
+    os.remove('media/tmp/Player.exe')
+
+
+def zipper(dir, zip_file):
+    zip = zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED)
+    root_len = len(os.path.abspath(dir))
+    for root, dirs, files in os.walk(dir):
+        archive_root = os.path.abspath(root)[root_len:]
+        for f in files:
+            fullpath = os.path.join(root, f)
+            archive_name = os.path.join(archive_root, f)
+            zip.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+    zip.close()
+    # return zip_file
 
 
 def accountManage(request):
