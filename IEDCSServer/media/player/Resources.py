@@ -3,7 +3,7 @@
 
 serverIp = "localhost"
 serverPort = "8000"
-serverUrl = "http://" + serverIp + ":" + serverPort
+serverUrl = "https://" + serverIp + ":" + serverPort
 
 class api:
     HOMEPAGE = serverUrl + "/"
@@ -11,6 +11,7 @@ class api:
     GET_CONTENT_BY_USER = serverUrl + "/api/content/user/"
     GET_CONTENT_TO_PLAY = serverUrl + "/api/content/play/"
     GET_CONTENT_PAGES = serverUrl + "/api/content/pages/"
+    CHALLENGE = serverUrl + "/api/content/challenge/"
     HAS_CONTENT_TO_PLAY = serverUrl + "/api/content/hascontent/"
     # GET_CONTENT_FILENAME = serverUrl + "/api/content/name/"
     # GET_CONTENT_FILEPATH = serverUrl + "/api/content/filepath/"

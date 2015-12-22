@@ -9,6 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
+from base64 import b64decode
 # from PIL import Image
 
 
@@ -16,9 +17,9 @@ class Core(object):
     loggedIn = False
 
     def __init__(self):
-
         self.crypt = CryptoModule()
         self.deviceKey = None
+        self.playerKey = None
         # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
@@ -28,8 +29,6 @@ class Core(object):
                 if op == 'y':
                     print co.BOLD + co.HEADER + "\nTerminated by user! See you soon.\n"
                     sys.exit(0)
-
-
 
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
@@ -44,16 +43,22 @@ class Core(object):
         print co.ENDC
 
         hash_pass = CryptoModule.hashingSHA256(passwd)
-        try:
-            # Verify user in server
-            result = requests.get(api.LOGIN+"?username="+username+"&password="+hash_pass, verify=True)
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+        # Verify user in server
+        url = api.LOGIN+"?username="+username+"&password="+hash_pass
+        # result = requests.get(pedido, verify='../Certificates/CertificateAuthority/CA-IEDCS.crt')
+        result = self.request(url)
+        if result == None:
             return
 
         if result.status_code == 200:
             ## Load user info
-            f = open('resources/user'+username+'.pkl', 'r')
+            try:
+                f = open('resources/user'+username+'.pkl', 'r')
+            except Exception:
+                self.loggedIn = False
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+
             decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
             f.close()
             src = StringIO(decipheredFile)
@@ -68,18 +73,10 @@ class Core(object):
             self.lastName = userInfo["lastName"]
             self.createdOn = userInfo["createdOn"]
 
-            if hash_pass == self.password:
-                try:
-                    f = open('resources/player'+self.username+'.pub', 'r')
-                    playerPublic = f.read()
-                    f.close()
-                    player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
-                    self.playerHash = CryptoModule.hashingSHA256(player)
-                    # self.playerKey = self.crypt.rsaImport(player)
-                except:
-                    print co.FAIL+"\tFail loading files."+co.ENDC
-                    os._exit(0)
-
+            # Validation to check if user.pkl was renamed to some other existent user
+            if hash_pass == self.password and username == self.username:
+                # verifies if can open player key pub
+                self.getPlayerKey()
                 # if everything ok, lets generate device key or not
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
@@ -91,38 +88,53 @@ class Core(object):
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn =  ""
-        self.deviceKey = self.playerHash = None
+        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
+        #self.deviceKey = self.playerHash = None
+        self.deviceKey = self.playerKey = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
+
+    def getPlayerKey(self):
+        try:
+            f = open('resources/player'+self.username+'.pub', 'r')
+            playerPublic = f.read()
+            f.close()
+            # TODO rain check public player key with server DB
+            player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            self.playerKey = self.crypt.rsaImport(player)
+            #self.playerHash = CryptoModule.hashingSHA256(player)
+
+        except:
+            print co.FAIL+"\tFail loading files."+co.ENDC
+            os._exit(0)
 
 
     ### List content from logged user
     def list_my_content(self):
-        try:
-            result = requests.get(api.GET_CONTENT_BY_USER + str(self.userID), verify=True)
-            if result.status_code == 200:
-                res = json.loads(result.text)['results']
-                if len(res) > 0:
-                    print co.OKBLUE+co.BOLD+"\tThis is your content:\n"+co.ENDC
-                    print co.HEADER+co.BOLD+"  ID  \t   Date of purchase\t\t    Name of product"+co.ENDC
-                    distinct = []
-                    for item in res:
-                        if item not in distinct:
-                            distinct += [item]
-                            print co.OKGREEN+"  "+str(item['contentID'])+"\t"+item['createdOn']+"\t    "+item['name']+co.ENDC
-                else:
-                    print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
-
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
+        url = api.GET_CONTENT_BY_USER + str(self.userID)
+        result = self.request(url)
+        if result == None:
             return
+
+        if result.status_code == 200:
+            res = json.loads(result.text)['results']
+            if len(res) > 0:
+                print co.OKBLUE+co.BOLD+"\tThis is your content:\n"+co.ENDC
+                print co.HEADER+co.BOLD+"  ID  \t   Date of purchase\t\t    Name of product"+co.ENDC
+                distinct = []
+                for item in res:
+                    if item not in distinct:
+                        distinct += [item]
+                        print co.OKGREEN+"  "+str(item['contentID'])+"\t"+item['createdOn']+"\t    "+item['name']+co.ENDC
+            else:
+                print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
+
 
 
     ### Play content bought by the logged client
     def play_my_content(self):
         hasContent = self.hasContentToPlay()
-        if not hasContent:
+        if hasContent == None:
             print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
             return
 
@@ -133,10 +145,9 @@ class Core(object):
 
             # Get pages number to view one by one
             pages = 0
-            try:
-                result = requests.get(api.GET_CONTENT_PAGES + str(contentID), verify=True)
-            except requests.ConnectionError:
-                print co.FAIL+"Error connecting with server!\n"+co.ENDC
+            url = api.GET_CONTENT_PAGES + str(contentID)
+            result = self.request(url)
+            if result == None:
                 return
 
             if result.status_code == 200:
@@ -150,24 +161,26 @@ class Core(object):
             i = 0
             while i <= pages:
                 i += 1
-                try:
-                    result = requests.get(api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i))
-                except requests.ConnectionError:
-                    print co.FAIL+"Error connecting with server!\n"+co.ENDC
+                url = api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i)
+                result = self.request(url)
+                if result == None:
                     return
+
                 if result.status_code == 200:
                     res = json.loads(result.text)
                     cfname = res['path']
 
-                    # decipher content
-                    fileKey = self.genFileKey()
-                    f1 = open(cfname, 'r')
-                    decifrado = self.crypt.decipherAES(fileKey[0], fileKey[1], f1.read())
-                    f1.close()
+                    # decipher content, dataKey ((f1,f2), dataCiphered)
+                    dataKey = self.genFileKey(cfname)
+
+                    #f1 = open(cfname, 'r')
+                    decifrado = self.crypt.decipherAES(dataKey[0][0], dataKey[1][0], dataKey[1])
+                    #f1.close()
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
                     ## TODO use StringIO to use opencv or something (if we have time)
+
                     f4 = open(filePath, 'w')
                     f4.write(decifrado)
                     f4.close()
@@ -175,7 +188,7 @@ class Core(object):
                     try:
                         p = subprocess.Popen(["display", filePath])
                         time.sleep(0.3)
-                        os.remove(filePath)
+                        #os.remove(filePath)
                         while True:
                             opt = raw_input("Next image? (y/n/x) ")
                             if opt=='y':
@@ -194,19 +207,74 @@ class Core(object):
             print co.FAIL+"Error occurred!! ", e
             print co.ENDC
 
-    def genFileKey(self):
-        ## TODO finish this!
+    def genFileKey(self, cfname):
+
+        # 1 step: decipher magic key with devicekey key
+        if self.deviceKey is not None:
+            with open(cfname, "r+") as f:
+                all = f.read()
+
+            header = all.split('#')
+            magicProtected = header[1]
+            magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
+            # 2 step: cipher magic key with player
+            magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
+
+            # 3 step: send magicSend to server and receive aux key to start decrypting file
+            # api = self.userID, magicSend
+            url = api.CHALLENGE
+            data = { "userId": str(self.userID), "magicKey": magicSend }
+            result = self.request(url, data)
+            if result == None:
+                return
+
+            if result.status_code == 200:
+                res = json.loads(result.text)
+                auxServer = res['challenge']
+                fileKey = self.auxFileKey(auxServer)
+                return (fileKey,header[2])
+
+            #print "Magic Plyer:", magicPlain
+        else:
+            print "No DEVICE KEY FOUND"
+
         return ("+bananasbananas+","+bananasbananas+")
 
+    def auxFileKey(self,aux):
+
+        if self.playerKey is None or self.deviceKey is None:
+            print "error"
+            return None
+        deviceKeyPub = self.crypt.publicRsa(self.deviceKey)
+
+        pk = CryptoModule.hashingSHA256(str(self.playerKey))
+        dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
+
+        xor1 = ""
+        for i in range(0, len(pk)):
+            xor1 += str(self.logical_function(aux[i], pk[i]))
+        hash_xor1 = CryptoModule.hashingSHA256(xor1)
+
+        fileKey = ""
+        for i in range(0, len(dk)):
+            fileKey += self.logical_function(hash_xor1[i], dk[i])
+        fileKey = CryptoModule.hashingSHA256(fileKey)
+
+        p1 = fileKey[8:24]
+        p2 = fileKey[37:53]
+
+        return (p1,p2)
+
+
+    def logical_function(self, str1, str2):
+        return str1 + str2
 
     ### Verify if user has something to Play
     def hasContentToPlay(self):
-        try:
-            result = requests.get(api.HAS_CONTENT_TO_PLAY+str(self.userID))
-            return True if result.status_code == 200 else False
-        except requests.ConnectionError:
-            print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return
+        url = api.HAS_CONTENT_TO_PLAY+str(self.userID)
+        result = self.request(url)
+        return result if result != None else None
+
 
     ### Show personal information
     def show_my_info(self):
@@ -229,7 +297,6 @@ class Core(object):
         # check if hash of the device exists, if exists no need to make device key
         key = self.getDeviceKey()
 
-
         if key is None:
 
             rsadevice = self.crypt.generateRsa()
@@ -243,11 +310,12 @@ class Core(object):
             f.write(devkey)
             f.close()
 
-            #try:
-            r = requests.post(api.SAVE_DEVICE, data={"hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe})
-            #except requests.ConnectionError:
-            #    print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            #    return
+            # register new device in DB
+            url = api.SAVE_DEVICE
+            data = { "hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe }
+            result = self.request(url, data)
+            if result == None:
+                return
 
             if r.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
@@ -263,7 +331,6 @@ class Core(object):
         else:
             print co.OKGREEN+co.BOLD+"Yes, this is not your first time! (Device Validated)\n"+co.ENDC
             return key
-
 
     def getDeviceKey(self):
 
@@ -283,33 +350,12 @@ class Core(object):
         except:
             return None
 
-    # GET DEVICE KEY TO SERVER
-    """
-    def getDeviceKey(self, hashdevice):
 
-        # with userID and hash get device key
+    ### Request to server
+    def request(self, url, data=None):
         try:
-            result = requests.get(api.GET_DEVICE + str(self.userID) + "/" + hashdevice, verify=True)
-            # print result.text
-            if result.status_code == 200:
-                # print result.text
-                res = json.loads(result.text)
-                dados = res['results']
-                key_ciphered = dados[0]['deviceKey']
-                print dados
-                hashdevice = self.crypt.hashDevice()
-                key = self.crypt.decipherAES(hashdevice[0:16], hashdevice[32:48], key_ciphered)
-                return self.crypt.rsaImport(key, hashdevice)
-
-            # 204 - no content found
-            if result.status_code == 204:
-                return None
-
+            result = requests.get(url, data=data, verify='resources/CA-IEDCS.crt')
+            return result if result.status_code == 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
-            return None
-        except Exception as e:
-            print co.FAIL+"ERROR!", e
-            print co.ENDC
-            return None
-        """""
+            return

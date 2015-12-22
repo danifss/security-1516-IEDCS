@@ -12,6 +12,11 @@ from cStringIO import StringIO
 from base64 import b64decode
 # from PIL import Image
 
+# import urllib3
+# urllib3.disable_warnings()
+# import urllib3.contrib.pyopenssl
+# urllib3.contrib.pyopenssl.inject_into_urllib3()
+
 
 class Core(object):
     loggedIn = False
@@ -45,7 +50,6 @@ class Core(object):
         hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
         url = api.LOGIN+"?username="+username+"&password="+hash_pass
-        # result = requests.get(pedido, verify='../Certificates/CertificateAuthority/CA-IEDCS.crt')
         result = self.request(url)
         if result == None:
             return
@@ -313,11 +317,11 @@ class Core(object):
             # register new device in DB
             url = api.SAVE_DEVICE
             data = { "hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe }
-            result = self.request(url, data)
+            result = self.request(url, data=data, method="POST")
             if result == None:
                 return
 
-            if r.status_code == 200:
+            if result.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
             else:
                 # if user on the DB doesn't exits, player has to go down
@@ -333,7 +337,6 @@ class Core(object):
             return key
 
     def getDeviceKey(self):
-
         try:
             f = open('resources/device.priv', 'r')
             key = f.read()
@@ -352,9 +355,12 @@ class Core(object):
 
 
     ### Request to server
-    def request(self, url, data=None):
+    def request(self, url, data=None, method="GET"):
         try:
-            result = requests.get(url, data=data, verify='resources/CA-IEDCS.crt')
+            if method == "GET":
+                result = requests.get(url, verify='resources/CA-IEDCS.crt')
+            elif method == "POST":
+                result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
             return result if result.status_code == 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
