@@ -240,13 +240,12 @@ def writeUserData(user=None):
 ### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
 def createDownloadFile(userID, username):
     # execute nuitka
-    # command = "--recurse-all --recurse-directory=media/player/resources/ --output-dir=media/player/ --remove-output media/player/Player.py"
+    # command teste = "nuitka --recurse-directory=. --remove-output Player.py"
     # """
-    options = ["--recurse-all", "--output-dir=media/tmp/", "--recurse-directory=media/player/resources/", \
-               "--remove-output", "media/player/Player.py"]
-    #p = subprocess.Popen(["nuitka"]+options)
+    options = ["--recurse-directory=media/player/", "--output-dir=media/tmp/","--remove-output", "media/player/Player.py"]
+    p = subprocess.Popen(["nuitka"]+options)
     # Wait for the command to finish
-    #p.wait()
+    p.wait()
     # """
 
     # Making zip file to be downloaded
