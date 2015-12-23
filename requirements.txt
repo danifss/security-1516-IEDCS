@@ -6,7 +6,7 @@ django-rest-swagger==0.3.4
 django-sslserver==0.18
 django-wpadmin==1.7.4
 djangorestframework==3.3.2
-enum34==1.1.1
+enum34==1.1.2
 idna==2.0
 ipaddress==1.0.15
 ndg-httpsclient==0.4.0
