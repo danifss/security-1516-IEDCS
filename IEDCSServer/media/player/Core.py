@@ -12,6 +12,10 @@ from cStringIO import StringIO
 from base64 import b64decode
 # from PIL import Image
 
+# import urllib3
+# urllib3.disable_warnings()
+# import urllib3.contrib.pyopenssl
+# urllib3.contrib.pyopenssl.inject_into_urllib3()
 
 class Core(object):
     loggedIn = False
@@ -45,9 +49,8 @@ class Core(object):
         hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
         url = api.LOGIN+"?username="+username+"&password="+hash_pass
-        # result = requests.get(pedido, verify='../Certificates/CertificateAuthority/CA-IEDCS.crt')
         result = self.request(url)
-        if result == None:
+        if result is None:
             return
 
         if result.status_code == 200:
@@ -101,6 +104,7 @@ class Core(object):
             f.close()
             # TODO rain check public player key with server DB
             player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
             #self.playerHash = CryptoModule.hashingSHA256(player)
 
@@ -113,7 +117,7 @@ class Core(object):
     def list_my_content(self):
         url = api.GET_CONTENT_BY_USER + str(self.userID)
         result = self.request(url)
-        if result == None:
+        if result is None:
             return
 
         if result.status_code == 200:
@@ -134,7 +138,7 @@ class Core(object):
     ### Play content bought by the logged client
     def play_my_content(self):
         hasContent = self.hasContentToPlay()
-        if hasContent == None:
+        if hasContent is None:
             print co.HEADER+co.BOLD+"\tYou need to buy something!"+co.ENDC
             return
 
@@ -147,7 +151,7 @@ class Core(object):
             pages = 0
             url = api.GET_CONTENT_PAGES + str(contentID)
             result = self.request(url)
-            if result == None:
+            if result is None:
                 return
 
             if result.status_code == 200:
@@ -163,7 +167,7 @@ class Core(object):
                 i += 1
                 url = api.GET_CONTENT_TO_PLAY+str(self.userID)+'/'+str(contentID)+'/'+str(i)
                 result = self.request(url)
-                if result == None:
+                if result is None:
                     return
 
                 if result.status_code == 200:
@@ -172,13 +176,17 @@ class Core(object):
 
                     # decipher content, dataKey ((f1,f2), dataCiphered)
                     dataKey = self.genFileKey(cfname)
+                    if dataKey is None:
+                        raise Exception("Don't have permissions to open the file")
 
-                    #f1 = open(cfname, 'r')
-                    decifrado = self.crypt.decipherAES(dataKey[0][0], dataKey[1][0], dataKey[1])
-                    #f1.close()
+                    key = dataKey[0][0]
+                    vi = dataKey[0][1]
+                    data = dataKey[1].decode('base64')
+                    decifrado = self.crypt.decipherAES(key, vi, data)
                     os.remove(cfname)
                     # save to disk
                     filePath = cfname+'.jpg'
+
                     ## TODO use StringIO to use opencv or something (if we have time)
 
                     f4 = open(filePath, 'w')
@@ -187,14 +195,14 @@ class Core(object):
 
                     try:
                         p = subprocess.Popen(["display", filePath])
-                        time.sleep(0.3)
-                        #os.remove(filePath)
+                        time.sleep(0.1)
+                        os.remove(filePath)
                         while True:
                             opt = raw_input("Next image? (y/n/x) ")
-                            if opt=='y':
+                            if opt == 'y':
                                 p.kill()
                                 break
-                            elif opt=='x':
+                            elif opt == 'x':
                                 i = pages + 1
                                 p.kill()
                                 break
@@ -209,45 +217,46 @@ class Core(object):
 
     def genFileKey(self, cfname):
 
+        if self.playerKey is None or self.deviceKey is None:
+            return None
+
         # 1 step: decipher magic key with devicekey key
-        if self.deviceKey is not None:
-            with open(cfname, "r+") as f:
-                all = f.read()
+        with open(cfname, "r+") as f:
+            fileCiphered = f.read()
 
-            header = all.split('#')
-            magicProtected = header[1]
-            magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
-            # 2 step: cipher magic key with player
-            magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
+        header = fileCiphered.split('#')
+        magicProtected = header[1]
+        magicPlain = self.crypt.rsaDecipher(self.deviceKey, magicProtected)
 
-            # 3 step: send magicSend to server and receive aux key to start decrypting file
-            # api = self.userID, magicSend
-            url = api.CHALLENGE
-            data = { "userId": str(self.userID), "magicKey": magicSend }
-            result = self.request(url, data)
-            if result == None:
-                return
+        # 2 step: cipher magic key with player key Public
+        magicSend = self.crypt.rsaCipher(self.playerKey, magicPlain)
+        # 3 step: send magicSend to server and receive aux key to start decrypting file
+        # api = self.userID, magicSend
+        url = api.CHALLENGE
+        data = { "userId": str(self.userID), "magicKey": magicSend }
+        result = self.request(url, data=data, method='POST')
+        if result is None:
+            return
 
-            if result.status_code == 200:
-                res = json.loads(result.text)
-                auxServer = res['challenge']
-                fileKey = self.auxFileKey(auxServer)
-                return (fileKey,header[2])
+        # 3 step: send magicSend to server and receive aux key to start decrypting file
+        #result = requests.post(api.CHALLENGE, data={"userId": str(self.userID), "magicKey": magicSend})
 
-            #print "Magic Plyer:", magicPlain
+        if result.status_code == 200:
+            res = json.loads(result.text)
+            auxServer = res['challenge']
+            fileKey = self.auxFileKey(auxServer)
+            return (fileKey,header[2])
         else:
-            print "No DEVICE KEY FOUND"
-
-        return ("+bananasbananas+","+bananasbananas+")
+            return None
 
     def auxFileKey(self,aux):
 
         if self.playerKey is None or self.deviceKey is None:
-            print "error"
             return None
+
         deviceKeyPub = self.crypt.publicRsa(self.deviceKey)
 
-        pk = CryptoModule.hashingSHA256(str(self.playerKey))
+        pk = CryptoModule.hashingSHA256(str(self.playerKey.exportKey()))
         dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
 
         xor1 = ""
@@ -273,7 +282,7 @@ class Core(object):
     def hasContentToPlay(self):
         url = api.HAS_CONTENT_TO_PLAY+str(self.userID)
         result = self.request(url)
-        return result if result != None else None
+        return result if result is not None else None
 
 
     ### Show personal information
@@ -313,11 +322,11 @@ class Core(object):
             # register new device in DB
             url = api.SAVE_DEVICE
             data = { "hash": hashdevice, "userID": str(self.userID), "deviceKey": devsafe }
-            result = self.request(url, data)
-            if result == None:
+            result = self.request(url, data=data, method="POST")
+            if result is None:
                 return
 
-            if r.status_code == 200:
+            if result.status_code == 200:
                 print co.HEADER+co.BOLD+"Uouu! Your first time here! Hope you enjoy it.\n"+co.ENDC
             else:
                 # if user on the DB doesn't exits, player has to go down
@@ -333,7 +342,6 @@ class Core(object):
             return key
 
     def getDeviceKey(self):
-
         try:
             f = open('resources/device.priv', 'r')
             key = f.read()
@@ -352,9 +360,12 @@ class Core(object):
 
 
     ### Request to server
-    def request(self, url, data=None):
+    def request(self, url, data=None, method="GET"):
         try:
-            result = requests.get(url, data=data, verify='resources/CA-IEDCS.crt')
+            if method == "GET":
+                result = requests.get(url, verify='resources/CA-IEDCS.crt')
+            elif method == "POST":
+                result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
             return result if result.status_code == 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
