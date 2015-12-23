@@ -7,6 +7,7 @@ keySize = 2048
 ### USER
 class User(models.Model):
     userID = models.AutoField(primary_key=True)
+    userCC = models.CharField(max_length=8, unique=True)
     userKey = models.CharField(max_length=keySize)
     username = models.CharField(max_length=100, unique=True)
     email = models.CharField(max_length=150, unique=True)

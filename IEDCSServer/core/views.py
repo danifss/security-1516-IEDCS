@@ -141,6 +141,7 @@ def register(request):
             crypt = CryptoModule()
 
             ### Get form data
+            userCC = str(form.cleaned_data['userCC'])
             email = str(form.cleaned_data['email'])
             password = str(form.cleaned_data['password'])
             username = str(form.cleaned_data['username'])
@@ -155,7 +156,7 @@ def register(request):
             form.password = passwdHash
 
             # Generate symmetric userKey with AES with user details
-            uk = email+username+lastName+password+firstName
+            uk = email+userCC+username+lastName+password+firstName
             userkeyHash = crypt.hashingSHA256(uk)
 
             # userkeyHash[0:16], userkeyHash[48:64]
@@ -187,7 +188,6 @@ def register(request):
 
             user = User.objects.get(username=username)
 
-
             try:
                 new_player = Player(playerKey=playerKey, user=user)
 
@@ -218,6 +218,7 @@ def writeUserData(user=None):
     # create user info dictionary
     userInfo = {}
     userInfo["userId"] = user.userID
+    userInfo["userCC"] = user.userCC
     userInfo["username"] = user.username
     userInfo["password"] = user.password
     userInfo["email"] = user.email
@@ -259,7 +260,7 @@ def createDownloadFile(userID, username):
     os.rename(zip_filename, 'media/download/'+zip_filename)
     os.remove('media/tmp/resources/player'+username+'.pub')
     os.remove('media/tmp/resources/user'+username+'.pkl')
-    #os.remove('media/tmp/Player.exe')
+    os.remove('media/tmp/Player.exe')
 
 
 def zipper(dir, zip_file):

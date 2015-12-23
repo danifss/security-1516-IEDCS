@@ -69,6 +69,7 @@ class Core(object):
             userInfo = pickle.load(src)
             # Import user info
             self.userID = userInfo["userId"]
+            self.userCC = userInfo["userCC"]
             self.username = userInfo["username"]
             self.password = userInfo["password"]
             self.email = userInfo["email"]
@@ -91,8 +92,7 @@ class Core(object):
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
-        #self.deviceKey = self.playerHash = None
+        self.userID = self.userCC = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
         self.deviceKey = self.playerKey = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
@@ -287,6 +287,8 @@ class Core(object):
 
     ### Show personal information
     def show_my_info(self):
+        print co.HEADER+co.BOLD+"User CC   : "+co.ENDC+ \
+              co.OKGREEN+self.userCC+co.ENDC
         print co.HEADER+co.BOLD+"Username  : "+co.ENDC+ \
               co.OKGREEN+self.username+co.ENDC
         print co.HEADER+co.BOLD+"Email     : "+co.ENDC+ \
