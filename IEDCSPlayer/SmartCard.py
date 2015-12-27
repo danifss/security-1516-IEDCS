@@ -28,7 +28,6 @@ class SmartCard(object):
             if ValueError:
                 return "Connect the smart card reader!\n"
 
-
     def getCCNumber(self):
         certs = self.getUserCerts()
         if certs:
@@ -66,14 +65,6 @@ class SmartCard(object):
         # parse list of longs to octect string
         return ''.join(chr(s) for s in data)
 
-    def veriStatus(self):
-
-        veri = self.pkcs11.getSlotList()
-        self.session = self.pkcs11.openSession(self.slots[0])
-        print "ver", veri[0]
-        if veri:
-            return 0
-        return 1
 
 #CKR_TOKEN_NOT_PRESENT (0x000000E0)
 

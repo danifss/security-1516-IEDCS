@@ -143,11 +143,15 @@ class CryptoModule(object):
         hashing method
     """
     @staticmethod
-    def hashingSHA256(data):
+    def hashingSHA256(data, salt=None):
         d = str.encode(data)
-        type(d) # insures its bytes
+        # type(d) # insures it is bytes
         # apply sintese
-        hash_object = hashlib.sha256(d)
+        if salt:
+            s = str.encode(salt)
+            hash_object = hashlib.sha256(d+s)
+        else:
+            hash_object = hashlib.sha256(d)
         hex_dig = hash_object.hexdigest()
 
         return hex_dig

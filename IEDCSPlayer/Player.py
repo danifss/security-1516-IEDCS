@@ -9,12 +9,8 @@ try:
     ### Initialize core of the system
     core = Core()
 
-    #smart.startSession()
-
-
     ### Lyfecycle of the program
     while True:
-
 
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Welcome to IEDCS Player"
         print "\tIdentity Enabled Distribution Control System" + co.ENDC
