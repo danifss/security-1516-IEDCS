@@ -9,6 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
+from SmartCard import *
 from base64 import b64decode
 # from PIL import Image
 
@@ -17,6 +18,7 @@ from base64 import b64decode
 # import urllib3.contrib.pyopenssl
 # urllib3.contrib.pyopenssl.inject_into_urllib3()
 
+
 class Core(object):
     loggedIn = False
 
@@ -24,6 +26,8 @@ class Core(object):
         self.crypt = CryptoModule()
         self.deviceKey = None
         self.playerKey = None
+        self.cc_number = 0
+
         # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
@@ -40,17 +44,31 @@ class Core(object):
 
     ### Login
     def login(self):
+        pteid = SmartCard()
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Logging into IEDCS Player" + co.ENDC
         print co.WARNING
+        # every login
+        check = pteid.startSession()
+
+        if check:
+            print co.FAIL+check+co.ENDC
+            self.loggedIn = False
+            return
+
+        self.cc_number = pteid.getCCNumber()
+        # destroy object to verify later if card was removed
+        del pteid
+
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
         hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
-        url = api.LOGIN+"?username="+username+"&password="+hash_pass
+        url = api.LOGIN+"?username="+username+"&password="+hash_pass+"&userCC="+self.cc_number
         result = self.request(url)
         if result is None:
+            print co.FAIL+"\tFail doing login."+co.ENDC
             return
 
         if result.status_code == 200:

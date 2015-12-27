@@ -49,12 +49,13 @@ class UserLogin(generics.ListCreateAPIView):
         omit_parameters:
         - form
         """
-        if 'password' in request.GET and 'username' in request.GET:
+        if 'password' in request.GET and 'username' in request.GET and 'userCC' in request.GET:
             try:
                 user = User.objects.get(username__iexact = request.GET.get('username'))
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
-                if passwd == user.password:
+                cc_number = request.GET.get('userCC')
+                if passwd == user.password and cc_number == user.userCC:
                     return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
                                                                      #'last_name': user.lastName, 'email': user.email})
                 else:
