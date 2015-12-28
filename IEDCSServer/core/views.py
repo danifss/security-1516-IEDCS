@@ -115,7 +115,8 @@ def authenticate(username, password):
     # validate password
     crypt = CryptoModule()
 
-    web_pass = crypt.hashingSHA256(password, user.userSalt)
+    salt = user.userSalt.decode('base64')
+    web_pass = crypt.hashingSHA256(password, salt)
     bd_pass = user.password
     if bd_pass != web_pass:
         return False
