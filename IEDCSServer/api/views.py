@@ -504,9 +504,9 @@ class GET_userIV(generics.ListCreateAPIView):
     serializer_class = UserSerializer
     allowed_methods = ['get']
 
-    def get(self, request, pk=None):
+    def get(self, request, un=None):
         """
-        Gets the user IV for given user
+        Gets the user IV for given username
 
 
 
@@ -528,8 +528,7 @@ class GET_userIV(generics.ListCreateAPIView):
         - form
         """
         try:
-            int_id = int(pk)
-            user = User.objects.get(userID=int_id)
+            user = User.objects.get(username=un)
             iv = user.userIV
 
             return Response(status=status.HTTP_200_OK, data={'iv': iv})

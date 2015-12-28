@@ -10,7 +10,7 @@ urlpatterns = [
     # ex: /api/user/login/?username=daniel?password=9r3hf83h8gh39g
     url(r'^user/login/$', views.UserLogin.as_view()),
     # ex: /api/user/iv/2
-    url(r'^user/iv/(?P<pk>[0-9]+)$', views.GET_userIV.as_view()),
+    url(r'^user/iv/(?P<un>[a-zA-Z0-9]+)$', views.GET_userIV.as_view()),
     ### PLAYER
     # ex: /api/player/iv/2
     url(r'^player/iv/(?P<pk>[0-9]+)$', views.GET_playerIV.as_view()),
@@ -30,10 +30,5 @@ urlpatterns = [
     url(r'^content/play/(?P<pk>[0-9]+)/(?P<ct>[0-9]+)/(?P<pg>[0-9]+)$', views.PlayContent.as_view()),
     # ex: /api/content/challenge/ with JSON attach
     url(r'^content/challenge/$', views.ChallengeKey.as_view()),
-
-    # # ex: /api/content/name/1
-    # url(r'^content/name/(?P<pk>[0-9]+)$', views.ContentNames.as_view()),
-    # # ex: /api/content/filepath/1
-    # url(r'^content/filepath/(?P<pk>[0-9]+)$', views.ContentFilePath.as_view()),
 
 ]
