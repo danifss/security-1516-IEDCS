@@ -8,6 +8,8 @@ serverUrl = "https://" + serverIp + ":" + serverPort
 class api:
     HOMEPAGE = serverUrl + "/"
     LOGIN = serverUrl + "/api/user/login/"
+    GET_USER_IV = serverUrl + "/api/user/iv/"
+    GET_PLAYER_IV = serverUrl + "/api/player/iv/"
     GET_CONTENT_BY_USER = serverUrl + "/api/content/user/"
     GET_CONTENT_TO_PLAY = serverUrl + "/api/content/play/"
     GET_CONTENT_PAGES = serverUrl + "/api/content/pages/"

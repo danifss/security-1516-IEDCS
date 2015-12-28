@@ -41,7 +41,7 @@ class CryptoModule(object):
         RSA export
     """
     #
-    def rsaExport(self, pairKey, data=None):
+    def rsaExport(self, pairKey, key=None):
 
         try:
             if not pairKey.has_private() :
@@ -51,7 +51,7 @@ class CryptoModule(object):
             # pub = pairKey.publickey().exportKey('PEM')
 
             # Retrives data of the private key, format PEM
-            return pairKey.exportKey('PEM',data)
+            return pairKey.exportKey('PEM',key)
 
         except Exception as e:
             print "Key not valid: ", e
@@ -143,11 +143,14 @@ class CryptoModule(object):
         hashing method
     """
     @staticmethod
-    def hashingSHA256(data):
+    def hashingSHA256(data, salt=None):
         d = str.encode(data)
-        type(d) # insures its bytes
+        # type(d) # insures it is bytes
         # apply sintese
-        hash_object = hashlib.sha256(d)
+        if salt:
+            hash_object = hashlib.sha256(d+salt)
+        else:
+            hash_object = hashlib.sha256(d)
         hex_dig = hash_object.hexdigest()
 
         return hex_dig

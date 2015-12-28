@@ -9,6 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
+from SmartCard import *
 from base64 import b64decode
 # from PIL import Image
 
@@ -17,6 +18,7 @@ from base64 import b64decode
 # import urllib3.contrib.pyopenssl
 # urllib3.contrib.pyopenssl.inject_into_urllib3()
 
+
 class Core(object):
     loggedIn = False
 
@@ -24,6 +26,8 @@ class Core(object):
         self.crypt = CryptoModule()
         self.deviceKey = None
         self.playerKey = None
+        self.cc_number = 0
+
         # Check if it is the real user
         while not self.loggedIn:
             # user mut be logged in
@@ -40,17 +44,40 @@ class Core(object):
 
     ### Login
     def login(self):
+        pteid = SmartCard()
         print co.BOLD + co.OKBLUE + "\n\n\t\t  Logging into IEDCS Player" + co.ENDC
         print co.WARNING
+        # every login
+        check = pteid.startSession()
+
+        if check:
+            print co.FAIL+check+co.ENDC
+            self.loggedIn = False
+            return
+
+        self.cc_number = pteid.getCCNumber()
+        # destroy object to verify later if card was removed
+        del pteid
+
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
-        hash_pass = CryptoModule.hashingSHA256(passwd)
+
+        #hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
-        url = api.LOGIN+"?username="+username+"&password="+hash_pass
+        # TODO cannot send hash_pass because of salt, need to cipher password
+        # chamamos agora aqui
+        ######################################
+        # self.getPlayerKey()
+        # passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
+        # url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
+        ######################################
+
+        url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
         result = self.request(url)
         if result is None:
+            print co.FAIL+"\tFail doing login."+co.ENDC
             return
 
         if result.status_code == 200:
@@ -62,14 +89,25 @@ class Core(object):
                 print co.FAIL+"\tFail doing login."+co.ENDC
                 return
 
-            decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
+            # get userIV from database
+            url = api.GET_USER_IV+str(username)
+            result = self.request(url, method="GET")
+            if result is None:
+                return
+            res = json.loads(result.text)
+            iv = res["iv"]
+            iv_raw = iv.decode('base64')
+            
+            decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv_raw, f.read())
             f.close()
             src = StringIO(decipheredFile)
 
             userInfo = pickle.load(src)
             # Import user info
             self.userID = userInfo["userId"]
+            self.userCC = userInfo["userCC"]
             self.username = userInfo["username"]
+            # agora secalhar nao faz sentido ter aqui a password hashada
             self.password = userInfo["password"]
             self.email = userInfo["email"]
             self.firstName = userInfo["firstName"]
@@ -77,7 +115,8 @@ class Core(object):
             self.createdOn = userInfo["createdOn"]
 
             # Validation to check if user.pkl was renamed to some other existent user
-            if hash_pass == self.password and username == self.username:
+            #if hash_pass == self.password and username == self.username:
+            if username == self.username:
                 # verifies if can open player key pub
                 self.getPlayerKey()
                 # if everything ok, lets generate device key or not
@@ -91,8 +130,8 @@ class Core(object):
 
     ### Logout
     def logout(self):
-        self.userID = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
-        #self.deviceKey = self.playerHash = None
+        self.userID = self.userCC = self.username = self.password = ""
+        self.email = self.firstName = self.lastName = self.createdOn = ""
         self.deviceKey = self.playerKey = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
@@ -102,8 +141,17 @@ class Core(object):
             f = open('resources/player'+self.username+'.pub', 'r')
             playerPublic = f.read()
             f.close()
-            # TODO rain check public player key with server DB
-            player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+
+            # get player IV from database
+            url = api.GET_PLAYER_IV + str(self.userID)
+            result = self.request(url, method="GET")
+            if result is None:
+                return
+            res = json.loads(result.text)
+            iv = res["iv"]
+            iv_raw = iv.decode('base64')
+
+            player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv_raw, playerPublic)
             #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
             #self.playerHash = CryptoModule.hashingSHA256(player)
@@ -287,6 +335,8 @@ class Core(object):
 
     ### Show personal information
     def show_my_info(self):
+        print co.HEADER+co.BOLD+"User CC   : "+co.ENDC+ \
+              co.OKGREEN+self.userCC+co.ENDC
         print co.HEADER+co.BOLD+"Username  : "+co.ENDC+ \
               co.OKGREEN+self.username+co.ENDC
         print co.HEADER+co.BOLD+"Email     : "+co.ENDC+ \
