@@ -80,9 +80,14 @@ class Core(object):
                 print co.FAIL+"\tFail doing login."+co.ENDC
                 return
 
-            # TODO api to get userIV
+            # get userIV from database
+            url = api.GET_USER_IV + str(self.userID)
+            result = self.request(url, method="GET")
+            if result is None:
+                return
+            res = json.loads(result.text)
+            iv = res["iv"]
             
-            iv = None # iv.decode('base64')
             decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv, f.read())
             f.close()
             src = StringIO(decipheredFile)
@@ -124,9 +129,15 @@ class Core(object):
             f = open('resources/player'+self.username+'.pub', 'r')
             playerPublic = f.read()
             f.close()
-            # TODO get player IV from database
 
-            iv = None #decode('base64')
+            # get player IV from database
+            url = api.GET_PLAYER_IV + str(self.userID)
+            result = self.request(url, method="GET")
+            if result is None:
+                return
+            res = json.loads(result.text)
+            iv = res["iv"]
+
             player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv, playerPublic)
             #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)

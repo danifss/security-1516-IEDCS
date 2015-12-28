@@ -242,7 +242,7 @@ def writeUserData(user=None):
     iv = user.userIV
     iv = iv.decode('base64')
 
-    c = crypt.cipherAES('uBAcxUXs1tJYAFSI"', iv, src.getvalue())
+    c = crypt.cipherAES("uBAcxUXs1tJYAFSI", iv, src.getvalue())
     # open file to write ciphered pickled object
     f = open('media/tmp/resources/user'+user.username+'.pkl', 'w')
     f.write(c)
