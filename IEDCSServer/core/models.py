@@ -10,6 +10,7 @@ class User(models.Model):
     userCC = models.CharField(max_length=8, unique=True)
     userKey = models.CharField(max_length=keySize)
     username = models.CharField(max_length=100, unique=True)
+    userIV = models.CharField(max_length=32, blank=True)
     email = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=100)
     firstName = models.CharField(max_length=100)

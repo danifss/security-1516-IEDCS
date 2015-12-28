@@ -174,11 +174,11 @@ def register(request):
 
             playerHash = crypt.hashingSHA256(pk)
             playerRsa = crypt.generateRsa()
-            iv = os.urandom(16)
+            iv_player = os.urandom(16)
 
             # save to file, ciphered
             playerPublic = playerRsa.publickey().exportKey("PEM")
-            playerPublicSafe = crypt.cipherAES("vp71cNkWdASAPXp4", iv, playerPublic)
+            playerPublicSafe = crypt.cipherAES("vp71cNkWdASAPXp4", iv_player, playerPublic)
 
             # write public key into file
             f = open(settings.MEDIA_ROOT+'/tmp/resources/player'+username+'.pub', 'w')
@@ -189,7 +189,7 @@ def register(request):
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
             user = User.objects.get(username=username)
-            iv_store = iv.encode('base64')
+            iv_store = iv_player.encode('base64')
 
             try:
                 new_player = Player(playerKey=playerKey, user=user, playerIV=iv_store)
@@ -234,7 +234,13 @@ def writeUserData(user=None):
     pickle.dump(userInfo, src)
     # cipher file
     crypt = CryptoModule()
-    c = crypt.cipherAES('1chavinhapotente','umVIsupercaragos', src.getvalue())
+
+    iv_user = os.urandom(16)
+    # save IV to database
+    user.userIV = iv_user.encode('base64')
+    user.save()
+
+    c = crypt.cipherAES('uBAcxUXs1tJYAFSI"', iv_user, src.getvalue())
     # open file to write ciphered pickled object
     f = open('media/tmp/resources/user'+user.username+'.pkl', 'w')
     f.write(c)

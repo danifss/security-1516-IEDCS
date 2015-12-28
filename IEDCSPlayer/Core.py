@@ -80,7 +80,10 @@ class Core(object):
                 print co.FAIL+"\tFail doing login."+co.ENDC
                 return
 
-            decipheredFile = self.crypt.decipherAES('1chavinhapotente','umVIsupercaragos',f.read())
+            # TODO api to get userIV
+            
+            iv = None # iv.decode('base64')
+            decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv, f.read())
             f.close()
             src = StringIO(decipheredFile)
 
