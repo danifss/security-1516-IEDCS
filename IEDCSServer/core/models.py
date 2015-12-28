@@ -32,6 +32,7 @@ class Player(models.Model):
     playerID = models.AutoField(primary_key=True)
     playerKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
+    playerIV = models.CharField(max_length=32)
     user = models.ForeignKey(User)
 
     def __unicode__(self):

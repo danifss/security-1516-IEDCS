@@ -161,9 +161,10 @@ def register(request):
 
             # userkeyHash[0:16], userkeyHash[48:64]
             # just a decoy, the user key is the hash
-            userkeyString = crypt.cipherAES("uBAcxUXs1tJY/FSI", "vp71cNkWd/SAPXp4", userkeyHash)
+            # userkeyString = crypt.cipherAES("uBAcxUXs1tJY/FSI", "vp71cNkWd/SAPXp4", userkeyHash)
 
-            form.userKey = userkeyString
+            # form.userKey = userkeyString
+            form.userKey = userkeyHash
 
             # effectively registers new user in db
             form.save()
@@ -173,10 +174,11 @@ def register(request):
 
             playerHash = crypt.hashingSHA256(pk)
             playerRsa = crypt.generateRsa()
+            iv = os.urandom(16)
 
             # save to file, ciphered
             playerPublic = playerRsa.publickey().exportKey("PEM")
-            playerPublicSafe = crypt.cipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            playerPublicSafe = crypt.cipherAES("vp71cNkWdASAPXp4", iv, playerPublic)
 
             # write public key into file
             f = open(settings.MEDIA_ROOT+'/tmp/resources/player'+username+'.pub', 'w')
@@ -187,9 +189,10 @@ def register(request):
             playerKey = crypt.rsaExport(playerRsa, playerHash)
 
             user = User.objects.get(username=username)
+            iv_store = iv.encode('base64')
 
             try:
-                new_player = Player(playerKey=playerKey, user=user)
+                new_player = Player(playerKey=playerKey, user=user, playerIV=iv_store)
 
             except :
                 print "Error getting creating new Player."

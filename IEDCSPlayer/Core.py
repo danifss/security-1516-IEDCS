@@ -120,8 +120,10 @@ class Core(object):
             f = open('resources/player'+self.username+'.pub', 'r')
             playerPublic = f.read()
             f.close()
-            # TODO rain check public player key with server DB
-            player = self.crypt.decipherAES("AF9dNEVWEG7p6A9m", "o5mgrwCZ0FCbCkun", playerPublic)
+            # TODO get IV from database
+
+            iv = None #decode('base64')
+            player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv, playerPublic)
             #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
             #self.playerHash = CryptoModule.hashingSHA256(player)

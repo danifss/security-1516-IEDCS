@@ -41,7 +41,7 @@ class CryptoModule(object):
         RSA export
     """
     #
-    def rsaExport(self, pairKey, data=None):
+    def rsaExport(self, pairKey, key=None):
 
         try:
             if not pairKey.has_private() :
@@ -51,7 +51,7 @@ class CryptoModule(object):
             # pub = pairKey.publickey().exportKey('PEM')
 
             # Retrives data of the private key, format PEM
-            return pairKey.exportKey('PEM',data)
+            return pairKey.exportKey('PEM',key)
 
         except Exception as e:
             print "Key not valid: ", e
