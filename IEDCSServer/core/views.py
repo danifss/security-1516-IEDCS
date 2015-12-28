@@ -104,6 +104,7 @@ def login(request):
     return render(request, 'core/Account/login.html', {'form': form, \
                    'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
+
 def authenticate(username, password):
     try:
         # validate if username exists
@@ -114,9 +115,9 @@ def authenticate(username, password):
     # validate password
     crypt = CryptoModule()
 
-    sha_pass = crypt.hashingSHA256(password, user.userSalt)
+    web_pass = crypt.hashingSHA256(password, user.userSalt)
     bd_pass = user.password
-    if bd_pass != sha_pass:
+    if bd_pass != web_pass:
         return False
     # all good
     return True

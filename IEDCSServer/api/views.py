@@ -55,7 +55,10 @@ class UserLogin(generics.ListCreateAPIView):
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
                 cc_number = request.GET.get('userCC')
-                if passwd == user.password and cc_number == user.userCC:
+                # todo change password encryption, now in clear text
+                fixpassword = CryptoModule.hashingSHA256(passwd, user.userSalt)
+                
+                if fixpassword == user.password and cc_number == user.userCC:
                     return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
                                                                      #'last_name': user.lastName, 'email': user.email})
                 else:
