@@ -66,17 +66,12 @@ class Core(object):
         # to try and open player public key
         self.username = username
 
-        #hash_pass = CryptoModule.hashingSHA256(passwd)
-        # Verify user in server
-        # TODO cannot send hash_pass because of salt, need to cipher password
-        # chamamos agora aqui
-        ######################################
         self.getPlayerKey()
         passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
         url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
-        ######################################
 
         # url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
+
         result = self.request(url)
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
@@ -145,7 +140,7 @@ class Core(object):
             f.close()
 
             # get player IV from database
-            url = api.GET_PLAYER_IV + str(self.userID)
+            url = api.GET_PLAYER_IV + str(self.username)
             result = self.request(url, method="GET")
             if result is None:
                 return

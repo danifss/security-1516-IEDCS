@@ -53,21 +53,21 @@ class UserLogin(generics.ListCreateAPIView):
                 user = User.objects.get(username__iexact = request.GET.get('username'))
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
-                cc_number = request.GET.get('userCC')
+                cc_number = request.GET.get('userCC'
+                                            )
+                # POST restrictions, removes '+' from url's
+                passwd_protected = passwd.replace(" ", "+")
 
-                # todo change password encryption, now in clear text
-                ###########################
-                player = Player.objects.all().filter(user=user)
+                player = Player.objects.get(user=user)
                 crypto = CryptoModule()
                 playerIm = getPlayerKey(user, player)
-                passwd_plain = crypto.rsaDecipher(playerIm, passwd)
-                fixpassword = CryptoModule.hashingSHA256(passwd_plain, user.userSalt)
-                ############################
+                passwd_plain = crypto.rsaDecipher(playerIm, passwd_protected)
                 salt = user.userSalt.decode('base64')
+                passwd_hash = CryptoModule.hashingSHA256(passwd_plain, salt)
 
                 #fixpassword = CryptoModule.hashingSHA256(str(passwd), salt)
                 
-                if fixpassword == user.password and cc_number == user.userCC:
+                if passwd_hash == user.password and cc_number == user.userCC:
                     return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
                                                                      #'last_name': user.lastName, 'email': user.email})
                 else:
