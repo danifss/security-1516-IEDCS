@@ -159,6 +159,10 @@ def register(request):
             passwdHash = crypt.hashingSHA256(password, salt_user)
             form.password = passwdHash
 
+            iv_user = os.urandom(16)
+            # save IV to database
+            form.userIV = iv_user.encode('base64')
+
             # Generate symmetric userKey with AES with user details
             uk = email+userCC+username+lastName+password+firstName
             userkeyHash = crypt.hashingSHA256(uk, salt_user)
@@ -239,16 +243,15 @@ def writeUserData(user=None):
     # cipher file
     crypt = CryptoModule()
 
-    iv_user = os.urandom(16)
-    # save IV to database
-    user.userIV = iv_user.encode('base64')
-    user.save()
+    iv = user.userIV
+    iv = iv.decode('base64')
 
-    c = crypt.cipherAES('uBAcxUXs1tJYAFSI"', iv_user, src.getvalue())
+    c = crypt.cipherAES("uBAcxUXs1tJYAFSI", iv, src.getvalue())
     # open file to write ciphered pickled object
     f = open('media/tmp/resources/user'+user.username+'.pkl', 'w')
     f.write(c)
     f.close()
+
 
 # Function to create zip file to be downaloaded by a specific user
 ### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded

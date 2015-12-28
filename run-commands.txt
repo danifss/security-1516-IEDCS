@@ -1,13 +1,13 @@
 Installation:
 
 Configuring all system
-$ sudo apt­get install python­dev imagemagick libffi-dev libssl-dev swig
+$ sudo apt­-get install python­-dev imagemagick libffi-dev libssl-dev swig
 $ pip install virtualenv
-$ git clone ​https://code.ua.pt/git/security2015­p2g5
-$ cd security2015­p2g5
+$ git clone ​https://code.ua.pt/git/security2015­-p2g5
+$ cd security2015­-p2g5
 $ virtualenv venv
 $ . venv/bin/activate
-$ pip install ­r requirements.txt
+$ pip install ­-r requirements.txt
 
 Install midleware CC package:
 $ dpkg -i cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
