@@ -90,7 +90,7 @@ class Core(object):
                 return
 
             # get userIV from database
-            url = api.GET_USER_IV + str(self.userID)
+            url = api.GET_USER_IV+str(username)
             result = self.request(url, method="GET")
             if result is None:
                 return
