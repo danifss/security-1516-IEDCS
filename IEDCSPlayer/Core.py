@@ -113,7 +113,8 @@ class Core(object):
 
     ### Logout
     def logout(self):
-        self.userID = self.userCC = self.username = self.password = self.email = self.firstName = self.lastName = self.createdOn = ""
+        self.userID = self.userCC = self.username = self.password = ""
+        self.email = self.firstName = self.lastName = self.createdOn = ""
         self.deviceKey = self.playerKey = None
         self.loggedIn = False
         print co.WARNING + "Logged out with success." + co.ENDC
@@ -123,7 +124,7 @@ class Core(object):
             f = open('resources/player'+self.username+'.pub', 'r')
             playerPublic = f.read()
             f.close()
-            # TODO get IV from database
+            # TODO get player IV from database
 
             iv = None #decode('base64')
             player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv, playerPublic)

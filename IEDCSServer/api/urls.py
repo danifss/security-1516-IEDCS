@@ -9,6 +9,11 @@ urlpatterns = [
     ### USER
     # ex: /api/user/login/?username=daniel?password=9r3hf83h8gh39g
     url(r'^user/login/$', views.UserLogin.as_view()),
+    # ex: /api/user/iv/2
+    url(r'^user/iv/(?P<pk>[0-9]+)$', views.GET_userIV.as_view()),
+    ### PLAYER
+    # ex: /api/player/iv/2
+    url(r'^player/iv/(?P<pk>[0-9]+)$', views.GET_playerIV.as_view()),
     ### DEVICE
     # ex: /api/device/ with JSON attach
     url(r'^device/new/$', views.UserDeviceCreate.as_view()),

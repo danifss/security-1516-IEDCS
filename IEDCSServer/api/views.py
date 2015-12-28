@@ -265,6 +265,7 @@ class UserDeviceCreate(generics.ListCreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+""" PLAY CONTENT """
 class PlayContent(generics.ListCreateAPIView):
     """<b>Play Ciphered Content</b>"""
     queryset = Content.objects.all()
@@ -424,46 +425,7 @@ def getPlayerKey(user=None, player=None):
 
 def logical_function(str1, str2):
     return str1 + str2
-
-
-class ContentPages(generics.ListCreateAPIView):
-    """<b>Content pages number</b>"""
-    queryset = Content.objects.all()
-    serializer_class = ContentSerializer
-    allowed_methods = ['get']
-
-    def get(self, request, pk=None):
-        """
-        Gets number of pages of given content id
-
-
-
-
-        <b>Details</b>
-
-        METHODS : GET
-
-
-
-        <b>RETURNS:</b>
-
-        - 200 OK.
-
-        - 400 BAD REQUEST
-
-        ---
-        omit_parameters:
-        - form
-        """
-        try:
-            int_id = int(pk)
-            content = Content.objects.get(contentID=int_id)
-            pages = str(content.pages)
-
-            return Response(status=status.HTTP_200_OK, data={'pages': pages})
-        except:
-            pass
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+""" END OF PLAY CONTENT """
 
 
 class ChallengeKey(generics.ListCreateAPIView):
@@ -520,4 +482,126 @@ class ChallengeKey(generics.ListCreateAPIView):
                     return Response(status=status.HTTP_200_OK, data={'challenge': auxKey})
         except:
             print "Error in request!"
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GET_userIV(generics.ListCreateAPIView):
+    """<b>Gets the IV for user</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets the user IV for given user
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            user = User.objects.get(userID=int_id)
+            iv = user.userIV
+
+            return Response(status=status.HTTP_200_OK, data={'iv': iv})
+        except:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GET_playerIV(generics.ListCreateAPIView):
+    """<b>Gets the IV for player</b>"""
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets the player IV for given user
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            user = User.objects.get(userID=int_id)
+            player = Player.objects.all().filter(user=user)
+            iv = player.playerIV
+
+            return Response(status=status.HTTP_200_OK, data={'iv': iv})
+        except Exception as e:
+            print e
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContentPages(generics.ListCreateAPIView):
+    """<b>Content pages number</b>"""
+    queryset = Content.objects.all()
+    serializer_class = ContentSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Gets number of pages of given content id
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            int_id = int(pk)
+            content = Content.objects.get(contentID=int_id)
+            pages = str(content.pages)
+
+            return Response(status=status.HTTP_200_OK, data={'pages': pages})
+        except:
+            pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
