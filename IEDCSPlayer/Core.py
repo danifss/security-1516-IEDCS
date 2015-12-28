@@ -67,7 +67,7 @@ class Core(object):
         #hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
         # TODO cannot send hash_pass because of salt, need to cipher password
-        
+
         url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
         result = self.request(url)
         if result is None:
