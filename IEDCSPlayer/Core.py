@@ -96,8 +96,9 @@ class Core(object):
                 return
             res = json.loads(result.text)
             iv = res["iv"]
-            
-            decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv, f.read())
+            iv_raw = iv.decode('base64')
+
+            decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv_raw, f.read())
             f.close()
             src = StringIO(decipheredFile)
 
@@ -148,8 +149,9 @@ class Core(object):
                 return
             res = json.loads(result.text)
             iv = res["iv"]
+            iv_raw = iv.decode('base64')
 
-            player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv, playerPublic)
+            player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv_raw, playerPublic)
             #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
             #self.playerHash = CryptoModule.hashingSHA256(player)

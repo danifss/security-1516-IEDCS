@@ -58,14 +58,15 @@ class UserLogin(generics.ListCreateAPIView):
 
                 # todo change password encryption, now in clear text
                 ###########################
+                # player = Player.objects.all().filter(user=user)
                 # crypto = CryptoModule()
-                # player = buscar player DANIEL
                 # playerIm = getPlayerKey(user, player)
                 # passwd_plain = crypto.rsaDecipher(playerIm, passwd)
                 # fixpassword = CryptoModule.hashingSHA256(passwd_plain, user.userSalt)
                 ############################
+                salt = user.userSalt.decode('base64')
 
-                fixpassword = CryptoModule.hashingSHA256(passwd, user.userSalt)
+                fixpassword = CryptoModule.hashingSHA256(str(passwd), salt)
                 
                 if fixpassword == user.password and cc_number == user.userCC:
                     return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
