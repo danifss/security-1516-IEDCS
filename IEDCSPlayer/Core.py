@@ -63,9 +63,18 @@ class Core(object):
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
-        hash_pass = CryptoModule.hashingSHA256(passwd)
+
+        #hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
-        url = api.LOGIN+"?username="+username+"&password="+hash_pass+"&userCC="+self.cc_number
+        # TODO cannot send hash_pass because of salt, need to cipher password
+        # chamamos agora aqui
+        ######################################
+        # self.getPlayerKey()
+        # passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
+        # url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
+        ######################################
+
+        url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
         result = self.request(url)
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
@@ -98,6 +107,7 @@ class Core(object):
             self.userID = userInfo["userId"]
             self.userCC = userInfo["userCC"]
             self.username = userInfo["username"]
+            # agora secalhar nao faz sentido ter aqui a password hashada
             self.password = userInfo["password"]
             self.email = userInfo["email"]
             self.firstName = userInfo["firstName"]
@@ -105,7 +115,8 @@ class Core(object):
             self.createdOn = userInfo["createdOn"]
 
             # Validation to check if user.pkl was renamed to some other existent user
-            if hash_pass == self.password and username == self.username:
+            #if hash_pass == self.password and username == self.username:
+            if username == self.username:
                 # verifies if can open player key pub
                 self.getPlayerKey()
                 # if everything ok, lets generate device key or not

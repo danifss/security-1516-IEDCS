@@ -104,6 +104,7 @@ def login(request):
     return render(request, 'core/Account/login.html', {'form': form, \
                    'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
+
 def authenticate(username, password):
     try:
         # validate if username exists
@@ -113,9 +114,10 @@ def authenticate(username, password):
         return None
     # validate password
     crypt = CryptoModule()
-    sha_pass = crypt.hashingSHA256(password)
+
+    web_pass = crypt.hashingSHA256(password, user.userSalt)
     bd_pass = user.password
-    if bd_pass != sha_pass:
+    if bd_pass != web_pass:
         return False
     # all good
     return True
@@ -152,7 +154,9 @@ def register(request):
             form = form.save(commit=False)
 
             # apply SHA256 to password
-            passwdHash = crypt.hashingSHA256(password)
+            salt_user = os.urandom(32)
+            form.userSalt = salt_user.encode('base64')
+            passwdHash = crypt.hashingSHA256(password, salt_user)
             form.password = passwdHash
 
             iv_user = os.urandom(16)
@@ -161,7 +165,7 @@ def register(request):
 
             # Generate symmetric userKey with AES with user details
             uk = email+userCC+username+lastName+password+firstName
-            userkeyHash = crypt.hashingSHA256(uk)
+            userkeyHash = crypt.hashingSHA256(uk, salt_user)
 
             # userkeyHash[0:16], userkeyHash[48:64]
             # just a decoy, the user key is the hash
