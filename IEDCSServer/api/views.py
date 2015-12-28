@@ -14,8 +14,6 @@ import json
 import time, datetime
 
 
-
-
 class UserLogin(generics.ListCreateAPIView):
     """<b>User Login</b>"""
     queryset = User.objects.all()
@@ -45,6 +43,7 @@ class UserLogin(generics.ListCreateAPIView):
 
         username -- registration username
         password -- registration password
+        userCC -- registration CC
         ---
         omit_parameters:
         - form
@@ -543,9 +542,9 @@ class GET_playerIV(generics.ListCreateAPIView):
     serializer_class = PlayerSerializer
     allowed_methods = ['get']
 
-    def get(self, request, pk=None):
+    def get(self, request, un=None):
         """
-        Gets the player IV for given user
+        Gets the player IV for given username
 
 
 
@@ -567,14 +566,12 @@ class GET_playerIV(generics.ListCreateAPIView):
         - form
         """
         try:
-            int_id = int(pk)
-            user = User.objects.get(userID=int_id)
+            user = User.objects.get(username=un)
             player = Player.objects.get(user=user)
             iv = player.playerIV
 
             return Response(status=status.HTTP_200_OK, data={'iv': iv})
-        except Exception as e:
-            print e
+        except:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
