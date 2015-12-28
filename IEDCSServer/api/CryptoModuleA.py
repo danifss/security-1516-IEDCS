@@ -137,17 +137,21 @@ class CryptoModule(object):
     """
     @staticmethod
     def hashingSHA256(data, salt=None):
-        d = str.encode(data)
-        # type(d) # insures it is bytes
-        # apply sintese
-        if salt:
-            hash_object = hashlib.sha256(d+salt)
-        else:
-            hash_object = hashlib.sha256(d)
-        hex_dig = hash_object.hexdigest()
 
-        return hex_dig
+        try:
+            d = str.encode(data)
+            # type(d) # insures it is bytes
+            # apply sintese
+            if salt:
+                hash_object = hashlib.sha256(d+salt)
+            else:
+                hash_object = hashlib.sha256(d)
+            hex_dig = hash_object.hexdigest()
+            return hex_dig
 
+        except Exception as e:
+            print "Hashing Error: ", e
+            return None
 
 
 

@@ -63,18 +63,15 @@ class Core(object):
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
+        # to try and open player public key
+        self.username = username
 
-        #hash_pass = CryptoModule.hashingSHA256(passwd)
-        # Verify user in server
-        # TODO cannot send hash_pass because of salt, need to cipher password
-        # chamamos agora aqui
-        ######################################
-        # self.getPlayerKey()
-        # passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
-        # url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
-        ######################################
+        self.getPlayerKey()
+        passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
+        url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
 
-        url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
+        # url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
+
         result = self.request(url)
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
@@ -97,7 +94,7 @@ class Core(object):
             res = json.loads(result.text)
             iv = res["iv"]
             iv_raw = iv.decode('base64')
-            
+
             decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv_raw, f.read())
             f.close()
             src = StringIO(decipheredFile)
@@ -118,7 +115,7 @@ class Core(object):
             #if hash_pass == self.password and username == self.username:
             if username == self.username:
                 # verifies if can open player key pub
-                self.getPlayerKey()
+                #self.getPlayerKey()
                 # if everything ok, lets generate device key or not
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
@@ -143,7 +140,7 @@ class Core(object):
             f.close()
 
             # get player IV from database
-            url = api.GET_PLAYER_IV + str(self.userID)
+            url = api.GET_PLAYER_IV + str(self.username)
             result = self.request(url, method="GET")
             if result is None:
                 return
@@ -152,9 +149,8 @@ class Core(object):
             iv_raw = iv.decode('base64')
 
             player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv_raw, playerPublic)
-            #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
-            #self.playerHash = CryptoModule.hashingSHA256(player)
+
 
         except:
             print co.FAIL+"\tFail loading files."+co.ENDC
