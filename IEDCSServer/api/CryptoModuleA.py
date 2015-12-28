@@ -141,8 +141,7 @@ class CryptoModule(object):
         # type(d) # insures it is bytes
         # apply sintese
         if salt:
-            s = str.encode(salt)
-            hash_object = hashlib.sha256(d+s)
+            hash_object = hashlib.sha256(d+salt)
         else:
             hash_object = hashlib.sha256(d)
         hex_dig = hash_object.hexdigest()

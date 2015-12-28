@@ -63,9 +63,12 @@ class Core(object):
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
-        hash_pass = CryptoModule.hashingSHA256(passwd)
+
+        #hash_pass = CryptoModule.hashingSHA256(passwd)
         # Verify user in server
-        url = api.LOGIN+"?username="+username+"&password="+hash_pass+"&userCC="+self.cc_number
+        # TODO cannot send hash_pass because of salt, need to cipher password
+        
+        url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
         result = self.request(url)
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
@@ -81,7 +84,7 @@ class Core(object):
                 return
 
             # TODO api to get userIV
-            
+
             iv = None # iv.decode('base64')
             decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv, f.read())
             f.close()
