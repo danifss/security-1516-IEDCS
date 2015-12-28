@@ -55,7 +55,16 @@ class UserLogin(generics.ListCreateAPIView):
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
                 cc_number = request.GET.get('userCC')
+
                 # todo change password encryption, now in clear text
+                ###########################
+                # crypto = CryptoModule()
+                # player = buscar player DANIEL
+                # playerIm = getPlayerKey(user, player)
+                # passwd_plain = crypto.rsaDecipher(playerIm, passwd)
+                # fixpassword = CryptoModule.hashingSHA256(passwd_plain, user.userSalt)
+                ############################
+
                 fixpassword = CryptoModule.hashingSHA256(passwd, user.userSalt)
                 
                 if fixpassword == user.password and cc_number == user.userCC:
