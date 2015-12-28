@@ -14,8 +14,6 @@ import json
 import time, datetime
 
 
-
-
 class UserLogin(generics.ListCreateAPIView):
     """<b>User Login</b>"""
     queryset = User.objects.all()
@@ -45,6 +43,7 @@ class UserLogin(generics.ListCreateAPIView):
 
         username -- registration username
         password -- registration password
+        userCC -- registration CC
         ---
         omit_parameters:
         - form
@@ -56,7 +55,7 @@ class UserLogin(generics.ListCreateAPIView):
                 passwd = request.GET.get('password')
                 cc_number = request.GET.get('userCC')
 
-                player = Player.objects.all().filter(user=user)
+                player = Player.objects.get(user=user)
 
                 # todo change password encryption, now in clear text
                 ###########################
@@ -568,8 +567,9 @@ class GET_playerIV(generics.ListCreateAPIView):
         """
         try:
             int_id = int(pk)
+            # user = User.objects.all().filter(userID=int_id)
             user = User.objects.get(userID=int_id)
-            player = Player.objects.all().filter(user=user)
+            player = Player.objects.get(user=user)
             iv = player.playerIV
 
             return Response(status=status.HTTP_200_OK, data={'iv': iv})
