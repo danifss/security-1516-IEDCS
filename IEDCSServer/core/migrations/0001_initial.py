@@ -37,8 +37,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('playerID', models.AutoField(serialize=False, primary_key=True)),
                 ('playerKey', models.CharField(max_length=2048)),
-                ('createdOn', models.DateTimeField(auto_now_add=True)),
                 ('playerIV', models.CharField(max_length=32)),
+                ('createdOn', models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
@@ -54,6 +54,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('userID', models.AutoField(serialize=False, primary_key=True)),
                 ('userCC', models.CharField(unique=True, max_length=8)),
+                ('userCCKey', models.CharField(max_length=2048)),
                 ('userKey', models.CharField(max_length=2048)),
                 ('username', models.CharField(unique=True, max_length=100)),
                 ('userIV', models.CharField(max_length=32, blank=True)),
