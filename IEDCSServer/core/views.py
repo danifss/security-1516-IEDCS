@@ -146,11 +146,23 @@ def register(request):
             #a = pteid.getAutenPubKey()
             if check:
                 msgError = 'Make sure you have you SmartCard inserted.'
-                form = registerUserForm()
+                form = registerUserForm(request.POST)
                 return render(request, 'core/Account/register.html', {'form': form, 'error_message' : msgError, \
                   'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
             userCC = pteid.getCCNumber()
+            # Validate if this user is already registered
+            try:
+                existentUser = User.objects.get(userCC=userCC)
+                if existentUser is not None:
+                    form = registerUserForm(request.POST)
+                    msgError = "This SmartCard is already registered!"
+                    form = registerUserForm()
+                    return render(request, 'core/Account/register.html', {'form': form, 'error_message' : msgError, \
+                      'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
+            except:
+                pass
+
             cc_key_obj = pteid.getAutenPubKey()
             cc_key = crypt.publicRsa(cc_key_obj)
 
@@ -181,10 +193,6 @@ def register(request):
             # Generate symmetric userKey with AES with user details
             uk = email+userCC+username+lastName+password+firstName
             userkeyHash = crypt.hashingSHA256(uk, salt_user)
-
-            # userkeyHash[0:16], userkeyHash[48:64]
-            # just a decoy, the user key is the hash
-            # userkeyString = crypt.cipherAES("uBAcxUXs1tJY/FSI", "vp71cNkWd/SAPXp4", userkeyHash)
 
             # form.userKey = userkeyString
             form.userKey = userkeyHash
