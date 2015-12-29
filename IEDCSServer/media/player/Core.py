@@ -9,7 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
-from SmartCard import *
+from SmartCardP import *
 from base64 import b64decode
 # from PIL import Image
 
