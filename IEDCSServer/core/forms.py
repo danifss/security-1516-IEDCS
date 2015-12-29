@@ -7,6 +7,7 @@ from django.core.validators import RegexValidator
 class registerUserForm(ModelForm):
     username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
     userCC = forms.CharField(label="CC Number", min_length=8, max_length=8, required=True, widget=forms.TextInput(attrs={'placeholder': 'Citizen Card Number'}),)
+    # password = forms.CharField(label="Password", widget=forms.PasswordInput)
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput, min_length=8, max_length=16, required=True, \
                         validators=[RegexValidator(regex='^.((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%_-]).{8,16})$', \
                         message='Password needs to have [a-zA-Z0-9]+ and at least one of this characters [@#$%_-]', code='nomatch')])

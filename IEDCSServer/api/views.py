@@ -576,6 +576,66 @@ class GET_playerIV(generics.ListCreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class SignValidation(generics.ListCreateAPIView):
+    """<b>Validate the CC sign</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['post']
+
+    def post(self, request):
+        """
+        Validates the sign of a CC
+
+
+
+
+        <b>Details</b>
+
+        METHODS : POST
+
+
+        <b>Example:</b>
+
+
+        {
+
+            "userID": "12",
+
+            "sign": "5i9fh938hf83h893hg9384hg9348hg"
+
+        }
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK
+
+        - 401 UNAUTHORIZED
+
+        ---
+        omit_parameters:
+        - form
+        """
+        # print request.META['CSRF_COOKIE']
+        try:
+            if 'userId' in request.data and 'sign' in request.data:
+                int_id = int(request.data['userId'])
+                user = User.objects.get(userID=int_id)
+
+                assinatura = request.data['sign']
+
+                ## TODO validate sign
+                ccPubKey = user.userCCKey
+                # fazer cenas e depois validar
+                signValidated = "assinatura com a chave publica do cc"
+
+                if signValidated == assinatura:
+                    return Response(status=status.HTTP_200_OK)
+        except:
+            pass
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
 class ContentPages(generics.ListCreateAPIView):
     """<b>Content pages number</b>"""
     queryset = Content.objects.all()

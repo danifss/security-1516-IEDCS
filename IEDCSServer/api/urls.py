@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^user/login/$', views.UserLogin.as_view()),
     # ex: /api/user/iv/daniel
     url(r'^user/iv/(?P<un>[\-%_&a-zA-Z0-9]+)$', views.GET_userIV.as_view()),
+    # ex: /api/user/signvalidation
+    url(r'^user/signvalidation/$', views.SignValidation.as_view()),
     ### PLAYER
     # ex: /api/player/iv/daniel
     url(r'^player/iv/(?P<un>[\-%_&a-zA-Z0-9]+)$', views.GET_playerIV.as_view()),
