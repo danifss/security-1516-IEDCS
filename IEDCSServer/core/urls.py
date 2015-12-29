@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.conf import settings
 
 from . import views
 
@@ -22,4 +23,7 @@ urlpatterns = [
     url(r'^content/$', views.listContent, name='content'),
     # ex: /content/buy/1
     url(r'^content/buy/(?P<pk>[0-9]+)/$', views.buyContent, name='buyContent'),
+
+    # ex: /Account/manage/media/player/download31.zip
+    url(r'^Account/manage/media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
 ]

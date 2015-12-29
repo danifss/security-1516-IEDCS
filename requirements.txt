@@ -6,3 +6,5 @@ pycrypto==2.6.1
 PyYAML==3.11
 requests==2.8.1
 wheel==0.26.0
+pykcs11==1.3.0
+nuitka==0.5.16.1

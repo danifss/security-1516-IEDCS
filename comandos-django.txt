@@ -1,9 +1,7 @@
 Correr servidor:
-    1 - python manage.py runserver
-    ou (definir porta)
-    2 - python manage.py runserver 8000
+    1 - python manage.py runsslserver 8000
     ou (definir ip para acesso publico)
-    3 - python manage.py runserver 0.0.0.0:8000
+    2 - python manage.py runsslserver 0.0.0.0:8000
 
 
 ##-------------------------------------------------------------------
@@ -67,3 +65,6 @@ Personalizar formularios etc no admin (apenas no backend):
     search_fields - uma caixa de texto para procurar pelo que éescolhido.
     
 
+##-------------------------------------------------------------------
+Reset do sequienceID de uma tabela:
+    UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='core_user';

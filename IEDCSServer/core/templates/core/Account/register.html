@@ -1,75 +1,100 @@
 {% extends "core/index.html" %}
+{% load staticfiles %}
 
 {% block content %}
 
         <h2>Register</h2>
         <br>
-        <form class="form-horizontal" action="/Account/register/" method="post">{% csrf_token %}
+        <div class="row">
+            <div class="col-xs-2"></div>
+            <div class="col-xs-10">
+                {{ error_message }}
+            </div>
+        </div>
+        <form class="form-horizontal" action="/Account/register/" method="post">
+            {% csrf_token %}
             <fieldset>
-                <legend>New User</legend>
-                <div class="form-group">
-                    <div class="col-lg-10">
-                        {{ form.as_ul }}
+                <div class="row">
+                    <div class="form-control">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8">
+                            {{ form.as_p }}
+                        </div>
+                        <div class="col-xs-2"></div>
                     </div>
                 </div>
-                <!--<div class="form-group">-->
-                    <!--<label for="inputUsername" class="col-lg-2 control-label">Username</label>-->
 
-                    <!--<div class="col-lg-10">-->
-                        <!--<input type="text" class="form-control" id="inputUsername" placeholder="Username">-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="form-group">-->
-                    <!--<label for="inputEmail" class="col-lg-2 control-label">Email</label>-->
-
-                    <!--<div class="col-lg-10">-->
-                        <!--<input type="text" class="form-control" id="inputEmail" placeholder="Email">-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="form-group">-->
-                    <!--<label for="inputPassword" class="col-lg-2 control-label">Password</label>-->
-
-                    <!--<div class="col-lg-10">-->
-                        <!--<input type="password" class="form-control" id="inputPassword" placeholder="Password">-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="form-group">-->
-                    <!--<label class="col-lg-2 control-label">Genre</label>-->
-
-                    <!--<div class="col-lg-10">-->
-                        <!--<div class="radio">-->
-                            <!--<label>-->
-                                <!--<input type="radio" name="optionsRadios" id="OR_Male" value="option1" checked="">-->
-                                <!--Male-->
-                            <!--</label>-->
-                            <!--<label>-->
-                                <!--<input type="radio" name="optionsRadios" id="OR_Female" value="option2">-->
-                                <!--Female-->
-                            <!--</label>-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="form-group">-->
-                    <!--<label for="inputFirstname" class="col-lg-2 control-label">First Name</label>-->
-
-                    <!--<div class="col-lg-10">-->
-                        <!--<input type="text" class="form-control" id="inputFirstname" placeholder="First Name">-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="form-group">-->
-                    <!--<label for="inputLastname" class="col-lg-2 control-label">Last Name</label>-->
-
-                    <!--<div class="col-lg-10">-->
-                        <!--<input type="text" class="form-control" id="inputLastname" placeholder="Last Name">-->
-                    <!--</div>-->
-                <!--</div>-->
-                <div class="form-group">
-                    <div class="col-lg-10 col-lg-offset-0">
-                        <button type="reset" class="btn btn-xs btn-default">Cancel</button>
-                        <button type="submit" class="btn btn-xs btn-primary">Submit</button>
+                <div class="row">
+                    <div class="col-xs-2"></div>
+                    <div class="col-xs-10">
+                        <button type="reset" class="btn btn-default">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmit" onclick="showSpinner()">Submit</button>
                     </div>
                 </div>
             </fieldset>
         </form>
+
+        <script>
+            function showSpinner(){
+                document.getElementById("loading").style.display="block";
+            }
+        </script>
+        <div id="loading">
+            <img id="loading-image" src="{% static 'web/img/spiral-spinner.gif' %}" alt="Loading..." />
+        </div>
+
+<!--
+                <div class="form-group">
+                    <label for="inputUsername" class="col-lg-2 control-label">Username</label>
+
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control" id="inputUsername" placeholder="Username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputEmail" class="col-lg-2 control-label">Email</label>
+
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control" id="inputEmail" placeholder="Email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputPassword" class="col-lg-2 control-label">Password</label>
+
+                    <div class="col-lg-10">
+                        <input type="password" class="form-control" id="inputPassword" placeholder="Password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Genre</label>
+
+                    <div class="col-lg-10">
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="optionsRadios" id="OR_Male" value="option1" checked="">
+                                Male
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="OR_Female" value="option2">
+                                Female
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputFirstname" class="col-lg-2 control-label">First Name</label>
+
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control" id="inputFirstname" placeholder="First Name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputLastname" class="col-lg-2 control-label">Last Name</label>
+
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control" id="inputLastname" placeholder="Last Name">
+                    </div>
+                </div>
+-->
 
 {% endblock %}
