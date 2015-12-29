@@ -9,7 +9,7 @@ from .models import User, Player, Content, Purchase
 from .forms import registerUserForm, loginForm
 
 from CryptoModuleS import *
-
+from SmartCardS import *
 import sys
 import os
 import cPickle as pickle
@@ -133,14 +133,28 @@ def register(request):
         request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
 
+    # instantiate SmartCard
+    pteid = SmartCard()
+    # instantiate Crypto Module
+    crypt = CryptoModule()
+
+    check = pteid.startSession()
+    #a = pteid.getAutenPubKey()
+    if check:
+        raise Exception(check)
+
+    userCC = pteid.getCCNumber()
+    cc_key_obj = pteid.getAutenPubKey()
+    cc_key = crypt.publicRsa(cc_key_obj)
+
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
-            # instantiate Crypto Module
-            crypt = CryptoModule()
+
+
 
             ### Get form data
-            userCC = str(form.cleaned_data['userCC'])
+            #userCC = str(form.cleaned_data['userCC'])
             email = str(form.cleaned_data['email'])
             password = str(form.cleaned_data['password1'])
             username = str(form.cleaned_data['username'])
@@ -149,6 +163,8 @@ def register(request):
 
             # save form without commit changes
             form = form.save(commit=False)
+            form.userCC = userCC
+            form.userCCKey = cc_key
 
             # apply SHA256 to password
             salt_user = os.urandom(32)
