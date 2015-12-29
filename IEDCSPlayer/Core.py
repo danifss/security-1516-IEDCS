@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 from Resources import *
 from CryptoModuleP import *
 import sys, os
@@ -10,13 +11,6 @@ import time
 import cPickle as pickle
 from cStringIO import StringIO
 from SmartCardP import *
-from base64 import b64decode
-# from PIL import Image
-
-# import urllib3
-# urllib3.disable_warnings()
-# import urllib3.contrib.pyopenssl
-# urllib3.contrib.pyopenssl.inject_into_urllib3()
 
 
 class Core(object):
@@ -421,15 +415,38 @@ class Core(object):
         except:
             return None
 
-
     ### Request to server
     def request(self, url, data=None, method="GET"):
         try:
-            if method == "GET":
-                result = requests.get(url, verify='resources/CA-IEDCS.crt')
-            elif method == "POST":
-                result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
-            return result if result.status_code == 200 else None
+
+            devnull = open(os.devnull, 'w')
+            with RedirectStdStreams(stdout=devnull, stderr=devnull):
+
+                if method == "GET":
+                    result = requests.get(url, verify='resources/CA-IEDCS.crt')
+                elif method == "POST":
+                    result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
+                return result if result.status_cNone== 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
+
+###################
+# http://stackoverflow.com/questions/6796492/temporarily-redirect-stdout-stderr
+# to remove warnings caused by the certicate CA-IEDCS.crt on the first run of the Player
+###################
+
+class RedirectStdStreams(object):
+    def __init__(self, stdout=None, stderr=None):
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush(); self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stdout.flush(); self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
