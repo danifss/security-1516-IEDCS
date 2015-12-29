@@ -83,25 +83,21 @@ def login(request):
                         return HttpResponseRedirect('/Account/login/')
                     return HttpResponseRedirect('/')
                 else:
-                    print "The User is not valid!"
                     request.session['firstName'] = "Visitante"
                     request.session['loggedIn'] = False
-                    msgError ='The User is not valid!'
+                    msgError = 'The password is incorrect!'
             else:
                 # the authentication system was unable to verify the username and password
-                print "The username and password were incorrect."
                 request.session['firstName'] = "Visitante"
                 request.session['loggedIn'] = False
-                msgError ='The username and password were incorrect.'
+                msgError ='The username and password are incorrect.'
     else:
         form = loginForm()
 
     request.session['firstName'] = "Visitante"
     request.session['loggedIn'] = False
-    context = RequestContext(request, {
-        'error_message' : msgError,
-    })
-    return render(request, 'core/Account/login.html', {'form': form, \
+
+    return render(request, 'core/Account/login.html', {'form': form, 'error_message' : msgError, \
                    'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
 
 
@@ -110,8 +106,8 @@ def authenticate(username, password):
         # validate if username exists
         user = User.objects.get(username=username)
     except:
-        print "Error getting user by username!"
         return None
+
     # validate password
     crypt = CryptoModule()
 
@@ -146,7 +142,7 @@ def register(request):
             ### Get form data
             userCC = str(form.cleaned_data['userCC'])
             email = str(form.cleaned_data['email'])
-            password = str(form.cleaned_data['password'])
+            password = str(form.cleaned_data['password1'])
             username = str(form.cleaned_data['username'])
             firstName = str(form.cleaned_data['lastName'])
             lastName = str(form.cleaned_data['firstName'])
@@ -253,7 +249,6 @@ def writeUserData(user=None):
     f.write(c)
     f.close()
 
-
 # Function to create zip file to be downaloaded by a specific user
 ### http://nuitka.net/doc/user-manual.html#use-case-1-program-compilation-with-all-modules-embedded
 def createDownloadFile(userID, username):
@@ -278,7 +273,6 @@ def createDownloadFile(userID, username):
     os.remove('media/tmp/resources/player'+username+'.pub')
     os.remove('media/tmp/resources/user'+username+'.pkl')
     os.remove('media/tmp/Player.exe')
-
 
 def zipper(dir, zip_file):
     zip = zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED)
