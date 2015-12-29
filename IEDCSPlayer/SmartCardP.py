@@ -113,9 +113,14 @@ class SmartCard(object):
                    and attrDict[PyKCS11.CKA_KEY_TYPE] == PyKCS11.CKK_RSA and attrDict[PyKCS11.CKA_LABEL] == 'CITIZEN AUTHENTICATION KEY':
 
                     try:
-                        toSign = "12345678901234567890"  # 20 bytes, SHA1 digest
+                        if len(data) == 20 and type(data) == str:
+                            toSign = data
+                        else:
+                            raise Exception("Data to sign invalid")
+
                         signature = self.session.sign(o, toSign)
-                        self.veriSign(signature, toSign)
+                        s = ''.join(chr(c) for c in signature).encode('hex')
+                        return s.encode('base64')
 
                     except Exception as e:
                         print "Sign failed, exception: ", e
@@ -125,10 +130,9 @@ class SmartCard(object):
         modulus = key.n
         exponent = key.e
 
-
         if modulus and exponent:
-            s = ''.join(chr(c) for c in signature).encode('hex')
-            #print "assinatura", s.encode('base64')
+
+            s = signature.decode('base64')
             sx = eval('0x%s' % s)
 
             decrypted = pow(sx, exponent, modulus)  # RSA
@@ -136,11 +140,14 @@ class SmartCard(object):
             d = self.hexx(decrypted).decode('hex')
             # print self.dump(d, 16)
             if data == d[-20:]:
-                print "Signature VERIFIED!\n"
+                #print "Signature VERIFIED!\n"
+                return 0
             else:
-                print "Signature NOT VERIFIED!"
+                #print "Signature NOT VERIFIED!"
+                return 1
         else:
-            print "Unable to verify signature: MODULUS/PUBLIC_EXP not found"
+            #print "Unable to verify signature: MODULUS/PUBLIC_EXP not found"
+            return 1
 
     def hexx(self, intval):
         x = hex(intval)[2:]

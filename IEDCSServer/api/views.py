@@ -9,6 +9,7 @@ from django.conf import settings
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
 from CryptoModuleA import *
+from SmartCardA import *
 import os
 import json
 import time, datetime
@@ -621,16 +622,19 @@ class SignValidation(generics.ListCreateAPIView):
             if 'username' in request.data and 'sign' in request.data:
                 username = request.data['username']
                 user = User.objects.get(username=username)
+                user.userCC
+                sign = request.data['sign']
+                crypto = CryptoModule()
+                pteid = SmartCard()
 
-                assinatura = request.data['sign']
+                ccPubKey = crypto.rsaImport(user.userCCKey)
+                data = user.userCC+user.userCC+"abcd"
+                check = pteid.veriSign(sign, data, ccPubKey)
 
-                ## TODO validate sign
-                ccPubKey = user.userCCKey
-                # fazer cenas e depois validar
-                signValidated = "assinatura com a chave publica do cc"
-
-                if signValidated == assinatura:
+                if not check:
                     return Response(status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_401_UNAUTHORIZED)
         except:
             pass
         return Response(status=status.HTTP_401_UNAUTHORIZED)

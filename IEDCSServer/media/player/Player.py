@@ -3,7 +3,7 @@ from Resources import *
 from Core import *
 import sys
 from webbrowser import open as browser
-from SmartCard import *
+from SmartCardP import *
 
 try:
     ### Initialize core of the system

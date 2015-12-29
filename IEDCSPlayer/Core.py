@@ -9,7 +9,7 @@ import subprocess
 import time
 import cPickle as pickle
 from cStringIO import StringIO
-from SmartCard import *
+from SmartCardP import *
 from base64 import b64decode
 # from PIL import Image
 
@@ -27,6 +27,7 @@ class Core(object):
         self.deviceKey = None
         self.playerKey = None
         self.cc_number = 0
+        self.userID = None
 
         # Check if it is the real user
         while not self.loggedIn:
@@ -41,7 +42,6 @@ class Core(object):
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
 
-
     ### Login
     def login(self):
         pteid = SmartCard()
@@ -49,16 +49,12 @@ class Core(object):
         print co.WARNING
         # every login
         check = pteid.startSession()
-        pteid.signData()
-        #a = pteid.getAutenPubKey()
         if check:
             print co.FAIL+check+co.ENDC
             self.loggedIn = False
             return
 
         self.cc_number = pteid.getCCNumber()
-        # destroy object to verify later if card was removed
-        del pteid
 
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
@@ -77,6 +73,26 @@ class Core(object):
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
             return
+
+        ###
+        # Only on first run, sends signature to be validated
+        if self.userID is None:
+            toSigndata = str(self.cc_number)+str(self.cc_number)+"abcd"
+            signed = pteid.signData(toSigndata)
+            url = api.VALIDATE_SIGN
+            data = { "username": str(self.username), "sign": signed }
+            result = self.request(url, data=data, method='POST')
+
+            if result is None:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+            elif result.status_code != 200:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+        ####
+
+        # destroy object to verify later if card was removed
+        del pteid
 
         if result.status_code == 200:
             ## Load user info

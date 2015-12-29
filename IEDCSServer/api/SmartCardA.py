@@ -56,7 +56,7 @@ class SmartCard(object):
         user = self.getUserCerts()
         cert = user[0]
         pubkey = cert.get_pubkey()
-        key = RSA.importKey(pubkey.as_der())
+        key = RSA.importKey(pubkey.as_der()) # obj public key
         # print key.publickey().exportKey() save to server
         return key
 
@@ -126,8 +126,11 @@ class SmartCard(object):
                     except Exception as e:
                         print "Sign failed, exception: ", e
 
-    def veriSign(self, signature, data):
-        key = self.getAutenPubKey()
+    def veriSign(self, signature, data, key=None):
+
+        if key is None:
+            key = self.getAutenPubKey()
+
         modulus = key.n
         exponent = key.e
 
