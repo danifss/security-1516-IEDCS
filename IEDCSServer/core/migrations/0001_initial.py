@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('playerID', models.AutoField(serialize=False, primary_key=True)),
                 ('playerKey', models.CharField(max_length=2048)),
+                ('playerIV', models.CharField(max_length=32)),
                 ('createdOn', models.DateTimeField(auto_now_add=True)),
             ],
         ),
@@ -52,13 +53,17 @@ class Migration(migrations.Migration):
             name='User',
             fields=[
                 ('userID', models.AutoField(serialize=False, primary_key=True)),
+                ('userCC', models.CharField(unique=True, max_length=8)),
+                ('userCCKey', models.CharField(max_length=2048)),
                 ('userKey', models.CharField(max_length=2048)),
                 ('username', models.CharField(unique=True, max_length=100)),
+                ('userIV', models.CharField(max_length=32, blank=True)),
+                ('userSalt', models.CharField(max_length=64, blank=True)),
                 ('email', models.CharField(unique=True, max_length=150)),
                 ('password', models.CharField(max_length=100)),
                 ('firstName', models.CharField(max_length=100)),
                 ('lastName', models.CharField(max_length=100)),
-                ('fileKey', models.CharField(max_length=2048, blank=True)),
+                ('magicKey', models.CharField(max_length=2048, blank=True)),
                 ('createdOn', models.DateTimeField(auto_now_add=True)),
             ],
         ),
@@ -69,7 +74,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='player',
-            name='userID',
+            name='user',
             field=models.ForeignKey(to='core.User'),
         ),
         migrations.AddField(
