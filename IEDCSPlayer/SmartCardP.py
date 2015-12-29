@@ -87,7 +87,7 @@ class SmartCard(object):
         if self.session is not None:
 
             try:
-                print "Login Pteid..."
+                #print "Login Pteid..."
                 self.session.login('')
             except Exception as e:
                 print "Login failed", e
