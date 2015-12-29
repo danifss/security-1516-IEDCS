@@ -1,20 +1,34 @@
 from django import forms
 from django.forms import ModelForm
 from .models import User
+from django.core.validators import RegexValidator
 
 
 class registerUserForm(ModelForm):
-    # password = forms.CharField(label="Password", widget=forms.PasswordInput, help_text="Enter password")
-    # username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
-    # password = forms.CharField(widget=forms.PasswordInput, required=True,)
-    # email = forms.EmailField(label="Email", max_length=150, required=True, widget=forms.TextInput(attrs={'placeholder': 'Email'}),)
-    # first_name = forms.CharField(label="First Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'First Name'}),)
-    # last_name = forms.CharField(label="Last Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Last Name'}),)
+    username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
+    # userCC = forms.CharField(label="CC Number", min_length=8, max_length=8, required=True, widget=forms.TextInput(attrs={'placeholder': 'Citizen Card Number'}),)
+    # password = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput, min_length=8, max_length=20, required=True, \
+                        validators=[RegexValidator(regex='^.((?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20})$', # (?=.*[@#$%_]) \
+                        message='Password needs to have [a-zA-Z0-9]+ and at least one of this characters [@#$%_]', code='nomatch')])
+    password2 = forms.CharField(label="Repeat Password", widget=forms.PasswordInput, min_length=8, max_length=20, required=True, \
+                        validators=[RegexValidator(regex='^.((?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20})$', # (?=.*[@#$%_]) \
+                        message='Password needs to have [a-zA-Z0-9]+ and at least one of this characters [@#$%_]', code='nomatch')])
+    email = forms.EmailField(label="Email", max_length=150, required=True, widget=forms.TextInput(attrs={'placeholder': 'Email Address'}),)
+    firstName = forms.CharField(label="First Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'First Name'}),)
+    lastName = forms.CharField(label="Last Name", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Last Name'}),)
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1", "")
+        password2 = self.cleaned_data["password2"]
+        if password1 != password2:
+            raise forms.ValidationError("The two password fields didn't match.")
+        return password2
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'firstName', 'lastName']
-        widgets = { 'password' : forms.PasswordInput() }
+        fields = ['username', 'password1', 'password2', 'email', 'firstName', 'lastName']
+        # widgets = { 'password' : forms.PasswordInput() }
 
 
 class loginForm(forms.Form):

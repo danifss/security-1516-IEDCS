@@ -1,48 +1,66 @@
 Installation:
+
 Configuring all system
-● sudo apt­get install python­dev imagemagick
-● pip install virtualenv
-● $ git clone ​https://code.ua.pt/git/security2015­p2g5
-● $ cd security2015­p2g5
-● $ virtualenv venv
-● $ . venv/bin/activate
-● pip install ­r requirements.txt
+$ sudo apt­-get install python­-dev imagemagick libffi-dev libssl-dev swig
+$ pip install virtualenv
+$ git clone ​https://code.ua.pt/git/security2015­-p2g5
+$ cd security2015­-p2g5
+$ virtualenv venv
+$ . venv/bin/activate
+$ pip install ­-r requirements.txt
+
+Install midleware CC package:
+$ dpkg -i cartaodecidadao-ubuntu-1.60.0-1608.x86_64.deb
+
+Import Certificate Authority to your browser:
+- Go to Certificates/CertificateAuthority
+- Open CA-IEDCS.pem with browser (firefox recommended)
+
+Install Server Certificates (on venv):
+    You need to be on folder security2015-p2g5 and with venv
+    $ ./install_server_certificates.sh
+
+
+--------------------------------------------
 
 Start Server
-● $ cd security2015­p2g5
-● $ . venv/bin/activate
-● $ cd IEDCSServer
-● $ python manage.py runserver 8000
+$ cd security2015­p2g5
+$ . venv/bin/activate
+$ cd IEDCSServer
+$ python manage.py runsslserver 8000
 
 Website
-● First start Server
-● Go to browser and open ​
-● http://localhost:8000
-● Now, it's just a normal website
-        ○ Register
-        ○ Log in
-        ○ Buy something
-        ○ Logout
+First start Server
+Go to browser and open ​
+https://localhost:8000
+Now, it's just a normal website
+        - Register
+        - Log in
+        - Buy something
+        - Logout
 
-Start Player
-● $ cd security2015­p2g5
-● $ . venv/bin/activate
-● $ cd IEDCSPlayer
-● $ python Player.py Credentials
+Start Player (python files)
+$ cd security2015­p2g5
+$ . venv/bin/activate
+$ cd IEDCSPlayer
+$ python Player.py
+
+Start Player (exe file downloaded from website)
 
 
+--------------------------------------------
+Credentials
 
+Server Admin:​ https://localhost:8000/admin
+username: admin
+password: admin
 
-Server Admin:​ http://localhost:8000/admin
-● username: admin
-● password: admin
-
-Website:​​ http://localhost:8000/Account/login/
-● You can user Register page to create new user
-● Or you can use one existing:
+Website:​​ https://localhost:8000/Account/login/
+You can user Register page to create new user
+Or you can use one existing:
     ○ username: user
     ○ password: user
 
 Player:
-● Use the same credentials as on website
+Use the same credentials as on website
 

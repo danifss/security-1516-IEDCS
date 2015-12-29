@@ -7,21 +7,40 @@
         <form class="form-horizontal" action="/Account/login/" method="post">
             {% csrf_token %}
             <fieldset>
-                <legend>User Login</legend>
-                <div class="form-group">
-                    <div class="col-lg-10">
-                        {{ form.as_ul }}
+                <div class="form-control">
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="col-xs-10">
+                                <label for="id_username" class="col-lg-2 control-label">Username</label>
+                                {{ form.username }}
+                                <!--<input type="text" class="form-control" id="inputUsername" placeholder="Username"/>-->
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-lg-10">
-                        {{ error_message }}
+
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="col-xs-10">
+                                <label for="id_password" class="col-lg-2 control-label">Password</label>
+                                {{ form.password }}
+                                <!--<input type="text" class="form-control" id="inputUsername" placeholder="Username"/>-->
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-lg-10 col-lg-offset-0">
-                        <button type="reset" class="btn btn-xs btn-default">Cancel</button>
-                        <button type="submit" class="btn btn-xs btn-primary">Submit</button>
+
+                    <div class="row">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-10">
+                            {{ error_message }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-10">
+                            <button type="reset" class="btn btn-default">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
                     </div>
                 </div>
             </fieldset>

@@ -1,3 +1,5 @@
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.Hash import SHA
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
@@ -6,8 +8,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from core.models import User, Player, Device, Content, Purchase
 from core.serializers import *
-from core.CryptoModule import *
+from CryptoModuleA import *
+from SmartCardA import *
+import os
 import json
+import time, datetime
 
 
 class UserLogin(generics.ListCreateAPIView):
@@ -39,18 +44,33 @@ class UserLogin(generics.ListCreateAPIView):
 
         username -- registration username
         password -- registration password
+        userCC -- registration CC
         ---
         omit_parameters:
         - form
         """
-        if 'password' in request.GET and 'username' in request.GET:
+        if 'password' in request.GET and 'username' in request.GET and 'userCC' in request.GET:
             try:
                 user = User.objects.get(username__iexact = request.GET.get('username'))
                 # if user.check_password(request.GET.get('password')):
                 passwd = request.GET.get('password')
-                if passwd == user.password:
-                    return Response(status=status.HTTP_200_OK, data={'id': user.userID, 'first_name': user.firstName,
-                                                                     'last_name': user.lastName, 'email': user.email})
+                cc_number = request.GET.get('userCC'
+                                            )
+                # POST restrictions, removes '+' from url's
+                passwd_protected = passwd.replace(" ", "+")
+
+                player = Player.objects.get(user=user)
+                crypto = CryptoModule()
+                playerIm = getPlayerKey(user, player)
+                passwd_plain = crypto.rsaDecipher(playerIm, passwd_protected)
+                salt = user.userSalt.decode('base64')
+                passwd_hash = CryptoModule.hashingSHA256(passwd_plain, salt)
+
+                #fixpassword = CryptoModule.hashingSHA256(str(passwd), salt)
+                
+                if passwd_hash == user.password and cc_number == user.userCC:
+                    return Response(status=status.HTTP_200_OK) #, data={'id': user.userID, 'first_name': user.firstName,
+                                                                     #'last_name': user.lastName, 'email': user.email})
                 else:
                     return Response(status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
@@ -86,6 +106,7 @@ class ContentByUser(generics.ListCreateAPIView):
         omit_parameters:
         - form
         """
+        # print request.META['CSRF_COOKIE']
         try:
             int_id = int(pk)
             user = User.objects.get(userID=int_id)
@@ -97,6 +118,47 @@ class ContentByUser(generics.ListCreateAPIView):
         except:
             self.queryset = []
         return self.list(request)
+
+
+class UserHasContent(generics.ListCreateAPIView):
+    """<b>Check if User has Content</b>"""
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, pk=None):
+        """
+        Check if given User has any Content
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 204 NO CONTENT
+
+        ---
+        omit_parameters:
+        - form
+        """
+        # print request.META['CSRF_COOKIE']
+        try:
+            int_id = int(pk)
+            user = User.objects.get(userID=int_id)
+            purchases = Purchase.objects.all().filter(user=user)
+            if len(purchases) > 0:
+                return Response(status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserDevice(generics.ListCreateAPIView):
@@ -132,7 +194,7 @@ class UserDevice(generics.ListCreateAPIView):
             int_id = int(pk)
             hash_str = str(hash)
             user = User.objects.get(userID=int_id)
-            player = Player.objects.all().filter(userID=user.userID)
+            player = Player.objects.get(user=user)
             device = Device.objects.all().filter(player=player,deviceHash=hash_str)
             if len(device) == 0:
                 self.queryset = []
@@ -190,8 +252,8 @@ class UserDeviceCreate(generics.ListCreateAPIView):
         omit_parameters:
             - form
         """
-        # print request.META
-        # X-CSRFToken: Zp5dgB965IKXQmSyzYaqoXrKfUTWSKsq
+        # print request.META['CSRF_COOKIE']
+        # X-CSRFToken: zhOXQAEtUqXoolDN66tlSJ76zKLPl48N
         # {
         # "hash" : "ola",
         # "userID" : "1",
@@ -203,7 +265,7 @@ class UserDeviceCreate(generics.ListCreateAPIView):
                 deviceHash = request.data['hash']
                 userID = int(request.data['userID'])
                 user = User.objects.get(userID=userID)
-                player = Player.objects.get(userID=user.userID)
+                player = Player.objects.get(user=user)
                 deviceKey = request.data['deviceKey']
                 # create Device and save it
                 new_device = Device(deviceKey=deviceKey, player=player, deviceHash=deviceHash)
@@ -211,11 +273,12 @@ class UserDeviceCreate(generics.ListCreateAPIView):
                 return Response(status=status.HTTP_200_OK)
             except Exception as e:
                 print "Error creating new Device.", e
-                Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+""" PLAY CONTENT """
 class PlayContent(generics.ListCreateAPIView):
     """<b>Play Ciphered Content</b>"""
     queryset = Content.objects.all()
@@ -261,29 +324,320 @@ class PlayContent(generics.ListCreateAPIView):
                 if content.pages > 0 and int_page > 0 and int_page <= content.pages:
                     try:
                         crypto = CryptoModule()
-                        fileKey = ("aaaaaaaaaaaaaaaa","aaaaaaaaaaaaaaaa")
-                        # fileKey =
-                        # TODO correct path
+
+                        player = Player.objects.get(user=user)
+                        device = Device.objects.get(player=player)
+                        fileKey = genFileKey(user, player, device)
                         fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
-                        print fpath
+                        # print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
+                        f1.close()
                         # save to disk
                         cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
-                        f2 = open(cipheredFileName, 'w')
-                        f2.write(fcifra)
+
+                        f2 = open(cipheredFileName, 'wb')
+                        deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+                        deviceKeyPubObj = crypto.rsaImport(deviceKeyPub)
+
+                        # cipher magicKey with device key PUBLIC
+                        magicSafe = crypto.rsaCipher(deviceKeyPubObj, user.magicKey)
+                        fcifraSafe = str(fcifra).encode('base64')
+
+                        # cardinal don't belong to base64, to do split by #
+                        f2.write("#"+magicSafe+"#"+fcifraSafe)
                         f2.close()
-                        f1.close()
+
                     except Exception as e:
-                        print "Error encrypting! ", e
+                        print "Error while encrypting!", e
                         return Response(status=status.HTTP_400_BAD_REQUEST)
 
                     return Response(status=status.HTTP_200_OK, data={'path': cipheredFileName})
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
-            # return Response(status=status.HTTP_200_OK, data={'path': ''})
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+def genFileKey(user=None, player=None, device=None):
+    if user==None or player==None or device==None:
+        print " TRUE: user==None or player==None or device==None"
+        return None
+
+    crypto = CryptoModule()
+
+    userkey = user.userKey
+    playerIm = getPlayerKey(user, player)
+    playerKeyPub = crypto.publicRsa(playerIm)
+
+    deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
+
+    # magic used to -> Calculate auxiliar key with userKey and magic value
+    magic = CryptoModule.hashingSHA256(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M'))
+    # Save ciphered magicKey on database
+    magicKey = crypto.cipherAES(magic[0:16], magic[32:48], magic)
+    user.magicKey = magicKey
+    # user.save() -> post modifications to DB
+    user.save()
+
+    aux = getAuxKey(userkey, magicKey)
+    pk = CryptoModule.hashingSHA256(str(playerKeyPub))
+    dk = CryptoModule.hashingSHA256(str(deviceKeyPub))
+
+    xor1 = ""
+    for i in range(0, len(pk)):
+        xor1 += str(logical_function(aux[i], pk[i]))
+    hash_xor1 = CryptoModule.hashingSHA256(xor1)
+
+    fileKey = ""
+    for i in range(0, len(dk)):
+        fileKey += logical_function(hash_xor1[i], dk[i])
+    fileKey = CryptoModule.hashingSHA256(fileKey)
+
+    p1 = fileKey[8:24]
+    p2 = fileKey[37:53]
+    return (p1,p2)
+
+
+def getAuxKey(userKey, magic):
+    if userKey is None or magic is None:
+        print "TRUE userKey is None or magic is None"
+        return None
+
+    tmp = str(userKey)+str(magic)
+    auxKey = CryptoModule.hashingSHA256(tmp)
+    return auxKey
+
+
+def verifyMagic(magicCiphered,user=None, player=None):
+
+    crypto = CryptoModule()
+
+    magicKey = user.magicKey
+
+    playerKey = getPlayerKey(user, player)
+    magicPlain = crypto.rsaDecipher(playerKey, magicCiphered)
+
+    # challenge correct
+    if magicKey == magicPlain:
+        return getAuxKey(user.userKey, magicKey)
+    # challenge not accepted
+    else:
+        return None
+
+
+def getPlayerKey(user=None, player=None):
+    crypto = CryptoModule()
+
+    playerKey = player.playerKey
+    pkhash = user.email[:len(user.email)/2]+user.password[len(user.password)/2:]+user.username
+
+    playerHash = crypto.hashingSHA256(str(pkhash))
+    return crypto.rsaImport(playerKey, playerHash)
+
+
+def logical_function(str1, str2):
+    return str1 + str2
+""" END OF PLAY CONTENT """
+
+
+class ChallengeKey(generics.ListCreateAPIView):
+    """<b>Get the auxiliar key to produce FileKey</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['post']
+
+    def post(self, request):
+        """
+        Gets the auxiliar token for produce the FileKey
+
+
+
+
+        <b>Details</b>
+
+        METHODS : POST
+
+
+        <b>Example:</b>
+
+
+        {
+
+            "userId": "12",
+
+            "magicKey": "5i9fh938hf83h893hg9384hg9348hg"
+
+        }
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        # print request.META['CSRF_COOKIE']
+        try:
+            if 'userId' in request.data and 'magicKey' in request.data:
+                int_id = int(request.data['userId'])
+                user = User.objects.get(userID=int_id)
+                player = Player.objects.get(user=user)
+                magicKeyCiphered = request.data['magicKey']
+
+                auxKey = verifyMagic(magicKeyCiphered, user, player)
+
+                if auxKey is not None:
+                    return Response(status=status.HTTP_200_OK, data={'challenge': auxKey})
+        except:
+            print "Error in request!"
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GET_userIV(generics.ListCreateAPIView):
+    """<b>Gets the IV for user</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, un=None):
+        """
+        Gets the user IV for given username
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            user = User.objects.get(username=un)
+            iv = user.userIV
+
+            return Response(status=status.HTTP_200_OK, data={'iv': iv})
+        except:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GET_playerIV(generics.ListCreateAPIView):
+    """<b>Gets the IV for player</b>"""
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
+    allowed_methods = ['get']
+
+    def get(self, request, un=None):
+        """
+        Gets the player IV for given username
+
+
+
+
+        <b>Details</b>
+
+        METHODS : GET
+
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK.
+
+        - 400 BAD REQUEST
+
+        ---
+        omit_parameters:
+        - form
+        """
+        try:
+            user = User.objects.get(username=un)
+            player = Player.objects.get(user=user)
+            iv = player.playerIV
+
+            return Response(status=status.HTTP_200_OK, data={'iv': iv})
+        except:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class SignValidation(generics.ListCreateAPIView):
+    """<b>Validate the CC sign</b>"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    allowed_methods = ['post']
+
+    def post(self, request):
+        """
+        Validates the sign of a CC
+
+
+
+
+        <b>Details</b>
+
+        METHODS : POST
+
+
+        <b>Example:</b>
+
+
+        {
+
+            "username": "daniel",
+
+            "sign": "5i9fh938hf83h893hg9384hg9348hg"
+
+        }
+
+
+        <b>RETURNS:</b>
+
+        - 200 OK
+
+        - 401 UNAUTHORIZED
+
+        ---
+        omit_parameters:
+        - form
+        """
+        # print request.META['CSRF_COOKIE']
+        try:
+            if 'username' in request.data and 'sign' in request.data:
+                username = request.data['username']
+                user = User.objects.get(username=username)
+                user.userCC
+                sign = request.data['sign']
+                crypto = CryptoModule()
+                pteid = SmartCard()
+
+                ccPubKey = crypto.rsaImport(user.userCCKey)
+                data = user.userCC+user.userCC+"abcd"
+                check = pteid.veriSign(sign, data, ccPubKey)
+
+                if not check:
+                    return Response(status=status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except:
+            pass
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ContentPages(generics.ListCreateAPIView):
@@ -324,83 +678,3 @@ class ContentPages(generics.ListCreateAPIView):
         except:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# class ContentNames(generics.ListCreateAPIView):
-#     """<b>Content file name</b>"""
-#     queryset = Content.objects.all()
-#     serializer_class = ContentSerializer
-#     allowed_methods = ['get']
-#
-#     def get(self, request, pk=None):
-#         """
-#         Gets file name of given content id
-#
-#
-#
-#
-#         <b>Details</b>
-#
-#         METHODS : GET
-#
-#
-#
-#         <b>RETURNS:</b>
-#
-#         - 200 OK.
-#
-#         - 400 BAD REQUEST
-#
-#         ---
-#         omit_parameters:
-#         - form
-#         """
-#         try:
-#             int_id = int(pk)
-#             content = Content.objects.get(contentID=int_id)
-#             file_name = str(content.fileName)
-#
-#             return Response(status=status.HTTP_200_OK, data={'file_name': file_name})
-#         except:
-#             pass
-#         return Response(status=status.HTTP_400_BAD_REQUEST)
-#
-#
-# class ContentFilePath(generics.ListCreateAPIView):
-#     """<b>Content file path</b>"""
-#     queryset = Content.objects.all()
-#     serializer_class = ContentSerializer
-#     allowed_methods = ['get']
-#
-#     def get(self, request, pk=None):
-#         """
-#         Gets file path of given content id
-#
-#
-#
-#
-#         <b>Details</b>
-#
-#         METHODS : GET
-#
-#
-#
-#         <b>RETURNS:</b>
-#
-#         - 200 OK.
-#
-#         - 400 BAD REQUEST
-#
-#         ---
-#         omit_parameters:
-#         - form
-#         """
-#         try:
-#             int_id = int(pk)
-#             content = Content.objects.get(contentID=int_id)
-#             file_path = str(content.filepath)
-#
-#             return Response(status=status.HTTP_200_OK, data={'file_path': file_path})
-#         except:
-#             pass
-#         return Response(status=status.HTTP_400_BAD_REQUEST)
