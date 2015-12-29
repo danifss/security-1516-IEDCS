@@ -55,8 +55,6 @@ class Core(object):
             return
 
         self.cc_number = pteid.getCCNumber()
-        # destroy object to verify later if card was removed
-        del pteid
 
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
@@ -79,15 +77,22 @@ class Core(object):
         ###
         # Only on first run, sends signature to be validated
         if self.userID is None:
-            signed = pteid.signData("01234567890123456789")
+            toSigndata = str(self.cc_number)+str(self.cc_number)+"abcd"
+            signed = pteid.signData(toSigndata)
             url = api.VALIDATE_SIGN
-            data = { "userId": str(self.username), "sign": signed }
+            data = { "username": str(self.username), "sign": signed }
             result = self.request(url, data=data, method='POST')
-            if result.status_code == 200:
-                print "Correcto"
-            else:
-                print "Incorrecto"
+
+            if result is None:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+            elif result.status_code != 200:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
         ####
+
+        # destroy object to verify later if card was removed
+        del pteid
 
         if result.status_code == 200:
             ## Load user info

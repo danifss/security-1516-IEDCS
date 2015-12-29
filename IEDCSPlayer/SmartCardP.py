@@ -120,7 +120,6 @@ class SmartCard(object):
 
                         signature = self.session.sign(o, toSign)
                         s = ''.join(chr(c) for c in signature).encode('hex')
-                        self.veriSign(s.encode('base64'), data)
                         return s.encode('base64')
 
                     except Exception as e:
@@ -141,13 +140,13 @@ class SmartCard(object):
             d = self.hexx(decrypted).decode('hex')
             # print self.dump(d, 16)
             if data == d[-20:]:
-                print "Signature VERIFIED!\n"
+                #print "Signature VERIFIED!\n"
                 return 0
             else:
-                print "Signature NOT VERIFIED!"
+                #print "Signature NOT VERIFIED!"
                 return 1
         else:
-            print "Unable to verify signature: MODULUS/PUBLIC_EXP not found"
+            #print "Unable to verify signature: MODULUS/PUBLIC_EXP not found"
             return 1
 
     def hexx(self, intval):

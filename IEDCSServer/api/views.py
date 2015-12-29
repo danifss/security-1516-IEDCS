@@ -622,13 +622,14 @@ class SignValidation(generics.ListCreateAPIView):
             if 'username' in request.data and 'sign' in request.data:
                 username = request.data['username']
                 user = User.objects.get(username=username)
-
+                user.userCC
                 sign = request.data['sign']
                 crypto = CryptoModule()
                 pteid = SmartCard()
 
                 ccPubKey = crypto.rsaImport(user.userCCKey)
-                check = pteid.veriSign(sign, "01234567890123456789", ccPubKey)
+                data = user.userCC+user.userCC+"abcd"
+                check = pteid.veriSign(sign, data, ccPubKey)
 
                 if not check:
                     return Response(status=status.HTTP_200_OK)
