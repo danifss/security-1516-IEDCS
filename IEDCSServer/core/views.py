@@ -145,7 +145,7 @@ def register(request):
             check = pteid.startSession()
             #a = pteid.getAutenPubKey()
             if check:
-                msgError = 'Make sure you have you SmartCard inserted.'
+                msgError = 'Make sure you have your SmartCard inserted.'
                 form = registerUserForm(request.POST)
                 return render(request, 'core/Account/register.html', {'form': form, 'error_message' : msgError, \
                   'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
@@ -155,9 +155,8 @@ def register(request):
             try:
                 existentUser = User.objects.get(userCC=userCC)
                 if existentUser is not None:
-                    form = registerUserForm(request.POST)
                     msgError = "This SmartCard is already registered!"
-                    form = registerUserForm()
+                    form = registerUserForm(request.POST)
                     return render(request, 'core/Account/register.html', {'form': form, 'error_message' : msgError, \
                       'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
             except:
