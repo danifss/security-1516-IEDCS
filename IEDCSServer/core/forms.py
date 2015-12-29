@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator
 
 class registerUserForm(ModelForm):
     username = forms.CharField(label="Username", max_length=100, required=True, widget=forms.TextInput(attrs={'placeholder': 'Username'}),)
-    userCC = forms.CharField(label="CC Number", min_length=8, max_length=8, required=True, widget=forms.TextInput(attrs={'placeholder': 'Citizen Card Number'}),)
+    # userCC = forms.CharField(label="CC Number", min_length=8, max_length=8, required=True, widget=forms.TextInput(attrs={'placeholder': 'Citizen Card Number'}),)
     # password = forms.CharField(label="Password", widget=forms.PasswordInput)
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput, min_length=8, max_length=16, required=True, \
                         validators=[RegexValidator(regex='^.((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%_-]).{8,16})$', \
@@ -27,7 +27,7 @@ class registerUserForm(ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'password1', 'password2', 'userCC', 'email', 'firstName', 'lastName']
+        fields = ['username', 'password1', 'password2', 'email', 'firstName', 'lastName']
         # widgets = { 'password' : forms.PasswordInput() }
 
 

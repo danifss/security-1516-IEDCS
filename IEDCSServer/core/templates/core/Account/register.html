@@ -5,6 +5,12 @@
 
         <h2>Register</h2>
         <br>
+        <div class="row">
+            <div class="col-xs-2"></div>
+            <div class="col-xs-10">
+                {{ error_message }}
+            </div>
+        </div>
         <form class="form-horizontal" action="/Account/register/" method="post">
             {% csrf_token %}
             <fieldset>

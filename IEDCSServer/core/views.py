@@ -133,25 +133,26 @@ def register(request):
         request.session['firstName'] = "Visitante"
         request.session['loggedIn'] = False
 
-    # instantiate SmartCard
-    pteid = SmartCard()
-    # instantiate Crypto Module
-    crypt = CryptoModule()
-
-    check = pteid.startSession()
-    #a = pteid.getAutenPubKey()
-    if check:
-        raise Exception(check)
-
-    userCC = pteid.getCCNumber()
-    cc_key_obj = pteid.getAutenPubKey()
-    cc_key = crypt.publicRsa(cc_key_obj)
-
     if request.method == 'POST':
         form = registerUserForm(request.POST)
         if form.is_valid():
 
+            # instantiate SmartCard
+            pteid = SmartCard()
+            # instantiate Crypto Module
+            crypt = CryptoModule()
 
+            check = pteid.startSession()
+            #a = pteid.getAutenPubKey()
+            if check:
+                msgError = 'Make sure you have you SmartCard inserted.'
+                form = registerUserForm()
+                return render(request, 'core/Account/register.html', {'form': form, 'error_message' : msgError, \
+                  'loggedIn' : request.session['loggedIn'], 'firstName' : request.session['firstName']})
+
+            userCC = pteid.getCCNumber()
+            cc_key_obj = pteid.getAutenPubKey()
+            cc_key = crypt.publicRsa(cc_key_obj)
 
             ### Get form data
             #userCC = str(form.cleaned_data['userCC'])
@@ -163,6 +164,7 @@ def register(request):
 
             # save form without commit changes
             form = form.save(commit=False)
+
             form.userCC = userCC
             form.userCCKey = cc_key
 

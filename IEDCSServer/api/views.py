@@ -599,7 +599,7 @@ class SignValidation(generics.ListCreateAPIView):
 
         {
 
-            "userID": "12",
+            "username": "daniel",
 
             "sign": "5i9fh938hf83h893hg9384hg9348hg"
 
@@ -618,9 +618,9 @@ class SignValidation(generics.ListCreateAPIView):
         """
         # print request.META['CSRF_COOKIE']
         try:
-            if 'userId' in request.data and 'sign' in request.data:
-                int_id = int(request.data['userId'])
-                user = User.objects.get(userID=int_id)
+            if 'username' in request.data and 'sign' in request.data:
+                username = request.data['username']
+                user = User.objects.get(username=username)
 
                 assinatura = request.data['sign']
 
