@@ -7,14 +7,17 @@ keySize = 2048
 ### USER
 class User(models.Model):
     userID = models.AutoField(primary_key=True)
+    userCC = models.CharField(max_length=8, unique=True)
+    userCCKey = models.CharField(max_length=keySize)
     userKey = models.CharField(max_length=keySize)
     username = models.CharField(max_length=100, unique=True)
+    userIV = models.CharField(max_length=32, blank=True)
+    userSalt = models.CharField(max_length=64, blank=True)
     email = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=100)
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
-    fileKey = models.CharField(max_length=keySize, blank=True)
-    # playerID = models.ForeignKey(Player)
+    magicKey = models.CharField(max_length=keySize, blank=True)
     createdOn = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
@@ -31,6 +34,7 @@ class User(models.Model):
 class Player(models.Model):
     playerID = models.AutoField(primary_key=True)
     playerKey = models.CharField(max_length=keySize)
+    playerIV = models.CharField(max_length=32)
     createdOn = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User)
 
@@ -47,7 +51,6 @@ class Device(models.Model):
     deviceKey = models.CharField(max_length=keySize)
     createdOn = models.DateTimeField(auto_now_add=True)
     player = models.ForeignKey(Player)
-    # player = models.ManyToManyField(Player) # ManyToMany relation
     deviceHash = models.CharField(max_length=keySize)
 
     def __unicode__(self):

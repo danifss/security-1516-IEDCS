@@ -25,7 +25,9 @@ SECRET_KEY = 'z7#-74cn-xsx2(wh8cmqi%el=_3ck#lzz20-hq6crhbmjx%=r8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+]
 
 
 # Application definition
@@ -43,10 +45,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # models for DB
+    # models and website
     'core',
     # API
     'api',
+    # SSL
+    'sslapp',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -81,6 +85,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'webinterface.wsgi.application'
 
+SESSION_COOKIE_SECURE = True # secure session cookies
+CSRF_COOKIE_SECURE = True # secure csrf token
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True # close session when close the browser
+SECURE_BROWSER_XSS_FILTER = True # control the operation of the XSS filter
+SECURE_SSL_REDIRECT = True # redirect all HTTP connections to HTTPS.
+
+# refuse to connect to your domain name via an insecure connection for some time
+SECURE_HSTS_SECONDS = 3600 # 1h
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases

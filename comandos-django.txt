@@ -1,9 +1,7 @@
 Correr servidor:
-    1 - python manage.py runserver
-    ou (definir porta)
-    2 - python manage.py runserver 8000
+    1 - python manage.py runsslserver 8000
     ou (definir ip para acesso publico)
-    3 - python manage.py runserver 0.0.0.0:8000
+    2 - python manage.py runsslserver 0.0.0.0:8000
 
 
 ##-------------------------------------------------------------------

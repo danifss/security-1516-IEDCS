@@ -5,7 +5,14 @@
 
         <h2>Register</h2>
         <br>
-        <form class="form-horizontal" action="/Account/register/" method="post">{% csrf_token %}
+        <div class="row">
+            <div class="col-xs-2"></div>
+            <div class="col-xs-10">
+                {{ error_message }}
+            </div>
+        </div>
+        <form class="form-horizontal" action="/Account/register/" method="post">
+            {% csrf_token %}
             <fieldset>
                 <div class="row">
                     <div class="form-control">
@@ -35,7 +42,6 @@
         <div id="loading">
             <img id="loading-image" src="{% static 'web/img/spiral-spinner.gif' %}" alt="Loading..." />
         </div>
-
 
 <!--
                 <div class="form-group">
