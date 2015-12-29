@@ -49,7 +49,8 @@ class Core(object):
         print co.WARNING
         # every login
         check = pteid.startSession()
-
+        pteid.signData()
+        #a = pteid.getAutenPubKey()
         if check:
             print co.FAIL+check+co.ENDC
             self.loggedIn = False
