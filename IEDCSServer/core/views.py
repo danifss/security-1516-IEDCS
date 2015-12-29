@@ -142,7 +142,7 @@ def register(request):
             ### Get form data
             userCC = str(form.cleaned_data['userCC'])
             email = str(form.cleaned_data['email'])
-            password = str(form.cleaned_data['password'])
+            password = str(form.cleaned_data['password1'])
             username = str(form.cleaned_data['username'])
             firstName = str(form.cleaned_data['lastName'])
             lastName = str(form.cleaned_data['firstName'])
