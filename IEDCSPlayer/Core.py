@@ -426,7 +426,7 @@ class Core(object):
                     result = requests.get(url, verify='resources/CA-IEDCS.crt')
                 elif method == "POST":
                     result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
-                return result if result.status_cNone== 200 else None
+                return result if result.status_code== 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return

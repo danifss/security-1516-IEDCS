@@ -24,10 +24,9 @@ Install Server Certificates (on venv):
 --------------------------------------------
 
 Start Server
-$ cd security2015­p2g5
+$ cd security2015-p2g5
 $ . venv/bin/activate
-$ cd IEDCSServer
-$ python manage.py runsslserver 8000
+(venv)$ ./deploy-server.sh
 
 Website
 First start Server
