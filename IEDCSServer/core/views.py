@@ -293,11 +293,15 @@ def createDownloadFile(userID, username):
     # zip file
     zipper(zip_path, zip_filename)
 
-    # clean and move files
-    os.rename(zip_filename, 'media/download/'+zip_filename)
-    os.remove('media/tmp/resources/player'+username+'.pub')
-    os.remove('media/tmp/resources/user'+username+'.pkl')
-    os.remove('media/tmp/Player.exe')
+    try:
+        # clean and move files
+        os.rename(zip_filename, 'media/download/'+zip_filename)
+        os.remove('media/tmp/resources/player'+username+'.pub')
+        os.remove('media/tmp/resources/user'+username+'.pkl')
+        os.remove('media/tmp/Player.exe')
+    except Exception as e:
+        print "Some error when cleaning files after create download file."
+        print "ERROR: ", e
 
 def zipper(dir, zip_file):
     zip = zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED)

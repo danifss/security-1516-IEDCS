@@ -13,6 +13,7 @@ from SmartCardA import *
 import os
 import json
 import time, datetime
+import subprocess
 
 
 class UserLogin(generics.ListCreateAPIView):
@@ -325,16 +326,23 @@ class PlayContent(generics.ListCreateAPIView):
                     try:
                         crypto = CryptoModule()
 
+                        # create folder tmp if not exists
+                        if not os.path.exists("/tmp"):
+                            p = subprocess.Popen(["mkdir", "-p","/tmp"])
+                            p.wait()
+
                         player = Player.objects.get(user=user)
                         device = Device.objects.get(player=player)
                         fileKey = genFileKey(user, player, device)
-                        fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
+                        # fpath = settings.MEDIA_ROOT+'/'+content.filepath+'/'+content.fileName+pg+".jpg"
+                        fpath = "/tmp/storage-mount/"+content.filepath+'/'+content.fileName+pg+".jpg"
                         # print fpath
                         f1 = open(fpath, 'rb')
                         fcifra = crypto.cipherAES(fileKey[0], fileKey[1], f1.read())
                         f1.close()
                         # save to disk
-                        cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
+                        # cipheredFileName = settings.MEDIA_ROOT+"/storage/ghosts/ciphered_"+content.fileName+pg
+                        cipheredFileName = "/tmp/ciphered_"+content.fileName+pg
 
                         f2 = open(cipheredFileName, 'wb')
                         deviceKeyPub = crypto.decipherAES(device.deviceHash[0:16], device.deviceHash[32:48], device.deviceKey)
