@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 from Resources import *
 from CryptoModuleP import *
 import sys, os
@@ -10,13 +11,6 @@ import time
 import cPickle as pickle
 from cStringIO import StringIO
 from SmartCardP import *
-from base64 import b64decode
-# from PIL import Image
-
-# import urllib3
-# urllib3.disable_warnings()
-# import urllib3.contrib.pyopenssl
-# urllib3.contrib.pyopenssl.inject_into_urllib3()
 
 
 class Core(object):
@@ -27,6 +21,7 @@ class Core(object):
         self.deviceKey = None
         self.playerKey = None
         self.cc_number = 0
+        self.userID = None
 
         # Check if it is the real user
         while not self.loggedIn:
@@ -41,7 +36,6 @@ class Core(object):
         ### print welcome message
         print co.HEADER+"\tWelcome "+co.BOLD+self.firstName+" "+self.lastName+co.ENDC
 
-
     ### Login
     def login(self):
         pteid = SmartCard()
@@ -49,36 +43,50 @@ class Core(object):
         print co.WARNING
         # every login
         check = pteid.startSession()
-
         if check:
             print co.FAIL+check+co.ENDC
             self.loggedIn = False
             return
 
         self.cc_number = pteid.getCCNumber()
-        # destroy object to verify later if card was removed
-        del pteid
 
         username = raw_input("\tUsername: ")
         passwd = getpass.getpass('\tPassword:')
         print co.ENDC
 
+        # to try and open player public key
+        self.username = username
 
-        #hash_pass = CryptoModule.hashingSHA256(passwd)
-        # Verify user in server
-        # TODO cannot send hash_pass because of salt, need to cipher password
-        # chamamos agora aqui
-        ######################################
-        # self.getPlayerKey()
-        # passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
-        # url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
-        ######################################
+        self.getPlayerKey()
+        passwd_protected = self.crypt.rsaCipher(self.playerKey, passwd)
+        url = api.LOGIN+"?username="+username+"&password="+passwd_protected+"&userCC="+self.cc_number
 
-        url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
+        # url = api.LOGIN+"?username="+username+"&password="+passwd+"&userCC="+self.cc_number
+
         result = self.request(url)
         if result is None:
             print co.FAIL+"\tFail doing login."+co.ENDC
             return
+
+        ###
+        # Only on first run, sends signature to be validated
+        if self.userID is None:
+            toSigndata = str(self.cc_number)+str(self.cc_number)+"abcd"
+            signed = pteid.signData(toSigndata)
+            url = api.VALIDATE_SIGN
+            data = { "username": str(self.username), "sign": signed }
+            result = self.request(url, data=data, method='POST')
+
+            if result is None:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+            elif result.status_code != 200:
+                print co.FAIL+"\tFail doing login."+co.ENDC
+                return
+        ####
+
+        # destroy object to verify later if card was removed
+        del pteid
 
         if result.status_code == 200:
             ## Load user info
@@ -97,7 +105,7 @@ class Core(object):
             res = json.loads(result.text)
             iv = res["iv"]
             iv_raw = iv.decode('base64')
-            
+
             decipheredFile = self.crypt.decipherAES('uBAcxUXs1tJYAFSI', iv_raw, f.read())
             f.close()
             src = StringIO(decipheredFile)
@@ -118,7 +126,7 @@ class Core(object):
             #if hash_pass == self.password and username == self.username:
             if username == self.username:
                 # verifies if can open player key pub
-                self.getPlayerKey()
+                #self.getPlayerKey()
                 # if everything ok, lets generate device key or not
                 self.deviceKey = self.generateDevice()
                 self.loggedIn = True
@@ -143,7 +151,7 @@ class Core(object):
             f.close()
 
             # get player IV from database
-            url = api.GET_PLAYER_IV + str(self.userID)
+            url = api.GET_PLAYER_IV + str(self.username)
             result = self.request(url, method="GET")
             if result is None:
                 return
@@ -152,9 +160,8 @@ class Core(object):
             iv_raw = iv.decode('base64')
 
             player = self.crypt.decipherAES("vp71cNkWdASAPXp4", iv_raw, playerPublic)
-            #print "Player Public Key", player
             self.playerKey = self.crypt.rsaImport(player)
-            #self.playerHash = CryptoModule.hashingSHA256(player)
+
 
         except:
             print co.FAIL+"\tFail loading files."+co.ENDC
@@ -408,15 +415,38 @@ class Core(object):
         except:
             return None
 
-
     ### Request to server
     def request(self, url, data=None, method="GET"):
         try:
-            if method == "GET":
-                result = requests.get(url, verify='resources/CA-IEDCS.crt')
-            elif method == "POST":
-                result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
-            return result if result.status_code == 200 else None
+
+            devnull = open(os.devnull, 'w')
+            with RedirectStdStreams(stdout=devnull, stderr=devnull):
+
+                if method == "GET":
+                    result = requests.get(url, verify='resources/CA-IEDCS.crt')
+                elif method == "POST":
+                    result = requests.post(url, data=data, verify='resources/CA-IEDCS.crt')
+                return result if result.status_code== 200 else None
         except requests.ConnectionError:
             print co.FAIL+"Error connecting with server!\n"+co.ENDC
             return
+
+###################
+# http://stackoverflow.com/questions/6796492/temporarily-redirect-stdout-stderr
+# to remove warnings caused by the certicate CA-IEDCS.crt on the first run of the Player
+###################
+
+class RedirectStdStreams(object):
+    def __init__(self, stdout=None, stderr=None):
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush(); self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stdout.flush(); self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
