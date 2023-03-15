@@ -11,7 +11,7 @@ idna==2.0
 ipaddress==1.0.15
 M2Crypto==0.22.3
 ndg-httpsclient==0.4.0
-Nuitka==0.5.16.1
+Nuitka==0.9
 pyasn1==0.1.9
 pycparser==2.14
 pycrypto==2.6.1
