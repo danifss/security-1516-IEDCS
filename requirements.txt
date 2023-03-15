@@ -1,6 +1,6 @@
 certifi==2022.12.7
 cffi==1.4.2
-cryptography==1.1.2
+cryptography==39.0.1
 Django==1.11.29
 django-rest-swagger==0.3.4
 django-sslserver==0.18
